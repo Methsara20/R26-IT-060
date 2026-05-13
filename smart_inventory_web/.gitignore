@@ -1,0 +1,75 @@
+# =========================================
+# FLUTTER / DART
+# =========================================
+
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+.pub-cache/
+
+build/
+coverage/
+
+# =========================================
+# ANDROID
+# =========================================
+
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+/android/.gradle/
+/android/captures/
+/android/local.properties
+
+# =========================================
+# IOS
+# =========================================
+
+/ios/Flutter/.last_build_id
+/ios/Pods/
+/ios/.symlinks/
+/ios/Runner.xcworkspace/
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+
+# =========================================
+# WEB
+# =========================================
+
+web/flutter_service_worker.js
+web/.dart_tool/
+
+# =========================================
+# VS CODE / IDE
+# =========================================
+
+.idea/
+*.iml
+.vscode/
+
+# =========================================
+# LOGS & TEMP FILES
+# =========================================
+
+*.log
+*.tmp
+*.temp
+
+# =========================================
+# OS FILES
+# =========================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================================
+# MISC
+# =========================================
+
+*.swp
+*.lock
+.history/
