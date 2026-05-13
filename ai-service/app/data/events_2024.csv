@@ -1,0 +1,43 @@
+date,event_name,event_type,is_holiday
+01/01/2024,New Year's Day,Holiday,1
+01/01/2024,New Year Clearance Sale,Promotion,0
+05/01/2024,Back to School Season Start,School_Season,0
+15/01/2024,Tamil Thai Pongal Day,Holiday,1
+25/01/2024,Duruthu Full Moon Poya Day,Holiday,1
+04/02/2024,Independence Day,Holiday,1
+10/02/2024,Valentine's Gift Promotion,Promotion,0
+23/02/2024,Nawam Full Moon Poya Day,Holiday,1
+08/03/2024,Maha Sivarathri Day,Holiday,1
+24/03/2024,Medin Full Moon Poya Day,Holiday,1
+25/03/2024,Pre-Avurudu Shopping Launch,Promotion,0
+29/03/2024,Good Friday,Holiday,1
+05/04/2024,Avurudu Mega Sale Peak,Promotion,0
+11/04/2024,Id-Ul-Fitr,Holiday,1
+12/04/2024,Day Prior to New Year,Holiday,1
+13/04/2024,Sinhala & Tamil New Year Day,Holiday,1
+14/04/2024,Sinhala & Tamil New Year (Aluth Avurudu),Holiday,1
+23/04/2024,Bak Full Moon Poya Day,Holiday,1
+01/05/2024,May Day,Holiday,1
+15/05/2024,Vesak Lantern & Decor Sale,Promotion,0
+23/05/2024,Vesak Full Moon Poya Day,Holiday,1
+24/05/2024,Day Following Vesak,Holiday,1
+10/06/2024,Poson Festival Preparation Sale,Promotion,0
+17/06/2024,Id-Ul-Alha,Holiday,1
+21/06/2024,Poson Full Moon Poya Day,Holiday,1
+15/07/2024,Mid-Year Clearance Sale,Promotion,0
+20/07/2024,Esala Full Moon Poya Day,Holiday,1
+10/08/2024,School Vacation Special Offers,Promotion,0
+19/08/2024,Nikini Full Moon Poya Day,Holiday,1
+16/09/2024,Milad-Un-Nabi,Holiday,1
+17/09/2024,Binara Full Moon Poya Day,Holiday,1
+10/10/2024,Pre-Deepavali Fashion Promo,Promotion,0
+17/10/2024,Vap Full Moon Poya Day,Holiday,1
+31/10/2024,Deepavali Festival Day,Holiday,1
+15/11/2024,Il Full Moon Poya Day,Holiday,1
+22/11/2024,Black Friday Weekend Sale,Promotion,0
+29/11/2024,Year-End Grand Sale Launch,Promotion,0
+01/12/2024,Christmas Season Launch,Promotion,0
+14/12/2024,Unduvap Full Moon Poya Day,Holiday,1
+15/12/2024,Peak December Shopping Week,Promotion,0
+25/12/2024,Christmas Day,Holiday,1
+31/12/2024,New Year's Eve Sale,Promotion,0

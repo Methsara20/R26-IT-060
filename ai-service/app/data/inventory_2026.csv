@@ -1,0 +1,25 @@
+store_id,store_name,product_id,product_name,category,current_stock,reorder_level,max_stock,supplier_lead_time,brand,gender,subcategory
+S001,Nugegoda,P001,T-shirt,Clothing,15,40,150,5,Nike,Men,Casual Wear
+S001,Nugegoda,P002,Jeans,Clothing,61,50,200,7,Levis,Men,Denim
+S001,Nugegoda,P003,Jacket,Clothing,47,30,100,10,Adidas,Men,Outerwear
+S001,Nugegoda,P004,Shoes,Footwear,48,35,120,8,Puma,Men,Sportswear
+S001,Nugegoda,P005,Cap,Accessories,46,30,100,4,Under Armour,Unisex,Accessories
+S001,Nugegoda,P006,Umbrella,Accessories,70,60,250,3,Kadurata,Unisex,General
+S001,Nugegoda,P007,Backpack,Accessories,25,45,150,6,Modano,Unisex,General
+S001,Nugegoda,P008,Hoodie,Clothing,12,25,80,9,Hustle,Unisex,General
+S002,Negombo,P001,T-shirt,Clothing,68,40,150,5,Nike,Men,Casual Wear
+S002,Negombo,P002,Jeans,Clothing,77,50,200,7,Levis,Men,Denim
+S002,Negombo,P003,Jacket,Clothing,58,30,100,10,Adidas,Men,Outerwear
+S002,Negombo,P004,Shoes,Footwear,43,35,120,8,Puma,Men,Sportswear
+S002,Negombo,P005,Cap,Accessories,185,30,100,4,Under Armour,Unisex,Accessories
+S002,Negombo,P006,Umbrella,Accessories,210,60,250,3,Kadurata,Unisex,General
+S002,Negombo,P007,Backpack,Accessories,140,45,150,6,Modano,Unisex,General
+S002,Negombo,P008,Hoodie,Clothing,44,25,80,9,Hustle,Unisex,General
+S003,Kirulapone,P001,T-shirt,Clothing,145,40,150,5,Nike,Men,Casual Wear
+S003,Kirulapone,P002,Jeans,Clothing,79,50,200,7,Levis,Men,Denim
+S003,Kirulapone,P003,Jacket,Clothing,60,30,100,10,Adidas,Men,Outerwear
+S003,Kirulapone,P004,Shoes,Footwear,40,35,120,8,Puma,Men,Sportswear
+S003,Kirulapone,P005,Cap,Accessories,37,30,100,4,Under Armour,Unisex,Accessories
+S003,Kirulapone,P006,Umbrella,Accessories,90,60,250,3,Kadurata,Unisex,General
+S003,Kirulapone,P007,Backpack,Accessories,57,45,150,6,Modano,Unisex,General
+S003,Kirulapone,P008,Hoodie,Clothing,54,25,80,9,Hustle,Unisex,General
