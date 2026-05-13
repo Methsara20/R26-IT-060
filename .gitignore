@@ -1,0 +1,26 @@
+backend/.env
+/__pycache__/
+__pyache__
+__pycache__/
+backend/app/.DS_Store
+.venv/
+/.venv/
+.DS_Store
+/build/
+
+firebase_key.json
+
+gradle-wrapper.jar
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+key.properties
+**/*.keystore
+**/*.jks
