@@ -1,0 +1,14 @@
+# PRODUCTS_COLLECTION = "products"
+# STORES_COLLECTION = "stores"
+# INVENTORY_COLLECTION = "inventory_current"
+
+PRODUCTS_COLLECTION = "products"
+STORES_COLLECTION = "stores"
+INVENTORY_COLLECTION = "inventory_current"
+
+ANALYTICS_SUMMARY_COLLECTION = "analytics_summary"
+SHOWROOM_ANALYTICS_COLLECTION = "showroom_analytics"
+CATEGORY_ANALYTICS_COLLECTION = "category_analytics"
+BRAND_ANALYTICS_COLLECTION = "brand_analytics"
+GENDER_ANALYTICS_COLLECTION = "gender_analytics"
+ALERT_ITEMS_COLLECTION = "alert_items"
