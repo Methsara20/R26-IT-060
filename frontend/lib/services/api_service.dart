@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 class ApiService {
-  static const String baseUrl = "http://172.20.10.5:8000";
+  static const String baseUrl = "http://192.168.1.5:8000";
 
   static Future<Map<String, dynamic>> createProfile({
     required String email,
