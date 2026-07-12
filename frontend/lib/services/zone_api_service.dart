@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ZoneApiService {
-  static const String baseUrl = "http://127.0.0.1:8000";
+  static const String baseUrl = "http://172.20.10.5:8000";
 
   static Future<Map<String, dynamic>> createZone({
     required String zoneName,
@@ -11,10 +11,7 @@ class ZoneApiService {
     final response = await http.post(
       Uri.parse("$baseUrl/zone/create"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "zone_name": zoneName,
-        "points": points,
-      }),
+      body: jsonEncode({"zone_name": zoneName, "points": points}),
     );
 
     return jsonDecode(response.body);

@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/api_service.dart';
+import '../services/monitoring_api_service.dart';
+import 'package:geolocator/geolocator.dart';
+import 'dart:async';
 
 class TryOnPage extends StatefulWidget {
-  const TryOnPage({super.key});
+  final String customerEmail;
+  const TryOnPage({super.key, required this.customerEmail});
 
   @override
   State<TryOnPage> createState() => _TryOnPageState();
@@ -24,6 +28,68 @@ class _TryOnPageState extends State<TryOnPage> {
   bool isLoading = false;
   String message = "";
   String? generatedImageUrl;
+
+  Timer? _heartbeatTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAssistanceMonitoring();
+  }
+
+  Future<void> _initializeAssistanceMonitoring() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+
+    if (permission == LocationPermission.deniedForever) return;
+
+    try {
+      Position pos = await Geolocator.getCurrentPosition();
+      String name = widget.customerEmail.split('@')[0];
+
+      await MonitoringApiService.startMonitoring(
+        customerId: widget.customerEmail,
+        customerName: name,
+        lat: pos.latitude,
+        lon: pos.longitude,
+        alt: pos.altitude,
+      );
+
+      _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (
+        timer,
+      ) async {
+        try {
+          Position currentPos = await Geolocator.getCurrentPosition();
+          await MonitoringApiService.updateMonitoring(
+            customerId: widget.customerEmail,
+            lat: currentPos.latitude,
+            lon: currentPos.longitude,
+            alt: currentPos.altitude,
+          );
+        } catch (e) {
+          debugPrint("Failed to update location: \$e");
+        }
+      });
+    } catch (e) {
+      debugPrint("Failed to start monitoring: \$e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _heartbeatTimer?.cancel();
+    MonitoringApiService.stopMonitoring(customerId: widget.customerEmail);
+    super.dispose();
+  }
 
   Future<void> pickHumanImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -109,10 +175,7 @@ class _TryOnPageState extends State<TryOnPage> {
                     ),
                   ),
                 )
-              : Image.memory(
-                  imageBytes,
-                  fit: BoxFit.contain,
-                ),
+              : Image.memory(imageBytes, fit: BoxFit.contain),
         ),
       ),
     );
@@ -126,10 +189,7 @@ class _TryOnPageState extends State<TryOnPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        title: const Text("Virtual Try-On"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Virtual Try-On"), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -167,10 +227,7 @@ class _TryOnPageState extends State<TryOnPage> {
               const SizedBox(height: 20),
               const Text(
                 "Generated Try-On Result",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Card(

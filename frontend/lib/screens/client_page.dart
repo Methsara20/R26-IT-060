@@ -255,7 +255,7 @@ class _ClientPageState extends State<ClientPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const TryOnPage(),
+                      builder: (_) => TryOnPage(customerEmail: loggedEmail ?? "guest@example.com"),
                     ),
                   );
                 },

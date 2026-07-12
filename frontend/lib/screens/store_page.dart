@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'create_zone_page.dart';
 import 'identify_zone_page.dart';
 import 'view_zones_page.dart';
+import 'customer_tracking_page.dart';
 
 class StorePage extends StatelessWidget {
   const StorePage({super.key});
@@ -58,6 +59,13 @@ class StorePage extends StatelessWidget {
               title: "View Zones",
               subtitle: "View and delete stored zones",
               page: const ViewZonesPage(),
+            ),
+            _menuButton(
+              context: context,
+              icon: Icons.track_changes,
+              title: "Customer Tracking & Alerts",
+              subtitle: "Track live customers and view assistance requests",
+              page: const CustomerTrackingPage(),
             ),
           ],
         ),
