@@ -147,6 +147,32 @@ def delete_zone(zone_id: str):
 
     doc_ref.delete()
 
+    # Mark active monitoring sessions in the deleted zone as Completed
+    active_sessions = (
+        db.collection("customer_monitoring")
+        .where(filter=firestore.FieldFilter("zone_id", "==", zone_id))
+        .where(filter=firestore.FieldFilter("status", "==", "Active"))
+        .stream()
+    )
+    for session in active_sessions:
+        session.reference.update({
+            "status": "Completed",
+            "last_updated": firestore.SERVER_TIMESTAMP
+        })
+
+    # Resolve pending assistance requests in the deleted zone
+    pending_requests = (
+        db.collection("assistance_requests")
+        .where(filter=firestore.FieldFilter("zone_id", "==", zone_id))
+        .where(filter=firestore.FieldFilter("status", "==", "Pending"))
+        .stream()
+    )
+    for req in pending_requests:
+        req.reference.update({
+            "status": "Resolved",
+            "resolved_at": firestore.SERVER_TIMESTAMP
+        })
+
     return {
         "message": "Zone deleted successfully",
         "zone_id": zone_id
