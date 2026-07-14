@@ -5,6 +5,7 @@
 PRODUCTS_COLLECTION = "products"
 STORES_COLLECTION = "stores"
 INVENTORY_COLLECTION = "inventory_current"
+STORE_DISTANCES_COLLECTION = "store_distances"
 
 ANALYTICS_SUMMARY_COLLECTION = "analytics_summary"
 SHOWROOM_ANALYTICS_COLLECTION = "showroom_analytics"
@@ -12,3 +13,8 @@ CATEGORY_ANALYTICS_COLLECTION = "category_analytics"
 BRAND_ANALYTICS_COLLECTION = "brand_analytics"
 GENDER_ANALYTICS_COLLECTION = "gender_analytics"
 ALERT_ITEMS_COLLECTION = "alert_items"
+
+OPTIMIZATION_CANDIDATES_COLLECTION = "optimization_candidates"
+OPTIMIZATION_HISTORY_COLLECTION = "optimization_history"
+STOCK_MOVEMENTS_COLLECTION = "stock_movements"
+INVENTORY_TRANSACTIONS_COLLECTION = "inventory_transactions"

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from app.services.product_service import (
     get_all_products,
-    get_product_by_id
+    get_product_by_id,
+    get_products_by_category
 )
 
 router = APIRouter(
@@ -11,13 +12,19 @@ router = APIRouter(
 )
 
 
-@router.get("/")
-def all_products():
-    return {
-        "count": len(get_all_products()),
-        "products": get_all_products()
-    }
+@router.get("")
+def list_products(
+    category: str | None = Query(default=None),
+):
+    if category:
+        products = get_products_by_category(category)
+    else:
+        products = get_all_products()
 
+    return {
+        "count": len(products),
+        "products": products,
+    }
 
 @router.get("/{product_id}")
 def product_by_id(product_id: str):
