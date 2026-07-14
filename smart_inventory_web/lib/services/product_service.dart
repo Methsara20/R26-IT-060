@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 class ProductService {
@@ -14,15 +15,16 @@ class ProductService {
   }) async {
     final queryParameters = <String, String>{};
 
-    if (category != null && category.trim().isNotEmpty) {
-      queryParameters['category'] = category;
+    if (category != null &&
+        category.trim().isNotEmpty) {
+      queryParameters['category'] =
+          category.trim();
     }
 
-    if (
-        subcategory != null &&
-        subcategory.trim().isNotEmpty
-    ) {
-      queryParameters['subcategory'] = subcategory;
+    if (subcategory != null &&
+        subcategory.trim().isNotEmpty) {
+      queryParameters['subcategory'] =
+          subcategory.trim();
     }
 
     final uri = Uri.parse(
@@ -35,23 +37,40 @@ class ProductService {
 
     if (response.statusCode != 200) {
       throw Exception(
-        'Unable to load products: ${response.statusCode}',
+        'Failed to load products. '
+        'Status: ${response.statusCode}\n'
+        'Response: ${response.body}',
       );
     }
 
     final decoded = jsonDecode(response.body);
 
-    final List<dynamic> items;
+    List<dynamic> rawProducts;
 
-    if (decoded is List) {
-      items = decoded;
+    if (decoded is List<dynamic>) {
+      rawProducts = decoded;
+    } else if (decoded is Map<String, dynamic>) {
+      final productsValue = decoded['products'];
+
+      if (productsValue is List<dynamic>) {
+        rawProducts = productsValue;
+      } else {
+        throw Exception(
+          'The API response does not contain a products list.',
+        );
+      }
     } else {
-      items = decoded['products'] ?? [];
+      throw Exception(
+        'Unexpected API response format.',
+      );
     }
 
-    return items
+    return rawProducts
+        .whereType<Map>()
         .map(
-          (item) => Map<String, dynamic>.from(item),
+          (item) => Map<String, dynamic>.from(
+            item,
+          ),
         )
         .toList();
   }
