@@ -97,9 +97,9 @@ Analyzes customer data to predict effective promotions, evaluate campaigns, and 
 
 ## Technologies Used
 
-- **Frontend:** React.js  
+- **Frontend:** Flutter 
 - **Backend:** Flask / FastAPI  
-- **Machine Learning:** XGBoost, Scikit-learn , Randon Forest  
+- **Machine Learning:** XGBoost, Scikit-learn, Random Forest  
 - **Database:** MySQL / Firebase  
 - **AI Tools:** Generative AI APIs (for virtual try-on & marketing)
 
