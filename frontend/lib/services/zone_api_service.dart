@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ZoneApiService {
-  static const String baseUrl = "http://172.20.10.5:8000";
+  static const String baseUrl = "http://0.0.0.0:8000";
 
   static Future<Map<String, dynamic>> createZone({
     required String zoneName,
