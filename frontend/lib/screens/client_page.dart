@@ -4,6 +4,7 @@ import 'create_profile_page.dart';
 import 'update_profile_page.dart';
 import 'delete_profile_page.dart';
 import 'try_on_page.dart';
+import 'catalog_page.dart';
 
 class ClientPage extends StatefulWidget {
   const ClientPage({super.key});
@@ -26,6 +27,7 @@ class _ClientPageState extends State<ClientPage> {
   String? profileId;
   String? token;
   String? loggedEmail;
+  String? recommendedSize;
 
   @override
   void dispose() {
@@ -75,9 +77,21 @@ class _ClientPageState extends State<ClientPage> {
         profileId = result["profile_id"];
         token = result["access_token"];
         loggedEmail = result["email"];
+        recommendedSize = result["recommended_size"];
         isLoggedIn = true;
         resultMessage = "Login successful";
       });
+      if (isLoggedIn) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CatalogPage(
+              customerEmail: loggedEmail!,
+              recommendedSize: recommendedSize,
+            ),
+          ),
+        );
+      }
     } catch (e) {
       setState(() => resultMessage = e.toString());
     }
@@ -184,6 +198,7 @@ class _ClientPageState extends State<ClientPage> {
                     setState(() {
                       profileId = result["profile_id"];
                       loggedEmail = result["email"];
+                      recommendedSize = result["recommended_size"];
                       isLoggedIn = true;
 
                       final body = result["body_measurements"];
@@ -197,6 +212,15 @@ class _ClientPageState extends State<ClientPage> {
                           "Waist: ${body["predicted_waist"]}\n"
                           "Leg Length: ${body["predicted_leg_length"]}";
                     });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CatalogPage(
+                          customerEmail: loggedEmail!,
+                          recommendedSize: recommendedSize,
+                        ),
+                      ),
+                    );
                   }
                 },
                 child: const Text("Don't have a profile? Create profile"),
@@ -255,12 +279,15 @@ class _ClientPageState extends State<ClientPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => TryOnPage(customerEmail: loggedEmail ?? "guest@example.com"),
+                      builder: (_) => CatalogPage(
+                        customerEmail: loggedEmail!,
+                        recommendedSize: recommendedSize,
+                      ),
                     ),
                   );
                 },
-                icon: const Icon(Icons.checkroom),
-                label: const Text("Start Virtual Try-On"),
+                icon: const Icon(Icons.shopping_bag),
+                label: const Text("Go to Catalog"),
               ),
             ),
           ],
