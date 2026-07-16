@@ -7,6 +7,8 @@ from app.routes import profile
 from app.routes import tryon
 from app.routes import inventory
 from app.routes import monitoring
+from app.routes import product_routes
+from app.routes import smart_inventory
 
 app = FastAPI()
 
@@ -23,6 +25,8 @@ app.include_router(profile.router, prefix="/profile", tags=["Profile"])
 app.include_router(tryon.router, prefix="/tryon", tags=["Try On"])
 app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 app.include_router(monitoring.router, prefix="/monitoring", tags=["Monitoring"])
+app.include_router(product_routes.router)
+app.include_router(smart_inventory.router)
 
 app.mount("/generated", StaticFiles(directory="generated"), name="generated")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
