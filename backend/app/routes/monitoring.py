@@ -105,12 +105,14 @@ def update_monitoring(data: MonitoringUpdateRequest):
 
     if not current_zone_id:
         session_doc.reference.update({
+            "status": "Completed",
             "last_updated": firestore.SERVER_TIMESTAMP,
             "latitude": data.latitude,
             "longitude": data.longitude,
             "altitude": data.altitude
         })
-        return {"message": "Customer not in any zone, tracking paused."}
+        _resolve_pending_requests(data.customer_id)
+        return {"message": "Customer left geofenced zones. Session completed."}
 
     stored_zone_id = session_data.get("zone_id")
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -224,9 +226,25 @@ def get_active_sessions():
         .where(filter=firestore.FieldFilter("status", "==", "Active"))
         .stream()
     )
+    
+    now = datetime.datetime.now(datetime.timezone.utc)
+    # Heartbeat is every 10 seconds. Expire after 40 seconds of inactivity.
+    stale_limit = now - datetime.timedelta(seconds=40)
+    
     result = []
     for doc in active_sessions:
         data = doc.to_dict()
+        
+        last_updated = data.get("last_updated")
+        if last_updated:
+            if last_updated < stale_limit:
+                doc.reference.update({
+                    "status": "Completed",
+                    "last_updated": firestore.SERVER_TIMESTAMP
+                })
+                _resolve_pending_requests(data.get("customer_id"))
+                continue
+                
         data["monitoring_id"] = doc.id
         if "entry_time" in data and data["entry_time"]:
             data["entry_time"] = data["entry_time"].isoformat()
