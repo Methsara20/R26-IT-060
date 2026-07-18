@@ -149,25 +149,40 @@ class _TryOnPageState extends State<TryOnPage> {
     required Uint8List? imageBytes,
     required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 3,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
       child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Container(
           width: double.infinity,
           height: 220,
-          padding: const EdgeInsets.all(12),
           child: imageBytes == null
-              ? Center(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_photo_alternate_outlined, size: 48, color: Colors.grey.shade400),
+                    const SizedBox(height: 12),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black54,
+                      ),
                     ),
-                  ),
+                  ],
                 )
-              : Image.memory(imageBytes, fit: BoxFit.contain),
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.memory(imageBytes, fit: BoxFit.cover),
+                ),
         ),
       ),
     );
@@ -180,37 +195,44 @@ class _TryOnPageState extends State<TryOnPage> {
         : "$generatedImageUrl?t=${DateTime.now().millisecondsSinceEpoch}";
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(title: const Text("Virtual Try-On"), centerTitle: true),
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: const Text(
+          "Virtual Try-On",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              "Your Photo",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+            ),
+            const SizedBox(height: 12),
             imageBox(
               title: "Upload Human Image",
               imageBytes: humanImageBytes,
               onTap: pickHumanImage,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+
             if (isProductsLoading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Center(child: CircularProgressIndicator()),
-              )
+              const Center(child: CircularProgressIndicator())
             else if (productsError != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Center(child: Text("Error loading catalog: $productsError")),
-              )
+              Center(child: Text("Error loading catalog: $productsError", style: const TextStyle(color: Colors.red)))
             else if (products.isNotEmpty && selectedProduct == null) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  "Select from Catalog:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+              const Text(
+                "Select from Catalog",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
               ),
+              const SizedBox(height: 12),
               SizedBox(
                 height: 120,
                 child: ListView.builder(
@@ -228,175 +250,219 @@ class _TryOnPageState extends State<TryOnPage> {
                         });
                       },
                       child: Container(
-                        margin: const EdgeInsets.only(right: 12),
+                        margin: const EdgeInsets.only(right: 16),
                         width: 100,
                         decoration: BoxDecoration(
+                          color: Colors.white,
                           border: Border.all(
-                            color: isSelected ? Colors.blue : Colors.grey.shade300,
-                            width: isSelected ? 3 : 1,
+                            color: isSelected ? const Color(0xFF2563EB) : Colors.transparent,
+                            width: isSelected ? 3 : 0,
                           ),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                          ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(13),
                           child: product["image_url"] != null
                               ? Image.network(
                                   product["image_url"],
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) =>
-                                      const Center(child: Icon(Icons.broken_image)),
+                                      const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
                                 )
-                              : const Center(child: Icon(Icons.image)),
+                              : const Center(child: Icon(Icons.image, color: Colors.grey)),
                         ),
                       ),
                     );
                   },
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
             ],
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                "Selected Clothing Image:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+
+            const Text(
+              "Selected Clothing",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
             ),
-            Card(
-              elevation: 3,
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                ],
+              ),
               child: InkWell(
+                borderRadius: BorderRadius.circular(16),
                 onTap: pickClothImage,
                 child: Container(
                   width: double.infinity,
                   height: 220,
-                  padding: const EdgeInsets.all(12),
                   child: selectedProduct != null
                       ? Stack(
                           children: [
-                            Center(
-                              child: Image.network(
-                                selectedProduct!["image_url"] ?? "",
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image, size: 50),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                width: double.infinity,
+                                height: 220,
+                                color: const Color(0xFFF1F5F9),
+                                child: Image.network(
+                                  selectedProduct!["image_url"] ?? "",
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image, size: 50),
+                                ),
                               ),
                             ),
                             Positioned(
-                              right: 0,
-                              top: 0,
-                              child: IconButton(
-                                icon: const Icon(Icons.close, color: Colors.red),
-                                onPressed: () {
+                              right: 8,
+                              top: 8,
+                              child: GestureDetector(
+                                onTap: () {
                                   setState(() {
                                     selectedProduct = null;
                                   });
                                 },
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.close, color: Colors.redAccent, size: 20),
+                                ),
                               ),
                             ),
                           ],
                         )
                       : clothImageBytes == null
-                          ? const Center(
-                              child: Text(
-                                "Tap here to upload from gallery",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_photo_alternate_outlined, size: 48, color: Colors.grey.shade400),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  "Upload from gallery",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black54,
+                                  ),
                                 ),
-                              ),
+                              ],
                             )
-                          : Image.memory(clothImageBytes!, fit: BoxFit.contain),
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.memory(clothImageBytes!, fit: BoxFit.cover),
+                            ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
+
             SizedBox(
               width: double.infinity,
+              height: 56,
               child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
                 onPressed: isLoading ? null : sendImages,
-                icon: const Icon(Icons.send),
-                label: const Text("Send"),
+                icon: isLoading
+                    ? const SizedBox.shrink()
+                    : const Icon(Icons.auto_awesome, color: Colors.white),
+                label: isLoading
+                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text(
+                        "Generate Try-On",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
               ),
             ),
+            
             const SizedBox(height: 16),
-            if (isLoading) const CircularProgressIndicator(),
             if (message.isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(message),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEE2E2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Text(message, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
               ),
+              
             if (imageUrlWithCacheBust != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
               const Text(
-                "Generated Try-On Result",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                "Your Virtual Look",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              
               if (widget.recommendedSize != null) ...[
-                Card(
-                  color: const Color(0xFFEFF6FF),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: Color(0xFFBFDBFE), width: 1),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.check_circle_outline,
-                          color: Color(0xFF2563EB),
-                          size: 28,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 28),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Recommended Size Match",
+                              style: TextStyle(fontSize: 13, color: Color(0xFF166534), fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Matches your profile: ${widget.recommendedSize}",
+                              style: const TextStyle(fontSize: 16, color: Color(0xFF14532D), fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Recommended Size Match",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF1E40AF),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Your body profile matches size: ${widget.recommendedSize}",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF1E3A8A),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
               ],
-              Card(
-                elevation: 3,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
+              
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10)),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
                   child: Image.network(
                     imageUrlWithCacheBust,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
                       return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text("Could not load generated image"),
+                        padding: EdgeInsets.all(32),
+                        child: Center(child: Text("Could not load generated image", style: TextStyle(color: Colors.red))),
                       );
                     },
                   ),
                 ),
               ),
+              const SizedBox(height: 40),
             ],
           ],
         ),
