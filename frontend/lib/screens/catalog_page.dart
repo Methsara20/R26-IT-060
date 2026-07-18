@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../services/monitoring_api_service.dart';
+import 'package:geolocator/geolocator.dart';
+import 'dart:async';
 import 'product_detail_page.dart';
 
 class CatalogPage extends StatefulWidget {
@@ -26,10 +29,67 @@ class _CatalogPageState extends State<CatalogPage> {
   String selectedCategory = "All";
   List<String> categories = ["All"];
 
+  Timer? _heartbeatTimer;
+
   @override
   void initState() {
     super.initState();
+    _initializeAssistanceMonitoring();
     _fetchProducts();
+  }
+
+  Future<void> _initializeAssistanceMonitoring() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+
+    if (permission == LocationPermission.deniedForever) return;
+
+    try {
+      Position pos = await Geolocator.getCurrentPosition();
+      String name = widget.customerEmail.split('@')[0];
+
+      await MonitoringApiService.startMonitoring(
+        customerId: widget.customerEmail,
+        customerName: name,
+        lat: pos.latitude,
+        lon: pos.longitude,
+        alt: pos.altitude,
+      );
+
+      _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (
+        timer,
+      ) async {
+        try {
+          Position currentPos = await Geolocator.getCurrentPosition();
+          await MonitoringApiService.updateMonitoring(
+            customerId: widget.customerEmail,
+            lat: currentPos.latitude,
+            lon: currentPos.longitude,
+            alt: currentPos.altitude,
+          );
+        } catch (e) {
+          debugPrint("Failed to update location: $e");
+        }
+      });
+    } catch (e) {
+      debugPrint("Failed to start monitoring: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _heartbeatTimer?.cancel();
+    MonitoringApiService.stopMonitoring(customerId: widget.customerEmail);
+    super.dispose();
   }
 
   Future<void> _fetchProducts() async {
@@ -88,6 +148,29 @@ class _CatalogPageState extends State<CatalogPage> {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black87),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          try {
+            await MonitoringApiService.requestManualAssistance(widget.customerEmail);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Assistance requested! Staff is on the way."),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Failed to request assistance: $e"),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        backgroundColor: Colors.redAccent,
+        icon: const Icon(Icons.help_outline, color: Colors.white),
+        label: const Text("Request Help", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

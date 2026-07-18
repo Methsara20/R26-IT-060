@@ -78,4 +78,13 @@ class MonitoringApiService {
     );
     return jsonDecode(response.body);
   }
+
+  static Future<Map<String, dynamic>> requestManualAssistance(String customerId) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/monitoring/manual-assist"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"customer_id": customerId}),
+    );
+    return jsonDecode(response.body);
+  }
 }
