@@ -47,7 +47,11 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
       if (!silent) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error fetching tracking data: $e")),
+          SnackBar(
+            content: Text("Error fetching tracking data: $e"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -57,13 +61,21 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
     try {
       await MonitoringApiService.resolveRequest(requestId);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Assistance request marked as Resolved")),
+        const SnackBar(
+          content: Text("Assistance request marked as Resolved"),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       _fetchTrackingData();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Failed to resolve: $e")));
+      ).showSnackBar(SnackBar(
+        content: Text("Failed to resolve: $e"),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ));
     }
   }
 
@@ -82,11 +94,21 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
+        backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: const Text("Customer Tracking & Alerts"),
+          title: const Text(
+            "Customer Tracking & Alerts",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+          ),
+          backgroundColor: Colors.white,
+          elevation: 0,
           centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.black87),
           bottom: const TabBar(
+            labelColor: Color(0xFF2563EB),
+            unselectedLabelColor: Colors.black54,
+            indicatorColor: Color(0xFF2563EB),
+            indicatorWeight: 3,
             tabs: [
               Tab(icon: Icon(Icons.track_changes), text: "Live Tracking"),
               Tab(
@@ -97,7 +119,7 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
           ),
         ),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
             : TabBarView(
                 children: [
                   _buildLiveTrackingTab(),
@@ -110,16 +132,28 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
 
   Widget _buildLiveTrackingTab() {
     if (_activeSessions.isEmpty) {
-      return const Center(
-        child: Text(
-          "No customers currently active in Virtual Try-On",
-          style: TextStyle(fontSize: 16, color: Colors.black54),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.person_off_outlined, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            const Text(
+              "No Active Customers",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "There are no customers currently using Virtual Try-On.",
+              style: TextStyle(color: Colors.black45),
+            ),
+          ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       itemCount: _activeSessions.length,
       itemBuilder: (context, index) {
         final session = _activeSessions[index];
@@ -132,14 +166,21 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
         final entry = _formatTime(session["entry_time"]);
         final lastUpd = _formatTime(session["last_updated"]);
 
-        return Card(
-          elevation: 4,
-          margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -148,19 +189,24 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                   children: [
                     Row(
                       children: [
-                        const CircleAvatar(
-                          backgroundColor: Color(0xFFEAF1FF),
-                          child: Icon(Icons.person, color: Color(0xFF2563EB)),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEFF6FF),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.person, color: Color(0xFF2563EB)),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               name,
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
+                                color: Color(0xFF1E293B),
                               ),
                             ),
                             Text(
@@ -180,59 +226,81 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE6F4EA),
+                        color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        "Active",
-                        style: TextStyle(
-                          color: Colors.green.shade800,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.circle, size: 8, color: Color(0xFF16A34A)),
+                          SizedBox(width: 6),
+                          Text(
+                            "Active",
+                            style: TextStyle(
+                              color: Color(0xFF14532D),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const Divider(height: 24),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on,
-                      color: Colors.blueAccent,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "Current Zone: ",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      zone,
-                      style: const TextStyle(
-                        color: Colors.blueAccent,
-                        fontWeight: FontWeight.bold,
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade100),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            color: Color(0xFF2563EB),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            "Current Zone: ",
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                          ),
+                          Expanded(
+                            child: Text(
+                              zone,
+                              style: const TextStyle(
+                                color: Color(0xFF1E40AF),
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    const Icon(Icons.gps_fixed, color: Colors.grey, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        "GPS: Lat ${lat.toStringAsFixed(6)}, Lon ${lon.toStringAsFixed(6)} (Alt: ${alt.toStringAsFixed(1)}m)",
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 13,
-                        ),
+                      const Divider(height: 24),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.gps_fixed, color: Colors.black38, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "GPS: Lat ${lat.toStringAsFixed(6)}\nLon ${lon.toStringAsFixed(6)}\nAlt: ${alt.toStringAsFixed(1)}m",
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontFamily: 'monospace',
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -262,14 +330,26 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
 
   Widget _buildAssistanceAlertsTab() {
     if (_pendingRequests.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
-            SizedBox(height: 16),
-            Text(
-              "No pending assistance requests",
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: Color(0xFFDCFCE7),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle_outline, size: 64, color: Color(0xFF16A34A)),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "All Clear",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "No pending assistance requests at this time.",
               style: TextStyle(fontSize: 16, color: Colors.black54),
             ),
           ],
@@ -278,7 +358,7 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       itemCount: _pendingRequests.length,
       itemBuilder: (context, index) {
         final req = _pendingRequests[index];
@@ -289,16 +369,22 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
         final count = req["notification_count"] ?? 1;
         final time = _formatTime(req["request_time"]);
 
-        return Card(
-          color: const Color(0xFFFFF2F2), // Light red warning bg
-          elevation: 4,
-          margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.red.shade200, width: 1.5),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFEF2F2), // Light red warning bg
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFFECACA), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.red.withOpacity(0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -307,25 +393,30 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                   children: [
                     Row(
                       children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.red.shade100,
-                          child: const Icon(Icons.warning, color: Colors.red),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFEE2E2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444)),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               name,
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
+                                color: Color(0xFF991B1B),
                               ),
                             ),
                             Text(
                               email,
                               style: const TextStyle(
-                                color: Colors.black54,
+                                color: Color(0xFFB91C1C),
                                 fontSize: 13,
                               ),
                             ),
@@ -335,12 +426,12 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: 12,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
+                        color: const Color(0xFFEF4444),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         "Alert x$count",
@@ -353,50 +444,69 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                     ),
                   ],
                 ),
-                const Divider(height: 24, color: Colors.redAccent),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.notifications_active,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "Needs Assistance In: ",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.notifications_active,
+                        color: Color(0xFFDC2626),
+                        size: 24,
                       ),
-                    ),
-                    Text(
-                      zone,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Needs Assistance In:",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              zone,
+                              style: const TextStyle(
+                                color: Color(0xFFB91C1C),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "First Triggered At: $time",
-                  style: const TextStyle(color: Colors.black, fontSize: 13),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
+                Text(
+                  "First Triggered At: $time",
+                  style: const TextStyle(color: Color(0xFF991B1B), fontSize: 13),
+                ),
+                const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
+                  height: 50,
                   child: ElevatedButton.icon(
                     onPressed: () => _resolveAlert(id),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade600,
+                      backgroundColor: const Color(0xFFDC2626),
                       foregroundColor: Colors.white,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.check),
-                    label: const Text("Mark as Resolved"),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text("Mark as Resolved", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ),
               ],
