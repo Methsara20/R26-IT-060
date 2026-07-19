@@ -149,7 +149,16 @@ def update_monitoring(data: MonitoringUpdateRequest):
                 last_updated = last_updated.replace(tzinfo=datetime.timezone.utc)
             
             elapsed_since_last = (now - last_updated).total_seconds()
-            intent = classify_intent(distance, elapsed_since_last)
+            
+            # calculate overall zone dwell time for ML model
+            entry_time = session_data.get("entry_time")
+            dwell_time = 0.0
+            if entry_time:
+                if entry_time.tzinfo is None:
+                    entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+                dwell_time = (now - entry_time).total_seconds()
+
+            intent = classify_intent(distance, elapsed_since_last, zone_dwell_time_seconds=dwell_time)
             if elapsed_since_last > 0:
                 current_speed = distance / elapsed_since_last
 
