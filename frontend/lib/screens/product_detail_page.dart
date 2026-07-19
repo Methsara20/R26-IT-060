@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'try_on_page.dart';
 import '../services/app_state.dart';
+import '../services/api_service.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -19,6 +20,60 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
+  String? aiBrandSize;
+  bool isSizeLoading = true;
+  bool shouldShowSize = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBrandSize();
+  }
+
+  Future<void> _fetchBrandSize() async {
+    if (widget.recommendedSize == null) {
+      if (mounted) setState(() => isSizeLoading = false);
+      return;
+    }
+    
+    final category = (widget.product["category"] ?? "").toString().toLowerCase();
+    
+    // Ignore sizes for footwear and accessories
+    if (category.contains("footwear") || category.contains("accessories")) {
+      if (mounted) {
+        setState(() {
+          shouldShowSize = false;
+          isSizeLoading = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final size = await ApiService.predictBrandSize(
+        standardSize: widget.recommendedSize!,
+        brand: widget.product["brand"] ?? "Unknown",
+        category: category.isEmpty ? "clothing" : category,
+      );
+      if (mounted) {
+        setState(() {
+          aiBrandSize = size;
+          // If model returns N/A for some reason, hide it
+          shouldShowSize = size != "N/A";
+          isSizeLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isSizeLoading = false;
+          shouldShowSize = true;
+          aiBrandSize = widget.recommendedSize;
+        });
+      }
+    }
+  }
+
   void _addToCart() {
     AppState().addToCart(widget.product);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -34,8 +89,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     final isOutOfStock = (widget.product["current_stock"] ?? 0) <= 0;
     final price = widget.product["price_lkr"] ?? 0.0;
+    final brand = (widget.product["brand"] ?? "").toString().trim();
     
-    // Listen to changes so the favorite icon updates if toggled
+    bool sizeAdjusted = (aiBrandSize != null && aiBrandSize != widget.recommendedSize);
+    
     return ListenableBuilder(
       listenable: AppState(),
       builder: (context, _) {
@@ -45,7 +102,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           backgroundColor: Colors.white,
           appBar: AppBar(
             title: Text(
-              widget.product["brand"] ?? "Garment Details",
+              brand.isNotEmpty ? brand : "Garment Details",
               style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.transparent,
@@ -67,13 +124,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ),
           body: Column(
             children: [
-              // Scrollable Info
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Product image
                       Container(
                         width: double.infinity,
                         height: 380,
@@ -93,7 +148,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Subtitle/Gender row
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -136,7 +190,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                             const SizedBox(height: 16),
 
-                            // Title
                             Text(
                               widget.product["product_name"] ?? "Unnamed Item",
                               style: const TextStyle(
@@ -149,7 +202,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                             const SizedBox(height: 8),
 
-                            // Price
                             Text(
                               'LKR ${price.toStringAsFixed(0)}',
                               style: const TextStyle(
@@ -158,6 +210,63 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 color: Color(0xFF2563EB),
                               ),
                             ),
+
+                            if (shouldShowSize) ...[
+                              const SizedBox(height: 20),
+                              if (isSizeLoading)
+                                const Center(child: CircularProgressIndicator())
+                              else
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: sizeAdjusted ? const Color(0xFFFFF7ED) : const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: sizeAdjusted ? const Color(0xFFF97316).withOpacity(0.3) : const Color(0xFF2563EB).withOpacity(0.2),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.auto_awesome, 
+                                        color: sizeAdjusted ? const Color(0xFFF97316) : const Color(0xFF2563EB),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "AI Brand Sizing: $aiBrandSize",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                                color: sizeAdjusted ? const Color(0xFF9A3412) : const Color(0xFF1E40AF),
+                                              ),
+                                            ),
+                                            if (sizeAdjusted)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 4.0),
+                                                child: Text(
+                                                  "We dynamically adjusted your size for $brand based on their unique fit pattern.",
+                                                  style: const TextStyle(fontSize: 12, color: Color(0xFF9A3412)),
+                                                ),
+                                              )
+                                            else
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 4.0),
+                                                child: Text(
+                                                  "Your standard $aiBrandSize is the perfect fit for $brand.",
+                                                  style: const TextStyle(fontSize: 12, color: Color(0xFF1E40AF)),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
 
                             const SizedBox(height: 24),
                             const Divider(),
@@ -174,7 +283,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                             const SizedBox(height: 12),
 
-                            // Info grid list
                             _SpecRow(title: "Brand", value: widget.product["brand"] ?? "Generic"),
                             _SpecRow(title: "Category", value: widget.product["category"] ?? "General"),
                             _SpecRow(title: "Segment", value: widget.product["subcategory"] ?? "General"),
@@ -190,7 +298,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
               ),
 
-              // Bottom CTA Buttons
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
