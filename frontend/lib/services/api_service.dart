@@ -126,6 +126,25 @@ class ApiService {
     return decoded["products"] ?? [];
   }
 
+  static Future<String> predictBrandSize({
+    required String standardSize,
+    required String brand,
+    required String category,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/predict_brand_size"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "standard_size": standardSize,
+        "brand": brand,
+        "category": category,
+      }),
+    );
+
+    final decoded = _handleResponse(response);
+    return decoded["brand_specific_size"] ?? standardSize;
+  }
+
   static Map<String, dynamic> _handleResponse(http.Response response) {
     final decoded =
         response.body.isNotEmpty &&
