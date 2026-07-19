@@ -46,14 +46,12 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
 
   double? _heightToCm() {
     if (heightController.text.trim().isEmpty) return null;
-
     final height = _toDouble(heightController.text);
     return heightUnit == "inch" ? height * 2.54 : height;
   }
 
   double? _weightToKg() {
     if (weightController.text.trim().isEmpty) return null;
-
     final weight = _toDouble(weightController.text);
     return weightUnit == "lb" ? weight * 0.453592 : weight;
   }
@@ -62,7 +60,7 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
     setState(() => isLoading = true);
 
     try {
-      final result = await ApiService.updateProfile(
+      final response = await ApiService.updateProfile(
         profileId: widget.profileId,
         height: _heightToCm(),
         weight: _weightToKg(),
@@ -72,15 +70,25 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
             : passwordController.text.trim(),
       );
 
-      setState(() {
-        message =
-            "Profile updated successfully. Size: ${result["recommended_size"]}";
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Profile measurements updated instantly!"),
+            backgroundColor: Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.pop(context, response);
+      }
     } catch (e) {
-      setState(() => message = e.toString());
+      if (mounted) {
+        setState(() => message = e.toString());
+      }
     }
 
-    setState(() => isLoading = false);
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
   }
 
   Widget textInput({
@@ -91,14 +99,19 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextField(
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           suffixIcon: suffixIcon,
         ),
       ),
@@ -110,132 +123,178 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
     required List<String> items,
     required Function(String) onChanged,
   }) {
-    return DropdownButton<String>(
-      value: value,
-      items: items.map((item) {
-        return DropdownMenuItem(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
-      onChanged: (newValue) {
-        if (newValue != null) {
-          onChanged(newValue);
-        }
-      },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.black54),
+          dropdownColor: Colors.white,
+          items: items.map((item) {
+            return DropdownMenuItem(
+              value: item,
+              child: Text(item, style: const TextStyle(fontWeight: FontWeight.bold)),
+            );
+          }).toList(),
+          onChanged: (newValue) {
+            if (newValue != null) onChanged(newValue);
+          },
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("Update Profile"),
-        centerTitle: true,
+        title: const Text(
+          "Update Body Profile",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Card(
-          elevation: 3,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              "Body Metrics",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Update your physical measurements so our AI can recalculate your bespoke sizes.",
+              style: TextStyle(fontSize: 16, color: Colors.black54),
+            ),
+            const SizedBox(height: 32),
+
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: textInput(
-                        label: "Height",
-                        controller: heightController,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    unitDropdown(
-                      value: heightUnit,
-                      items: const ["cm", "inch"],
-                      onChanged: (value) {
-                        setState(() => heightUnit = value);
-                      },
-                    ),
-                  ],
+                Expanded(
+                  child: textInput(
+                    label: "Height",
+                    controller: heightController,
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: textInput(
-                        label: "Weight",
-                        controller: weightController,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    unitDropdown(
-                      value: weightUnit,
-                      items: const ["kg", "lb"],
-                      onChanged: (value) {
-                        setState(() => weightUnit = value);
-                      },
-                    ),
-                  ],
-                ),
-
+                const SizedBox(width: 12),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: DropdownButtonFormField<String>(
-                    value: selectedGender,
-                    decoration: const InputDecoration(
-                      labelText: "Gender",
-                      border: OutlineInputBorder(),
-                    ),
-                    items: genderOptions.map((gender) {
-                      return DropdownMenuItem(
-                        value: gender,
-                        child: Text(gender),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => selectedGender = value);
-                    },
+                  padding: const EdgeInsets.only(top: 2),
+                  child: unitDropdown(
+                    value: heightUnit,
+                    items: const ["cm", "inch"],
+                    onChanged: (value) => setState(() => heightUnit = value),
                   ),
                 ),
-
-                textInput(
-                  label: "New Password",
-                  controller: passwordController,
-                  obscure: !showPassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      showPassword ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() => showPassword = !showPassword);
-                    },
-                  ),
-                ),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : updateProfile,
-                    child: const Text("Update Profile"),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                if (isLoading) const CircularProgressIndicator(),
-
-                if (message.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(message),
-                  ),
               ],
             ),
-          ),
+
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: textInput(
+                    label: "Weight",
+                    controller: weightController,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: unitDropdown(
+                    value: weightUnit,
+                    items: const ["kg", "lb"],
+                    onChanged: (value) => setState(() => weightUnit = value),
+                  ),
+                ),
+              ],
+            ),
+
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: DropdownButtonFormField<String>(
+                value: selectedGender,
+                decoration: InputDecoration(
+                  labelText: "Gender",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                dropdownColor: Colors.white,
+                items: genderOptions.map((gender) {
+                  return DropdownMenuItem(value: gender, child: Text(gender));
+                }).toList(),
+                onChanged: (value) => setState(() => selectedGender = value),
+              ),
+            ),
+
+            const Divider(height: 40),
+            
+            const Text(
+              "Security",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 16),
+            textInput(
+              label: "New Password (Optional)",
+              controller: passwordController,
+              obscure: !showPassword,
+              suffixIcon: IconButton(
+                icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                onPressed: () => setState(() => showPassword = !showPassword),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: isLoading ? null : updateProfile,
+                child: isLoading
+                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white))
+                    : const Text("Save Changes", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
+            ),
+
+            if (message.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEE2E2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(message, style: const TextStyle(color: Colors.red)),
+              ),
+            ]
+          ],
         ),
       ),
     );
