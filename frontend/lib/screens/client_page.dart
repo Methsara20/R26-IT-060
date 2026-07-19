@@ -72,6 +72,7 @@ class _ClientPageState extends State<ClientPage> {
       final profileId = result["profile_id"];
       final loggedEmail = result["email"];
       final recommendedSize = result["recommended_size"];
+      final bodyMeasurements = result["body_measurements"];
 
       if (!mounted) return;
       
@@ -82,6 +83,7 @@ class _ClientPageState extends State<ClientPage> {
             customerEmail: loggedEmail!,
             recommendedSize: recommendedSize,
             profileId: profileId,
+            bodyMeasurements: bodyMeasurements,
           ),
         ),
       );
@@ -204,6 +206,7 @@ class _ClientPageState extends State<ClientPage> {
                           customerEmail: result["email"]!,
                           recommendedSize: result["recommended_size"],
                           profileId: result["profile_id"],
+                          bodyMeasurements: result["body_measurements"],
                         ),
                       ),
                     );
