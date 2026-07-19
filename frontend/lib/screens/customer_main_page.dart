@@ -11,12 +11,14 @@ class CustomerMainPage extends StatefulWidget {
   final String customerEmail;
   final String? recommendedSize;
   final String? profileId;
+  final Map<String, dynamic>? bodyMeasurements;
 
   const CustomerMainPage({
     super.key,
     required this.customerEmail,
     this.recommendedSize,
     this.profileId,
+    this.bodyMeasurements,
   });
 
   @override
@@ -27,25 +29,15 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
   int _currentIndex = 0;
   Timer? _heartbeatTimer;
 
-  late List<Widget> _pages;
+  late String? _recommendedSize;
+  late Map<String, dynamic>? _bodyMeasurements;
 
   @override
   void initState() {
     super.initState();
+    _recommendedSize = widget.recommendedSize;
+    _bodyMeasurements = widget.bodyMeasurements;
     _initializeAssistanceMonitoring();
-    _pages = [
-      CatalogPage(
-        customerEmail: widget.customerEmail,
-        recommendedSize: widget.recommendedSize,
-      ),
-      const FavoritesPage(),
-      const CartPage(),
-      ProfilePage(
-        customerEmail: widget.customerEmail,
-        recommendedSize: widget.recommendedSize,
-        profileId: widget.profileId,
-      ),
-    ];
   }
 
   Future<void> _initializeAssistanceMonitoring() async {
@@ -123,10 +115,31 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      CatalogPage(
+        customerEmail: widget.customerEmail,
+        recommendedSize: _recommendedSize,
+      ),
+      const FavoritesPage(),
+      const CartPage(),
+      ProfilePage(
+        customerEmail: widget.customerEmail,
+        recommendedSize: _recommendedSize,
+        profileId: widget.profileId,
+        bodyMeasurements: _bodyMeasurements,
+        onProfileUpdated: (newSize, newMeasurements) {
+           setState(() {
+              _recommendedSize = newSize;
+              _bodyMeasurements = newMeasurements;
+           });
+        },
+      ),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: pages,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _requestHelp,
