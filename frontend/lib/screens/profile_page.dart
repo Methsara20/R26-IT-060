@@ -8,12 +8,16 @@ class ProfilePage extends StatelessWidget {
   final String customerEmail;
   final String? recommendedSize;
   final String? profileId;
+  final Map<String, dynamic>? bodyMeasurements;
+  final void Function(String? recommendedSize, Map<String, dynamic>? bodyMeasurements)? onProfileUpdated;
 
   const ProfilePage({
     super.key,
     required this.customerEmail,
     this.recommendedSize,
     this.profileId,
+    this.bodyMeasurements,
+    this.onProfileUpdated,
   });
 
   @override
@@ -80,6 +84,33 @@ class ProfilePage extends StatelessWidget {
                       ),
                     ),
                   ],
+                  if (bodyMeasurements != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 16),
+                              SizedBox(width: 8),
+                              Text("AI Tailored Measurements", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _buildMeasurementRow("Shoulder Width", "${bodyMeasurements!['predicted_shoulder_width']} inches"),
+                          _buildMeasurementRow("Waist", "${bodyMeasurements!['predicted_waist']} inches"),
+                          _buildMeasurementRow("Leg Length", "${bodyMeasurements!['predicted_leg_length']} inches"),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -104,9 +135,9 @@ class ProfilePage extends StatelessWidget {
                     title: "Update Body Profile",
                     icon: Icons.straighten,
                     color: const Color(0xFF2563EB),
-                    onTap: () {
+                    onTap: () async {
                       if (profileId != null) {
-                        Navigator.push(
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => UpdateProfilePage(
@@ -114,6 +145,13 @@ class ProfilePage extends StatelessWidget {
                             ),
                           ),
                         );
+                        
+                        if (result != null && result is Map && onProfileUpdated != null) {
+                           onProfileUpdated!(
+                             result["recommended_size"],
+                             result["body_measurements"]
+                           );
+                        }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("No body profile found to update.")),
@@ -294,6 +332,19 @@ class ProfilePage extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildMeasurementRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
+        ],
+      ),
     );
   }
 }
