@@ -163,6 +163,7 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
         final lat = session["latitude"] ?? 0.0;
         final lon = session["longitude"] ?? 0.0;
         final alt = session["altitude"] ?? 0.0;
+        final intent = session["intent"] ?? "Unknown";
         final entry = _formatTime(session["entry_time"]);
         final lastUpd = _formatTime(session["last_updated"]);
 
@@ -220,29 +221,60 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                         ),
                       ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.circle, size: 8, color: Color(0xFF16A34A)),
-                          SizedBox(width: 6),
-                          Text(
-                            "Active",
-                            style: TextStyle(
-                              color: Color(0xFF14532D),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                    Row(
+                      children: [
+                        if (intent != "Unknown")
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: intent == "Browsing" ? const Color(0xFFFEF08A) : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  intent == "Browsing" ? Icons.search : Icons.directions_walk, 
+                                  size: 14, 
+                                  color: Colors.black87
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "AI: $intent",
+                                  style: const TextStyle(
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.circle, size: 8, color: Color(0xFF16A34A)),
+                              SizedBox(width: 6),
+                              Text(
+                                "Active",
+                                style: TextStyle(
+                                  color: Color(0xFF14532D),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
