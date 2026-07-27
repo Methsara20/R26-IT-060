@@ -67,7 +67,7 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
         alt: pos.altitude,
       );
 
-      _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+      _heartbeatTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
         try {
           Position currentPos = await Geolocator.getCurrentPosition();
           await MonitoringApiService.updateMonitoring(
