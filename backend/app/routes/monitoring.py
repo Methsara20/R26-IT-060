@@ -260,8 +260,8 @@ def get_active_sessions():
     )
     
     now = datetime.datetime.now(datetime.timezone.utc)
-    # Heartbeat is every 10 seconds. Expire after 40 seconds of inactivity.
-    stale_limit = now - datetime.timedelta(seconds=40)
+    # Heartbeat is every 3 seconds now. Expire after 60 seconds of inactivity to prevent accidental drops.
+    stale_limit = now - datetime.timedelta(seconds=60)
     
     result = []
     for doc in active_sessions:
