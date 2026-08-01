@@ -2,6 +2,7 @@
 # This is a generated file; do not edit or check into version control.
 export "FLUTTER_ROOT=/opt/homebrew/share/flutter"
 export "FLUTTER_APPLICATION_PATH=/Users/thedas/Desktop/Projects/R26-IT-060/smart_inventory_web"
+export "FLUTTER_FRAMEWORK_SWIFT_PACKAGE_PATH=/Users/thedas/Desktop/Projects/R26-IT-060/smart_inventory_web/ios/Flutter/ephemeral/Packages/.packages/FlutterFramework"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_TARGET=lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"
