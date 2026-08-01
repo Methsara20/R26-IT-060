@@ -79,7 +79,9 @@ class MonitoringApiService {
     return jsonDecode(response.body);
   }
 
-  static Future<Map<String, dynamic>> requestManualAssistance(String customerId) async {
+  static Future<Map<String, dynamic>> requestManualAssistance(
+    String customerId,
+  ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/monitoring/manual-assist"),
       headers: {"Content-Type": "application/json"},
