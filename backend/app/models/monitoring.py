@@ -16,3 +16,6 @@ class MonitoringUpdateRequest(BaseModel):
 
 class MonitoringStopRequest(BaseModel):
     customer_id: str
+
+class ManualAssistRequest(BaseModel):
+    customer_id: str

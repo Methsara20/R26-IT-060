@@ -3,6 +3,7 @@ from firebase_admin import firestore
 
 from app.models.profile import ProfileCreateRequest, ProfileUpdateRequest
 from app.models.auth import LoginRequest
+from pydantic import BaseModel
 from app.services.profile_service import get_size
 from app.services.auth_service import hash_password, verify_password
 from app.services.jwt_service import create_access_token
@@ -29,6 +30,7 @@ def create_profile(data: ProfileCreateRequest):
 
     body_measurements = predict_body_measurements(
         height=data.height,
+        weight=data.weight,
         gender=data.gender,
     )
 
@@ -185,6 +187,7 @@ def update_profile(profile_id: str, data: ProfileUpdateRequest):
 
         body_measurements = predict_body_measurements(
             height=new_height,
+            weight=new_weight,
             gender=new_gender,
         )
 
@@ -236,3 +239,15 @@ def delete_profile(profile_id: str):
         "message": "Profile deleted successfully",
         "profile_id": profile_id,
     }
+
+
+class BrandSizingRequest(BaseModel):
+    standard_size: str
+    brand: str
+    category: str
+
+@router.post("/predict_brand_size")
+def predict_brand_size(req: BrandSizingRequest):
+    from app.services.brand_sizing_service import predict_brand_specific_size
+    size = predict_brand_specific_size(req.standard_size, req.brand, req.category)
+    return {"brand_specific_size": size}

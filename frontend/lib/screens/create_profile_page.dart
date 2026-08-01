@@ -128,7 +128,9 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
       setState(() => message = e.toString());
     }
 
-    setState(() => isLoading = false);
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
   }
 
   Widget textInput({
@@ -140,7 +142,7 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
     String? Function(String?)? validator,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         obscureText: obscure,
@@ -148,7 +150,12 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
         validator: validator,
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           suffixIcon: suffixIcon,
         ),
       ),
@@ -160,173 +167,224 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
     required List<String> items,
     required Function(String) onChanged,
   }) {
-    return DropdownButton<String>(
-      value: value,
-      items: items.map((item) {
-        return DropdownMenuItem(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
-      onChanged: (newValue) {
-        if (newValue != null) {
-          onChanged(newValue);
-        }
-      },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.black54),
+          dropdownColor: Colors.white,
+          items: items.map((item) {
+            return DropdownMenuItem(
+              value: item,
+              child: Text(item, style: const TextStyle(fontWeight: FontWeight.bold)),
+            );
+          }).toList(),
+          onChanged: (newValue) {
+            if (newValue != null) {
+              onChanged(newValue);
+            }
+          },
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("Create Profile"),
-        centerTitle: true,
+        title: const Text(
+          "Create Profile",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Card(
-          elevation: 3,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                "Let's get started",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Create a profile to get AI-powered size recommendations.",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              textInput(
+                label: "Email",
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                validator: validateEmail,
+              ),
+
+              textInput(
+                label: "Password",
+                controller: passwordController,
+                obscure: !showPassword,
+                validator: validatePassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    showPassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() => showPassword = !showPassword);
+                  },
+                ),
+              ),
+
+              textInput(
+                label: "Confirm Password",
+                controller: confirmPasswordController,
+                obscure: !showConfirmPassword,
+                validator: validateConfirmPassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    showConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(
+                      () => showConfirmPassword = !showConfirmPassword,
+                    );
+                  },
+                ),
+              ),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  textInput(
-                    label: "Email",
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: validateEmail,
-                  ),
-
-                  textInput(
-                    label: "Password",
-                    controller: passwordController,
-                    obscure: !showPassword,
-                    validator: validatePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        showPassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() => showPassword = !showPassword);
-                      },
+                  Expanded(
+                    child: textInput(
+                      label: "Height",
+                      controller: heightController,
+                      keyboardType: TextInputType.number,
+                      validator: (value) =>
+                          validateNumber(value, "height"),
                     ),
                   ),
-
-                  textInput(
-                    label: "Confirm Password",
-                    controller: confirmPasswordController,
-                    obscure: !showConfirmPassword,
-                    validator: validateConfirmPassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        showConfirmPassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(
-                          () => showConfirmPassword = !showConfirmPassword,
-                        );
-                      },
-                    ),
-                  ),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: textInput(
-                          label: "Height",
-                          controller: heightController,
-                          keyboardType: TextInputType.number,
-                          validator: (value) =>
-                              validateNumber(value, "height"),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      unitDropdown(
-                        value: heightUnit,
-                        items: const ["cm", "inch"],
-                        onChanged: (value) {
-                          setState(() => heightUnit = value);
-                        },
-                      ),
-                    ],
-                  ),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: textInput(
-                          label: "Weight",
-                          controller: weightController,
-                          keyboardType: TextInputType.number,
-                          validator: (value) =>
-                              validateNumber(value, "weight"),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      unitDropdown(
-                        value: weightUnit,
-                        items: const ["kg", "lb"],
-                        onChanged: (value) {
-                          setState(() => weightUnit = value);
-                        },
-                      ),
-                    ],
-                  ),
-
+                  const SizedBox(width: 12),
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: DropdownButtonFormField<String>(
-                      value: selectedGender,
-                      decoration: const InputDecoration(
-                        labelText: "Gender",
-                        border: OutlineInputBorder(),
-                      ),
-                      items: genderOptions.map((gender) {
-                        return DropdownMenuItem(
-                          value: gender,
-                          child: Text(gender),
-                        );
-                      }).toList(),
+                    padding: const EdgeInsets.only(top: 2),
+                    child: unitDropdown(
+                      value: heightUnit,
+                      items: const ["cm", "inch"],
                       onChanged: (value) {
-                        setState(() => selectedGender = value);
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please select gender";
-                        }
-                        return null;
+                        setState(() => heightUnit = value);
                       },
                     ),
                   ),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : createProfile,
-                      child: const Text("Create Profile"),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  if (isLoading) const CircularProgressIndicator(),
-
-                  if (message.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Text(message),
-                    ),
                 ],
               ),
-            ),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: textInput(
+                      label: "Weight",
+                      controller: weightController,
+                      keyboardType: TextInputType.number,
+                      validator: (value) =>
+                          validateNumber(value, "weight"),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: unitDropdown(
+                      value: weightUnit,
+                      items: const ["kg", "lb"],
+                      onChanged: (value) {
+                        setState(() => weightUnit = value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: DropdownButtonFormField<String>(
+                  value: selectedGender,
+                  decoration: InputDecoration(
+                    labelText: "Gender",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  dropdownColor: Colors.white,
+                  items: genderOptions.map((gender) {
+                    return DropdownMenuItem(
+                      value: gender,
+                      child: Text(gender),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => selectedGender = value);
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Please select gender";
+                    }
+                    return null;
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  onPressed: isLoading ? null : createProfile,
+                  child: isLoading
+                      ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white))
+                      : const Text("Create Profile", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              if (message.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(message, style: const TextStyle(color: Colors.red)),
+                ),
+            ],
           ),
         ),
       ),

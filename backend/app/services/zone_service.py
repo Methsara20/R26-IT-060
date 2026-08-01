@@ -13,7 +13,7 @@ def get_zone_boundaries(points):
     }
 
 
-def is_point_in_zone(latitude, longitude, altitude, zone, altitude_tolerance=30.0):
+def is_point_in_zone(latitude, longitude, altitude, zone, altitude_tolerance=100.0):
     in_lat = zone["min_lat"] <= latitude <= zone["max_lat"]
     in_lon = zone["min_lon"] <= longitude <= zone["max_lon"]
     # GPS altitude is unreliable indoors, so apply a tolerance buffer

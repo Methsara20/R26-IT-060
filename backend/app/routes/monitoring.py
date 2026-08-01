@@ -2,8 +2,9 @@ import datetime
 from fastapi import APIRouter, HTTPException
 from firebase_admin import firestore
 from app.firebase_config import db
-from app.models.monitoring import MonitoringStartRequest, MonitoringUpdateRequest, MonitoringStopRequest
+from app.models.monitoring import MonitoringStartRequest, MonitoringUpdateRequest, MonitoringStopRequest, ManualAssistRequest
 from app.services.zone_service import is_point_in_zone
+from app.services.trajectory_service import calculate_distance, classify_intent
 
 router = APIRouter()
 
@@ -29,6 +30,29 @@ def _resolve_pending_requests(customer_id: str):
             "status": "Resolved",
             "resolved_at": firestore.SERVER_TIMESTAMP
         })
+
+def _get_updated_history(session_data, now_dt):
+    history = session_data.get("zone_history", [])
+    entry_time = session_data.get("entry_time")
+    stored_zone_id = session_data.get("zone_id")
+    stored_zone_name = session_data.get("zone_name")
+
+    if not stored_zone_id or not entry_time:
+        return history
+
+    if entry_time.tzinfo is None:
+        entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+
+    dwell_time = (now_dt - entry_time).total_seconds()
+
+    history.append({
+        "zone_id": stored_zone_id,
+        "zone_name": stored_zone_name,
+        "entry_time": entry_time,
+        "exit_time": now_dt,
+        "dwell_time_seconds": int(dwell_time)
+    })
+    return history
 
 
 @router.post("/start")
@@ -61,7 +85,8 @@ def start_monitoring(data: MonitoringStartRequest):
         "status": "Active",
         "latitude": data.latitude,
         "longitude": data.longitude,
-        "altitude": data.altitude
+        "altitude": data.altitude,
+        "zone_history": []
     }
 
     doc_ref = db.collection("customer_monitoring").add(new_session)
@@ -92,7 +117,8 @@ def update_monitoring(data: MonitoringUpdateRequest):
                 "status": "Active",
                 "latitude": data.latitude,
                 "longitude": data.longitude,
-                "altitude": data.altitude
+                "altitude": data.altitude,
+                "zone_history": []
             }
             db.collection("customer_monitoring").add(new_session)
             return {"message": "Session auto-created", "zone_name": zone_name}
@@ -104,12 +130,15 @@ def update_monitoring(data: MonitoringUpdateRequest):
     current_zone_id, current_zone_name = _resolve_zone(data.latitude, data.longitude, data.altitude)
 
     if not current_zone_id:
+        now = datetime.datetime.now(datetime.timezone.utc)
+        updated_history = _get_updated_history(session_data, now)
         session_doc.reference.update({
             "status": "Completed",
             "last_updated": firestore.SERVER_TIMESTAMP,
             "latitude": data.latitude,
             "longitude": data.longitude,
-            "altitude": data.altitude
+            "altitude": data.altitude,
+            "zone_history": updated_history
         })
         _resolve_pending_requests(data.customer_id)
         return {"message": "Customer left geofenced zones. Session completed."}
@@ -118,7 +147,8 @@ def update_monitoring(data: MonitoringUpdateRequest):
     now = datetime.datetime.now(datetime.timezone.utc)
 
     if current_zone_id != stored_zone_id:
-        # Customer moved to a new zone — reset timer
+        # Customer moved to a new zone — append to history, reset timer
+        updated_history = _get_updated_history(session_data, now)
         session_doc.reference.update({
             "zone_id": current_zone_id,
             "zone_name": current_zone_name,
@@ -126,17 +156,85 @@ def update_monitoring(data: MonitoringUpdateRequest):
             "last_updated": firestore.SERVER_TIMESTAMP,
             "latitude": data.latitude,
             "longitude": data.longitude,
-            "altitude": data.altitude
+            "altitude": data.altitude,
+            "zone_history": updated_history
         })
+        
+        # Resolve existing requests since they moved
         _resolve_pending_requests(data.customer_id)
-        return {"message": "Zone changed", "new_zone": current_zone_name}
+
+        # PACING DETECTION (A -> B -> A)
+        pacing_alert_triggered = False
+        if len(updated_history) >= 2:
+            prev_zone = updated_history[-1]      # Zone B
+            prev_prev_zone = updated_history[-2] # Zone A
+
+            if prev_prev_zone.get("zone_id") == current_zone_id:
+                if prev_zone.get("dwell_time_seconds", 0) < 60:
+                    pacing_alert_triggered = True
+                    customer_name = session_data.get("customer_name", data.customer_id)
+                    new_request = {
+                        "customer_id": data.customer_id,
+                        "customer_name": customer_name,
+                        "zone_id": current_zone_id,
+                        "zone_name": current_zone_name,
+                        "request_time": firestore.SERVER_TIMESTAMP,
+                        "last_notification_time": firestore.SERVER_TIMESTAMP,
+                        "notification_count": 1,
+                        "status": "Pending",
+                        "is_pacing": True
+                    }
+                    db.collection("assistance_requests").add(new_request)
+                    db.collection("staff_notifications").add({
+                        "staff_id": "broadcast",
+                        "customer_id": data.customer_id,
+                        "zone_id": current_zone_id,
+                        "zone_name": current_zone_name,
+                        "sent_time": firestore.SERVER_TIMESTAMP,
+                        "status": "Sent",
+                        "is_pacing": True
+                    })
+
+        msg = "Zone changed (Pacing Alert Triggered)" if pacing_alert_triggered else "Zone changed"
+        return {"message": msg, "new_zone": current_zone_name}
     else:
         # Same zone — update coordinates and check dwell time
+        prev_lat = session_data.get("latitude")
+        prev_lon = session_data.get("longitude")
+        last_updated = session_data.get("last_updated")
+
+        distance = 0.0
+        intent = "Unknown"
+        current_speed = 0.0
+
+        if prev_lat and prev_lon and last_updated:
+            distance = calculate_distance(prev_lat, prev_lon, data.latitude, data.longitude)
+            
+            # last_updated from Firestore may be timezone aware
+            if last_updated.tzinfo is None:
+                last_updated = last_updated.replace(tzinfo=datetime.timezone.utc)
+            
+            elapsed_since_last = (now - last_updated).total_seconds()
+            
+            # calculate overall zone dwell time for ML model
+            entry_time = session_data.get("entry_time")
+            dwell_time = 0.0
+            if entry_time:
+                if entry_time.tzinfo is None:
+                    entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+                dwell_time = (now - entry_time).total_seconds()
+
+            intent = classify_intent(distance, elapsed_since_last, zone_dwell_time_seconds=dwell_time)
+            if elapsed_since_last > 0:
+                current_speed = distance / elapsed_since_last
+
         session_doc.reference.update({
             "last_updated": firestore.SERVER_TIMESTAMP,
             "latitude": data.latitude,
             "longitude": data.longitude,
-            "altitude": data.altitude
+            "altitude": data.altitude,
+            "current_speed": current_speed,
+            "intent": intent
         })
 
         entry_time = session_data.get("entry_time")
@@ -145,7 +243,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
 
         elapsed_seconds = (now - entry_time).total_seconds()
 
-        if elapsed_seconds >= 30:
+        if elapsed_seconds >= 30 and intent == "Browsing":
             pending_requests = list(
                 db.collection("assistance_requests")
                 .where(filter=firestore.FieldFilter("customer_id", "==", data.customer_id))
@@ -209,10 +307,14 @@ def stop_monitoring(data: MonitoringStopRequest):
         .where(filter=firestore.FieldFilter("status", "==", "Active"))
         .stream()
     )
+    now = datetime.datetime.now(datetime.timezone.utc)
     for session_doc in active_sessions:
+        session_data = session_doc.to_dict()
+        updated_history = _get_updated_history(session_data, now)
         session_doc.reference.update({
             "status": "Completed",
-            "last_updated": firestore.SERVER_TIMESTAMP
+            "last_updated": firestore.SERVER_TIMESTAMP,
+            "zone_history": updated_history
         })
 
     _resolve_pending_requests(data.customer_id)
@@ -228,8 +330,8 @@ def get_active_sessions():
     )
     
     now = datetime.datetime.now(datetime.timezone.utc)
-    # Heartbeat is every 10 seconds. Expire after 40 seconds of inactivity.
-    stale_limit = now - datetime.timedelta(seconds=40)
+    # Heartbeat is every 3 seconds now. Expire after 60 seconds of inactivity to prevent accidental drops.
+    stale_limit = now - datetime.timedelta(seconds=60)
     
     result = []
     for doc in active_sessions:
@@ -238,9 +340,11 @@ def get_active_sessions():
         last_updated = data.get("last_updated")
         if last_updated:
             if last_updated < stale_limit:
+                updated_history = _get_updated_history(data, now)
                 doc.reference.update({
                     "status": "Completed",
-                    "last_updated": firestore.SERVER_TIMESTAMP
+                    "last_updated": firestore.SERVER_TIMESTAMP,
+                    "zone_history": updated_history
                 })
                 _resolve_pending_requests(data.get("customer_id"))
                 continue
@@ -285,3 +389,59 @@ def resolve_request(request_id: str):
         "resolved_at": firestore.SERVER_TIMESTAMP
     })
     return {"message": "Request marked as Resolved"}
+
+
+@router.post("/manual-assist")
+def manual_assist(data: ManualAssistRequest):
+    active_sessions = list(
+        db.collection("customer_monitoring")
+        .where(filter=firestore.FieldFilter("customer_id", "==", data.customer_id))
+        .where(filter=firestore.FieldFilter("status", "==", "Active"))
+        .limit(1)
+        .stream()
+    )
+
+    if not active_sessions:
+        raise HTTPException(status_code=400, detail="No active session found for this customer. Cannot request assistance.")
+
+    session_data = active_sessions[0].to_dict()
+    current_zone_id = session_data.get("zone_id", "unknown")
+    current_zone_name = session_data.get("zone_name", "Unknown Zone")
+    customer_name = session_data.get("customer_name", "Customer")
+
+    # Check if a pending request already exists to avoid duplicates
+    pending_requests = list(
+        db.collection("assistance_requests")
+        .where(filter=firestore.FieldFilter("customer_id", "==", data.customer_id))
+        .where(filter=firestore.FieldFilter("status", "==", "Pending"))
+        .limit(1)
+        .stream()
+    )
+
+    if pending_requests:
+        return {"message": "Assistance request already pending."}
+
+    new_request = {
+        "customer_id": data.customer_id,
+        "customer_name": customer_name,
+        "zone_id": current_zone_id,
+        "zone_name": current_zone_name,
+        "request_time": firestore.SERVER_TIMESTAMP,
+        "last_notification_time": firestore.SERVER_TIMESTAMP,
+        "notification_count": 1,
+        "status": "Pending",
+        "is_manual": True
+    }
+    
+    db.collection("assistance_requests").add(new_request)
+    db.collection("staff_notifications").add({
+        "staff_id": "broadcast",
+        "customer_id": data.customer_id,
+        "zone_id": current_zone_id,
+        "zone_name": current_zone_name,
+        "sent_time": firestore.SERVER_TIMESTAMP,
+        "status": "Sent",
+        "is_manual": True
+    })
+    
+    return {"message": "Manual assistance request triggered"}

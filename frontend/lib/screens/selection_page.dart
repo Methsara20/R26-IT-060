@@ -15,7 +15,7 @@ class SelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -28,7 +28,8 @@ class SelectionPage extends StatelessWidget {
                 "Welcome",
                 style: TextStyle(
                   fontSize: 34,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1E293B),
                 ),
               ),
 
@@ -39,6 +40,7 @@ class SelectionPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.black54,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
 
@@ -82,66 +84,79 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(22),
-      elevation: 4,
-      shadowColor: Colors.black12,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Row(
-            children: [
-              Container(
-                height: 58,
-                width: 58,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF1FF),
-                  borderRadius: BorderRadius.circular(18),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Container(
+                  height: 64,
+                  width: 64,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 32,
+                    color: const Color(0xFF2563EB),
+                  ),
                 ),
-                child: Icon(
-                  icon,
-                  size: 32,
-                  color: const Color(0xFF2563EB),
-                ),
-              ),
-
-              const SizedBox(width: 18),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1E293B),
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                        height: 1.4,
+                      const SizedBox(height: 6),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black54,
+                          height: 1.4,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-
-              const Icon(
-                Icons.arrow_forward_ios,
-                size: 18,
-                color: Colors.black38,
-              ),
-            ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
