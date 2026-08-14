@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../services/app_state.dart';
+import '../theme/app_theme.dart';
+import 'dart:ui';
 
 class UpdateProfilePage extends StatefulWidget {
   final String profileId;
@@ -13,7 +16,7 @@ class UpdateProfilePage extends StatefulWidget {
   State<UpdateProfilePage> createState() => _UpdateProfilePageState();
 }
 
-class _UpdateProfilePageState extends State<UpdateProfilePage> {
+class _UpdateProfilePageState extends State<UpdateProfilePage> with SingleTickerProviderStateMixin {
   final heightController = TextEditingController();
   final weightController = TextEditingController();
   final passwordController = TextEditingController();
@@ -26,6 +29,9 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   bool showPassword = false;
   String message = "";
 
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+
   final List<String> genderOptions = [
     "male",
     "female",
@@ -33,7 +39,16 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _animController.forward();
+  }
+
+  @override
   void dispose() {
+    _animController.dispose();
     heightController.dispose();
     weightController.dispose();
     passwordController.dispose();
@@ -65,80 +80,95 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
         height: _heightToCm(),
         weight: _weightToKg(),
         gender: selectedGender,
-        password: passwordController.text.trim().isEmpty
-            ? null
-            : passwordController.text.trim(),
+        password: passwordController.text.trim().isEmpty ? null : passwordController.text.trim(),
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Profile measurements updated instantly!"),
-            backgroundColor: Color(0xFF16A34A),
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                SizedBox(width: 12),
+                Text("Profile measurements updated!", style: TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            backgroundColor: const Color(0xFF16A34A),
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         Navigator.pop(context, response);
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => message = e.toString());
-      }
+      if (mounted) setState(() => message = e.toString());
     }
 
-    if (mounted) {
-      setState(() => isLoading = false);
-    }
+    if (mounted) setState(() => isLoading = false);
   }
 
-  Widget textInput({
+  Widget _buildInput({
     required String label,
     required TextEditingController controller,
+    required IconData icon,
     bool obscure = false,
-    Widget? suffixIcon,
     TextInputType keyboardType = TextInputType.text,
+    Widget? suffixIcon,
+    required bool isDark,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 20),
       child: TextField(
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
+        style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 15),
         decoration: InputDecoration(
           labelText: label,
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
+          labelStyle: TextStyle(color: AppTheme.textSecondary(isDark)),
+          prefixIcon: Icon(icon, color: AppTheme.iconMuted(isDark), size: 20),
           suffixIcon: suffixIcon,
+          filled: true,
+          fillColor: AppTheme.glassInput(isDark),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: AppTheme.glassBorder(isDark)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: AppTheme.glassBorder(isDark)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: AppTheme.accentBlue(isDark), width: 1.5),
+          ),
         ),
       ),
     );
   }
 
-  Widget unitDropdown({
+  Widget _buildDropdownUnit({
     required String value,
     required List<String> items,
     required Function(String) onChanged,
+    required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: AppTheme.glassInput(isDark),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.glassBorder(isDark)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.black54),
-          dropdownColor: Colors.white,
+          icon: Icon(Icons.keyboard_arrow_down, color: AppTheme.iconMuted(isDark)),
+          dropdownColor: AppTheme.backgroundColor(isDark),
+          style: TextStyle(color: AppTheme.textPrimary(isDark), fontWeight: FontWeight.w600, fontSize: 15),
           items: items.map((item) {
-            return DropdownMenuItem(
-              value: item,
-              child: Text(item, style: const TextStyle(fontWeight: FontWeight.bold)),
-            );
+            return DropdownMenuItem(value: item, child: Text(item));
           }).toList(),
           onChanged: (newValue) {
             if (newValue != null) onChanged(newValue);
@@ -150,153 +180,228 @@ class _UpdateProfilePageState extends State<UpdateProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          "Update Body Profile",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              "Body Metrics",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Update your physical measurements so our AI can recalculate your bespoke sizes.",
-              style: TextStyle(fontSize: 16, color: Colors.black54),
-            ),
-            const SizedBox(height: 32),
+    return ListenableBuilder(
+      listenable: AppState(),
+      builder: (context, _) {
+        final isDark = AppState().isDarkMode;
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: textInput(
-                    label: "Height",
-                    controller: heightController,
-                    keyboardType: TextInputType.number,
+        return Scaffold(
+          backgroundColor: AppTheme.backgroundColor(isDark),
+          appBar: AppBar(
+            title: Text("Update Profile", style: TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textPrimary(isDark), fontSize: 18)),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: IconThemeData(color: AppTheme.textPrimary(isDark)),
+          ),
+          body: Stack(
+            children: [
+              // Background Glow Effects
+              Positioned(
+                top: -100,
+                left: -100,
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 120, sigmaY: 120),
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.orbPrimary(isDark).withOpacity(0.15),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: unitDropdown(
-                    value: heightUnit,
-                    items: const ["cm", "inch"],
-                    onChanged: (value) => setState(() => heightUnit = value),
+              ),
+              Positioned(
+                bottom: -50,
+                right: -100,
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 120, sigmaY: 120),
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+              SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(28),
+                  child: FadeTransition(
+                    opacity: _fadeAnim,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text("Body Metrics", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppTheme.textPrimary(isDark), letterSpacing: -0.5)),
+                        const SizedBox(height: 8),
+                        Text("Update your physical measurements so our AI can recalculate your bespoke sizes.", style: TextStyle(fontSize: 15, color: AppTheme.textSecondary(isDark), height: 1.5)),
+                        const SizedBox(height: 40),
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: textInput(
-                    label: "Weight",
-                    controller: weightController,
-                    keyboardType: TextInputType.number,
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppTheme.glassCard(isDark),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: AppTheme.glassBorder(isDark)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Physical Attributes", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textSecondary(isDark), letterSpacing: 1)),
+                            const SizedBox(height: 20),
+
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildInput(
+                                    label: "Height",
+                                    controller: heightController,
+                                    icon: Icons.height,
+                                    keyboardType: TextInputType.number,
+                                    isDark: isDark,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 1,
+                                  child: SizedBox(
+                                    height: 58,
+                                    child: _buildDropdownUnit(
+                                      value: heightUnit,
+                                      items: const ["cm", "inch"],
+                                      onChanged: (value) => setState(() => heightUnit = value),
+                                      isDark: isDark,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildInput(
+                                    label: "Weight",
+                                    controller: weightController,
+                                    icon: Icons.monitor_weight_outlined,
+                                    keyboardType: TextInputType.number,
+                                    isDark: isDark,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 1,
+                                  child: SizedBox(
+                                    height: 58,
+                                    child: _buildDropdownUnit(
+                                      value: weightUnit,
+                                      items: const ["kg", "lb"],
+                                      onChanged: (value) => setState(() => weightUnit = value),
+                                      isDark: isDark,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppTheme.glassInput(isDark),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppTheme.glassBorder(isDark)),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButtonFormField<String>(
+                                  value: selectedGender,
+                                  icon: Icon(Icons.keyboard_arrow_down, color: AppTheme.iconMuted(isDark)),
+                                  dropdownColor: AppTheme.backgroundColor(isDark),
+                                  style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 15),
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    prefixIcon: Icon(Icons.person_outline, color: AppTheme.iconMuted(isDark), size: 20),
+                                    prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                                  ),
+                                  hint: Text("Select Gender (Optional)", style: TextStyle(color: AppTheme.textSecondary(isDark))),
+                                  items: genderOptions.map((gender) {
+                                    return DropdownMenuItem(value: gender, child: Text(gender.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)));
+                                  }).toList(),
+                                  onChanged: (value) => setState(() => selectedGender = value),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+                            Divider(color: AppTheme.glassBorder(isDark)),
+                            const SizedBox(height: 28),
+
+                            Text("Security", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textSecondary(isDark), letterSpacing: 1)),
+                            const SizedBox(height: 20),
+                            _buildInput(
+                              label: "New Password (Optional)",
+                              controller: passwordController,
+                              icon: Icons.lock_outline,
+                              obscure: !showPassword,
+                              isDark: isDark,
+                              suffixIcon: IconButton(
+                                icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off, color: AppTheme.iconMuted(isDark), size: 20),
+                                onPressed: () => setState(() => showPassword = !showPassword),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentBlue(isDark),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 0,
+                          ),
+                          onPressed: isLoading ? null : updateProfile,
+                          child: isLoading
+                              ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Text("Save Changes", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ),
+                      ),
+
+                      if (message.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentRed(isDark).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppTheme.accentRed(isDark).withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline, color: AppTheme.accentRed(isDark), size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(message, style: TextStyle(color: AppTheme.accentRed(isDark), fontSize: 13))),
+                            ],
+                          ),
+                        ),
+                      ],
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: unitDropdown(
-                    value: weightUnit,
-                    items: const ["kg", "lb"],
-                    onChanged: (value) => setState(() => weightUnit = value),
-                  ),
-                ),
-              ],
-            ),
-
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: DropdownButtonFormField<String>(
-                value: selectedGender,
-                decoration: InputDecoration(
-                  labelText: "Gender",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                dropdownColor: Colors.white,
-                items: genderOptions.map((gender) {
-                  return DropdownMenuItem(value: gender, child: Text(gender));
-                }).toList(),
-                onChanged: (value) => setState(() => selectedGender = value),
               ),
-            ),
-
-            const Divider(height: 40),
-            
-            const Text(
-              "Security",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 16),
-            textInput(
-              label: "New Password (Optional)",
-              controller: passwordController,
-              obscure: !showPassword,
-              suffixIcon: IconButton(
-                icon: Icon(showPassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
-                onPressed: () => setState(() => showPassword = !showPassword),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                onPressed: isLoading ? null : updateProfile,
-                child: isLoading
-                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white))
-                    : const Text("Save Changes", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-              ),
-            ),
-
-            if (message.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(message, style: const TextStyle(color: Colors.red)),
-              ),
-            ]
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      }
     );
   }
 }
