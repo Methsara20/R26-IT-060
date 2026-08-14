@@ -1,11 +1,13 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'dart:ui';
 
 import '../services/api_service.dart';
-import '../services/monitoring_api_service.dart';
+import '../services/app_state.dart';
+import '../theme/app_theme.dart';
+import 'stylist_chat.dart';
 
 class TryOnPage extends StatefulWidget {
   final String customerEmail;
@@ -22,7 +24,7 @@ class TryOnPage extends StatefulWidget {
   State<TryOnPage> createState() => _TryOnPageState();
 }
 
-class _TryOnPageState extends State<TryOnPage> {
+class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
   final ImagePicker picker = ImagePicker();
 
   XFile? humanImage;
@@ -40,9 +42,24 @@ class _TryOnPageState extends State<TryOnPage> {
   String message = "";
   String? generatedImageUrl;
 
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
+
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnim;
+
   @override
   void initState() {
     super.initState();
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+    _animController.forward();
+
+    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.95, end: 1.05).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
+
     _loadProducts();
     if (widget.initialProduct != null) {
       selectedProduct = widget.initialProduct;
@@ -52,29 +69,33 @@ class _TryOnPageState extends State<TryOnPage> {
   Future<void> _loadProducts() async {
     try {
       final fetchedProducts = await ApiService.getProducts();
-      setState(() {
-        products = fetchedProducts;
-        isProductsLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          products = fetchedProducts;
+          isProductsLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        productsError = e.toString();
-        isProductsLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          productsError = e.toString();
+          isProductsLoading = false;
+        });
+      }
     }
   }
 
   @override
   void dispose() {
+    _animController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   Future<void> pickHumanImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
-
       setState(() {
         humanImage = pickedFile;
         humanImageBytes = bytes;
@@ -84,10 +105,8 @@ class _TryOnPageState extends State<TryOnPage> {
 
   Future<void> pickClothImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
-
       setState(() {
         clothImage = pickedFile;
         clothImageBytes = bytes;
@@ -98,9 +117,7 @@ class _TryOnPageState extends State<TryOnPage> {
 
   Future<void> sendImages() async {
     if (humanImage == null || (clothImage == null && selectedProduct == null)) {
-      setState(() {
-        message = "Please upload both human image and clothing image/product";
-      });
+      setState(() => message = "Please upload both your photo and a clothing item.");
       return;
     }
 
@@ -129,60 +146,99 @@ class _TryOnPageState extends State<TryOnPage> {
         );
       }
 
-      setState(() {
-        generatedImageUrl = result["image_url"];
-        message = result["message"] ?? "Try-on image generated successfully";
-      });
+      if (mounted) {
+        setState(() {
+          generatedImageUrl = result["image_url"];
+          message = result["message"] ?? "Try-on generated successfully!";
+        });
+      }
     } catch (e) {
-      setState(() {
-        message = e.toString();
-      });
+      if (mounted) {
+        setState(() => message = e.toString());
+      }
     }
 
-    setState(() {
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
   }
 
-  Widget imageBox({
+  Widget _buildGlassBox({
     required String title,
+    required String subtitle,
     required Uint8List? imageBytes,
     required VoidCallback onTap,
+    required IconData icon,
+    required bool isDark,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Container(
-          width: double.infinity,
-          height: 220,
-          child: imageBytes == null
-              ? Column(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 180,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppTheme.glassCard(isDark),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: AppTheme.glassBorder(isDark)),
+          boxShadow: [
+            if (imageBytes != null) BoxShadow(color: AppTheme.accentBlue(isDark).withOpacity(0.15), blurRadius: 40, offset: const Offset(0, 10)),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (imageBytes != null)
+                Image.memory(imageBytes, fit: BoxFit.cover)
+              else
+                Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_photo_alternate_outlined, size: 48, color: Colors.grey.shade400),
-                    const SizedBox(height: 12),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black54,
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppTheme.glassBackground(isDark),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.glassBorder(isDark)),
+                      ),
+                      child: Icon(icon, size: 42, color: AppTheme.iconMuted(isDark)),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary(isDark))),
+                    const SizedBox(height: 8),
+                    Text(subtitle, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary(isDark))),
+                  ],
+                ),
+              if (imageBytes != null)
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundColor(isDark).withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppTheme.glassBorder(isDark)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.edit, size: 14, color: AppTheme.textPrimary(isDark)),
+                            const SizedBox(width: 6),
+                            Text("Change", style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 12, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.memory(imageBytes, fit: BoxFit.cover),
+                  ),
                 ),
+            ],
+          ),
         ),
       ),
     );
@@ -190,283 +246,364 @@ class _TryOnPageState extends State<TryOnPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppState().isDarkMode;
     final imageUrlWithCacheBust = generatedImageUrl == null
         ? null
         : "$generatedImageUrl?t=${DateTime.now().millisecondsSinceEpoch}";
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          "Virtual Try-On",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black87),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Your Photo",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-            ),
-            const SizedBox(height: 12),
-            imageBox(
-              title: "Upload Human Image",
-              imageBytes: humanImageBytes,
-              onTap: pickHumanImage,
-            ),
-            const SizedBox(height: 24),
-
-            if (isProductsLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (productsError != null)
-              Center(child: Text("Error loading catalog: $productsError", style: const TextStyle(color: Colors.red)))
-            else if (products.isNotEmpty && selectedProduct == null) ...[
-              const Text(
-                "Select from Catalog",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 120,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    final isSelected = selectedProduct == product;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedProduct = product;
-                          clothImage = null;
-                          clothImageBytes = null;
-                        });
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 16),
-                        width: 100,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            color: isSelected ? const Color(0xFF2563EB) : Colors.transparent,
-                            width: isSelected ? 3 : 0,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(13),
-                          child: product["image_url"] != null
-                              ? Image.network(
-                                  product["image_url"],
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
-                                )
-                              : const Center(child: Icon(Icons.image, color: Colors.grey)),
-                        ),
-                      ),
-                    );
-                  },
+    return ListenableBuilder(
+      listenable: AppState(),
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: AppTheme.backgroundColor(isDark),
+          body: Stack(
+            children: [
+              // Background Glow Effects
+              Positioned(
+                top: -100,
+                left: -100,
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: AppTheme.orbPrimary(isDark).withOpacity(0.15)),
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-            ],
-
-            const Text(
-              "Selected Clothing",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
+              Positioned(
+                bottom: -50,
+                right: -100,
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: AppTheme.orbSecondary(isDark).withOpacity(0.15)),
+                  ),
+                ),
               ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: pickClothImage,
-                child: Container(
-                  width: double.infinity,
-                  height: 220,
-                  child: selectedProduct != null
-                      ? Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                width: double.infinity,
-                                height: 220,
-                                color: const Color(0xFFF1F5F9),
-                                child: Image.network(
-                                  selectedProduct!["image_url"] ?? "",
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.broken_image, size: 50),
-                                ),
+
+              CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    pinned: true,
+                    centerTitle: true,
+                    iconTheme: IconThemeData(color: AppTheme.textPrimary(isDark)),
+                    title: Text("AI Try-On", style: TextStyle(fontWeight: FontWeight.w900, color: AppTheme.textPrimary(isDark), fontSize: 20, letterSpacing: 0.5)),
+                    flexibleSpace: ClipRRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: Container(color: AppTheme.backgroundColor(isDark).withOpacity(0.7)),
+                      ),
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      child: FadeTransition(
+                        opacity: _fadeAnim,
+                        child: SlideTransition(
+                          position: _slideAnim,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Step 1", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppTheme.accentBlue(isDark), letterSpacing: 2)),
+                              const SizedBox(height: 8),
+                              Text("Your Photo", style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.textPrimary(isDark))),
+                              const SizedBox(height: 24),
+                              
+                              _buildGlassBox(
+                                title: "Upload Full Body Photo",
+                                subtitle: "Front-facing works best",
+                                icon: Icons.camera_front,
+                                imageBytes: humanImageBytes,
+                                onTap: pickHumanImage,
+                                isDark: isDark,
                               ),
-                            ),
-                            Positioned(
-                              right: 8,
-                              top: 8,
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedProduct = null;
-                                  });
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
+
+                              const SizedBox(height: 48),
+
+                              Text("Step 2", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppTheme.orbSecondary(isDark), letterSpacing: 2)),
+                              const SizedBox(height: 8),
+                              Text("The Outfit", style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.textPrimary(isDark))),
+                              const SizedBox(height: 24),
+
+                              if (isProductsLoading)
+                                Center(child: Padding(padding: const EdgeInsets.all(40), child: CircularProgressIndicator(color: AppTheme.orbSecondary(isDark))))
+                              else if (productsError != null)
+                                Center(child: Text("Error: $productsError", style: TextStyle(color: AppTheme.accentRed(isDark))))
+                              else if (products.isNotEmpty && selectedProduct == null) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.glassCard(isDark),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(color: AppTheme.glassBorder(isDark)),
                                   ),
-                                  child: const Icon(Icons.close, color: Colors.redAccent, size: 20),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                                        child: Text("Select from Catalog", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary(isDark))),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      SizedBox(
+                                        height: 140,
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.horizontal,
+                                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                                          itemCount: products.length,
+                                          itemBuilder: (context, index) {
+                                            final product = products[index];
+                                            return GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  selectedProduct = product;
+                                                  clothImage = null;
+                                                  clothImageBytes = null;
+                                                });
+                                              },
+                                              child: Container(
+                                                margin: const EdgeInsets.only(right: 16),
+                                                width: 100,
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.glassCard(isDark),
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  border: Border.all(color: AppTheme.glassBorder(isDark)),
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  child: product["image_url"] != null
+                                                      ? Image.network(product["image_url"], fit: BoxFit.cover)
+                                                      : Center(child: Icon(Icons.image, color: AppTheme.iconMuted(isDark))),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Center(child: Text("— OR —", style: TextStyle(color: AppTheme.textSecondary(isDark), fontWeight: FontWeight.w800, letterSpacing: 2))),
+                                const SizedBox(height: 24),
+                              ],
+
+                              // Selected Cloth Preview
+                              if (selectedProduct != null || clothImageBytes != null)
+                                Container(
+                                  height: 180,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.glassCard(isDark),
+                                    borderRadius: BorderRadius.circular(32),
+                                    border: Border.all(color: AppTheme.glassBorder(isDark)),
+                                  ),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(32),
+                                        child: selectedProduct != null
+                                            ? Image.network(selectedProduct!["image_url"] ?? "", fit: BoxFit.cover)
+                                            : Image.memory(clothImageBytes!, fit: BoxFit.cover),
+                                      ),
+                                      Positioned(
+                                        top: 16,
+                                        right: 16,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              selectedProduct = null;
+                                              clothImage = null;
+                                              clothImageBytes = null;
+                                            });
+                                          },
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(20),
+                                            child: BackdropFilter(
+                                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.backgroundColor(isDark).withOpacity(0.5),
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  border: Border.all(color: AppTheme.glassBorder(isDark)),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(Icons.close, size: 14, color: AppTheme.textPrimary(isDark)),
+                                                    const SizedBox(width: 6),
+                                                    Text("Remove", style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 12, fontWeight: FontWeight.w600)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                _buildGlassBox(
+                                  title: "Upload Custom Garment",
+                                  subtitle: "Flat lay images work best",
+                                  icon: Icons.checkroom,
+                                  imageBytes: null,
+                                  onTap: pickClothImage,
+                                  isDark: isDark,
+                                ),
+
+                              const SizedBox(height: 48),
+
+                              // Magic Button
+                              ScaleTransition(
+                                scale: isLoading ? _pulseAnim : const AlwaysStoppedAnimation(1.0),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      colors: [AppTheme.accentBlue(isDark), AppTheme.orbSecondary(isDark)],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(color: AppTheme.accentBlue(isDark).withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 10)),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    ),
+                                    onPressed: isLoading ? null : sendImages,
+                                    child: isLoading
+                                        ? const Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)),
+                                              SizedBox(width: 12),
+                                              Text("Generating Magic...", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)),
+                                            ],
+                                          )
+                                        : const Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                                              SizedBox(width: 8),
+                                              Text("Generate Try-On", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
+                                            ],
+                                          ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        )
-                      : clothImageBytes == null
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_photo_alternate_outlined, size: 48, color: Colors.grey.shade400),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  "Upload from gallery",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black54,
+
+                              if (message.isNotEmpty) ...[
+                                const SizedBox(height: 24),
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: message.contains("success") ? AppTheme.accentGreen(isDark).withOpacity(0.1) : AppTheme.accentRed(isDark).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: message.contains("success") ? AppTheme.accentGreen(isDark).withOpacity(0.3) : AppTheme.accentRed(isDark).withOpacity(0.3)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(message.contains("success") ? Icons.check_circle_outline : Icons.error_outline, color: message.contains("success") ? AppTheme.accentGreen(isDark) : AppTheme.accentRed(isDark)),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: Text(message, style: TextStyle(color: message.contains("success") ? AppTheme.accentGreen(isDark) : AppTheme.accentRed(isDark), fontWeight: FontWeight.w600, height: 1.4))),
+                                    ],
                                   ),
                                 ),
                               ],
-                            )
-                          : ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.memory(clothImageBytes!, fit: BoxFit.cover),
-                            ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
 
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                onPressed: isLoading ? null : sendImages,
-                icon: isLoading
-                    ? const SizedBox.shrink()
-                    : const Icon(Icons.auto_awesome, color: Colors.white),
-                label: isLoading
-                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text(
-                        "Generate Try-On",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            if (message.isNotEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(message, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
-              ),
-              
-            if (imageUrlWithCacheBust != null) ...[
-              const SizedBox(height: 40),
-              const Text(
-                "Your Virtual Look",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-              ),
-              const SizedBox(height: 16),
-              
-              if (widget.recommendedSize != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Recommended Size Match",
-                              style: TextStyle(fontSize: 13, color: Color(0xFF166534), fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "Matches your profile: ${widget.recommendedSize}",
-                              style: const TextStyle(fontSize: 16, color: Color(0xFF14532D), fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                              if (imageUrlWithCacheBust != null) ...[
+                                const SizedBox(height: 64),
+                                const Center(child: Text("✨ THE RESULT ✨", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFFF59E0B), letterSpacing: 3))),
+                                const SizedBox(height: 24),
+                                
+                                if (widget.recommendedSize != null) ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.glassCard(isDark),
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(color: AppTheme.accentGreen(isDark).withOpacity(0.3)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.verified, color: AppTheme.accentGreen(isDark), size: 32),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text("Perfect Size Match", style: TextStyle(fontSize: 13, color: AppTheme.accentGreen(isDark), fontWeight: FontWeight.w700)),
+                                              const SizedBox(height: 4),
+                                              Text("Recommended size: ${widget.recommendedSize}", style: TextStyle(fontSize: 16, color: AppTheme.textPrimary(isDark), fontWeight: FontWeight.w900)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                ],
+
+                                Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(32),
+                                    border: Border.all(color: AppTheme.glassBorder(isDark)),
+                                    boxShadow: [
+                                      BoxShadow(color: AppTheme.orbSecondary(isDark).withOpacity(0.2), blurRadius: 40, offset: const Offset(0, 20)),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(32),
+                                    child: Image.network(
+                                      imageUrlWithCacheBust,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) => Padding(padding: const EdgeInsets.all(32), child: Center(child: Text("Could not load generated image", style: TextStyle(color: AppTheme.accentRed(isDark))))),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 100),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-              ],
-              
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10)),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.network(
-                    imageUrlWithCacheBust,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Center(child: Text("Could not load generated image", style: TextStyle(color: Colors.red))),
-                      );
-                    },
-                  ),
-                ),
+                ],
               ),
-              const SizedBox(height: 40),
             ],
-          ],
-        ),
-      ),
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => StylistChatSheet(customerEmail: widget.customerEmail),
+              );
+            },
+            backgroundColor: AppTheme.textPrimary(isDark),
+            icon: Icon(Icons.chat_bubble_outline, color: AppTheme.backgroundColor(isDark), size: 20),
+            label: Text("Stylist", style: TextStyle(color: AppTheme.backgroundColor(isDark), fontWeight: FontWeight.w900)),
+          ),
+        );
+      }
     );
   }
 }
