@@ -25,16 +25,13 @@ The system integrates multiple AI components into a **single unified platform** 
 ### 1. GPS-Based Customer Behaviour Tracking & Staff Assistance
 Tracks customer movement, zone changes, and time spent in store areas using mobile GPS. It leverages a Random Forest classifier to distinguish between "Browsing" and "Transiting" behaviour, automatically alerting store staff when a customer demonstrates a need for assistance (e.g., prolonged dwell time or pacing).
 
-### 2. AI-Based Virtual Try-On & Size Recommendation
-Addresses sizing inconsistency by using Machine Learning (GridSearchCV-tuned Random Forest) to predict precise body measurements from basic inputs, and then maps those measurements to brand-specific sizes. Includes a **Google Vertex AI** integration allowing users to virtually try on clothing with photorealistic compositing.
+### 2. AI-Based Virtual Try-On, Size Recommendation & AI Stylist
+Addresses sizing inconsistency by using Machine Learning (GridSearchCV-tuned Random Forest) to predict precise body measurements from basic inputs, and then maps those measurements to brand-specific sizes. Includes a **Google Vertex AI** integration allowing users to virtually try on clothing with photorealistic compositing. Furthermore, it features a 24/7 **Conversational AI Stylist** utilizing a **Traditional Retrieval-Augmented Generation (RAG)** architecture (LangChain, HuggingFace Embeddings, ChromaDB) to ground the Large Language Model's styling advice in the store's actual live inventory, preventing AI hallucinations.
 
-### 3. Conversational AI Stylist (RAG Pipeline)
-A 24/7 personal shopping assistant embedded in the app. It utilizes a **Traditional Retrieval-Augmented Generation (RAG)** architecture (LangChain, HuggingFace Embeddings, ChromaDB) to ground the Large Language Model's styling advice in the store's actual live inventory, preventing AI hallucinations.
-
-### 4. Smart Inventory & Stock Flow Optimization 
+### 3. Smart Inventory & Stock Flow Optimization 
 Predicts product demand using machine learning (XGBoost) and provides intelligent stock management and restocking recommendations.
 
-### 5. Personalized Marketing Intelligence Dashboard
+### 4. Personalized Marketing Intelligence Dashboard
 Analyzes customer data to predict effective promotions, evaluate campaigns, and generate AI-based marketing content.
 
 ---
