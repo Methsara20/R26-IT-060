@@ -10,9 +10,17 @@ class AppState extends ChangeNotifier {
   final List<Map<String, dynamic>> _favoriteItems = [];
   final List<Map<String, dynamic>> _orderHistory = [];
 
+  bool _isDarkMode = true;
+
   List<Map<String, dynamic>> get cartItems => List.unmodifiable(_cartItems);
   List<Map<String, dynamic>> get favoriteItems => List.unmodifiable(_favoriteItems);
   List<Map<String, dynamic>> get orderHistory => List.unmodifiable(_orderHistory);
+  bool get isDarkMode => _isDarkMode;
+
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+  }
 
   double get cartTotal {
     double total = 0.0;
