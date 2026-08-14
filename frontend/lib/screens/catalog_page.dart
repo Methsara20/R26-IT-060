@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../services/api_service.dart';
+import '../services/app_state.dart';
+import '../theme/app_theme.dart';
 import 'product_detail_page.dart';
 
 class CatalogPage extends StatefulWidget {
@@ -66,9 +69,7 @@ class _CatalogPageState extends State<CatalogPage> {
 
         final matchesSearch = name.contains(searchQuery.toLowerCase()) ||
             brand.contains(searchQuery.toLowerCase());
-
-        final matchesCategory =
-            selectedCategory == "All" || cat == selectedCategory;
+        final matchesCategory = selectedCategory == "All" || cat == selectedCategory;
 
         return matchesSearch && matchesCategory;
       }).toList();
@@ -77,271 +78,334 @@ class _CatalogPageState extends State<CatalogPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppState().isDarkMode;
+    final firstName = widget.customerEmail.split('@')[0];
+    final capitalizedName = firstName.isNotEmpty 
+        ? firstName[0].toUpperCase() + firstName.substring(1) 
+        : "there";
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          "Fashion Catalog",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black87),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
-                        const SizedBox(height: 16),
-                        Text(
-                          "Failed to load products\n$errorMessage",
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 16, color: Colors.black54),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              isLoading = true;
-                              errorMessage = null;
-                            });
-                            _fetchProducts();
-                          },
-                          child: const Text("Retry"),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : Column(
-                  children: [
-                    // Search & Categories Section
-                    Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      child: Column(
-                        children: [
-                          TextField(
-                            onChanged: (val) {
-                              searchQuery = val;
-                              _applyFilters();
-                            },
-                            decoration: InputDecoration(
-                              hintText: "Search clothing or brands...",
-                              prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                              filled: true,
-                              fillColor: const Color(0xFFF1F5F9),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
+      backgroundColor: AppTheme.backgroundColor(isDark),
+      body: Stack(
+        children: [
+          // Background Glow Effects
+          Positioned(
+            top: -150,
+            left: -50,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 120, sigmaY: 120),
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.orbPrimary(isDark).withOpacity(0.2),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 200,
+            right: -100,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 120, sigmaY: 120),
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                ),
+              ),
+            ),
+          ),
+          
+          isLoading
+              ? Center(child: CircularProgressIndicator(color: AppTheme.accentBlue(isDark)))
+              : errorMessage != null
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: AppTheme.glassCard(isDark),
+                                shape: BoxShape.circle,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                              child: Icon(Icons.wifi_off_rounded, size: 60, color: AppTheme.iconMuted(isDark)),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: 38,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: categories.length,
-                              itemBuilder: (context, index) {
-                                final cat = categories[index];
-                                final isSelected = selectedCategory == cat;
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: ChoiceChip(
-                                    label: Text(
-                                      cat,
-                                      style: TextStyle(
-                                        color: isSelected ? Colors.white : Colors.black87,
+                            const SizedBox(height: 24),
+                            Text(
+                              "Failed to load products\n$errorMessage",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 15, color: AppTheme.textSecondary(isDark)),
+                            ),
+                            const SizedBox(height: 32),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() { isLoading = true; errorMessage = null; });
+                                _fetchProducts();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.accentBlue(isDark),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                              ),
+                              child: const Text("Retry", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : CustomScrollView(
+                      slivers: [
+                        // Glass Header
+                        SliverToBoxAdapter(
+                          child: ClipRRect(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                              child: Container(
+                                padding: const EdgeInsets.fromLTRB(24, 64, 24, 24),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.glassBackground(isDark),
+                                  border: Border(bottom: BorderSide(color: AppTheme.glassBorder(isDark))),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Hey, $capitalizedName! ✨",
+                                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppTheme.textPrimary(isDark), letterSpacing: -0.5),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      "Discover your perfect style today",
+                                      style: TextStyle(fontSize: 15, color: AppTheme.textPrimary(isDark).withOpacity(0.6)),
+                                    ),
+                                    const SizedBox(height: 28),
+        
+                                    // Glass Search Bar
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.glassInput(isDark),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: AppTheme.glassBorder(isDark)),
+                                      ),
+                                      child: TextField(
+                                        onChanged: (val) {
+                                          searchQuery = val;
+                                          _applyFilters();
+                                        },
+                                        style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 16),
+                                        decoration: InputDecoration(
+                                          hintText: "Search clothing or brands...",
+                                          hintStyle: TextStyle(color: AppTheme.textPrimary(isDark).withOpacity(0.4)),
+                                          prefixIcon: Icon(Icons.search, color: AppTheme.textPrimary(isDark).withOpacity(0.4)),
+                                          border: InputBorder.none,
+                                          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                                        ),
                                       ),
                                     ),
-                                    selected: isSelected,
-                                    selectedColor: const Color(0xFF2563EB),
-                                    backgroundColor: const Color(0xFFF1F5F9),
-                                    onSelected: (selected) {
-                                      if (selected) {
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+        
+                        // Category Chips
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 24, bottom: 12),
+                            child: SizedBox(
+                              height: 44,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(horizontal: 24),
+                                itemCount: categories.length,
+                                itemBuilder: (context, index) {
+                                  final cat = categories[index];
+                                  final isSelected = selectedCategory == cat;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 12),
+                                    child: GestureDetector(
+                                      onTap: () {
                                         setState(() {
                                           selectedCategory = cat;
                                           _applyFilters();
                                         });
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
+                                      },
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 200),
+                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? AppTheme.accentBlue(isDark) : AppTheme.glassCard(isDark),
+                                          borderRadius: BorderRadius.circular(24),
+                                          border: Border.all(color: isSelected ? AppTheme.accentBlue(isDark) : AppTheme.glassBorder(isDark)),
+                                          boxShadow: isSelected 
+                                            ? [BoxShadow(color: AppTheme.accentBlue(isDark).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))] 
+                                            : null,
+                                        ),
+                                        child: Text(
+                                          cat,
+                                          style: TextStyle(
+                                            color: isSelected ? Colors.white : AppTheme.textPrimary(isDark).withOpacity(0.7),
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Products Grid
-                    Expanded(
-                      child: filteredProducts.isEmpty
-                          ? const Center(
-                              child: Text(
-                                "No items match your criteria",
-                                style: TextStyle(fontSize: 16, color: Colors.grey),
-                              ),
-                            )
-                          : GridView.builder(
-                              padding: const EdgeInsets.all(16),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 0.68,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                              ),
-                              itemCount: filteredProducts.length,
-                              itemBuilder: (context, index) {
-                                final product = filteredProducts[index];
-                                final isOutOfStock = (product["current_stock"] ?? 0) <= 0;
-                                final price = product["price_lkr"] ?? 0.0;
-
-                                return Card(
-                                  color: Colors.white,
-                                  elevation: 2,
-                                  shadowColor: Colors.black12,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                        ),
+        
+                        // Results count
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                            child: Text(
+                              "${filteredProducts.length} items found",
+                              style: TextStyle(fontSize: 13, color: AppTheme.textPrimary(isDark).withOpacity(0.5), fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+        
+                        // Product Grid
+                        filteredProducts.isEmpty
+                            ? SliverFillRemaining(
+                                child: Center(
+                                  child: Text("No items match your criteria", style: TextStyle(fontSize: 16, color: AppTheme.textPrimary(isDark).withOpacity(0.5))),
+                                ),
+                              )
+                            : SliverPadding(
+                                padding: const EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 120),
+                                sliver: SliverGrid(
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.58,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
                                   ),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(16),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => ProductDetailPage(
-                                            product: product,
-                                            customerEmail: widget.customerEmail,
-                                            recommendedSize: widget.recommendedSize,
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final product = filteredProducts[index];
+                                      final isOutOfStock = (product["current_stock"] ?? 0) <= 0;
+                                      final price = product["price_lkr"] ?? 0.0;
+        
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => ProductDetailPage(
+                                                product: product,
+                                                customerEmail: widget.customerEmail,
+                                                recommendedSize: widget.recommendedSize,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.glassCard(isDark),
+                                            borderRadius: BorderRadius.circular(24),
+                                            border: Border.all(color: AppTheme.glassBorder(isDark)),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: Stack(
+                                                  children: [
+                                                    Container(
+                                                      width: double.infinity,
+                                                      decoration: BoxDecoration(
+                                                        color: AppTheme.glassBackground(isDark),
+                                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                                                      ),
+                                                      child: ClipRRect(
+                                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                                                        child: product["image_url"] != null
+                                                            ? Image.network(
+                                                                product["image_url"],
+                                                                fit: BoxFit.cover,
+                                                                errorBuilder: (context, error, stackTrace) =>
+                                                                    Center(child: Icon(Icons.broken_image, size: 40, color: AppTheme.iconMuted(isDark))),
+                                                              )
+                                                            : Center(child: Icon(Icons.image, size: 40, color: AppTheme.iconMuted(isDark))),
+                                                      ),
+                                                    ),
+                                                    if (isOutOfStock)
+                                                      Positioned(
+                                                        top: 12,
+                                                        left: 12,
+                                                        child: ClipRRect(
+                                                          borderRadius: BorderRadius.circular(8),
+                                                          child: BackdropFilter(
+                                                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                                            child: Container(
+                                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                              decoration: BoxDecoration(
+                                                                color: AppTheme.accentRed(isDark).withOpacity(0.2),
+                                                                border: Border.all(color: AppTheme.accentRed(isDark).withOpacity(0.5)),
+                                                                borderRadius: BorderRadius.circular(8),
+                                                              ),
+                                                              child: Text(
+                                                                "SOLD OUT",
+                                                                style: TextStyle(color: AppTheme.accentRed(isDark), fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.all(16),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      (product["brand"] ?? "Brand").toString().toUpperCase(),
+                                                      style: TextStyle(color: AppTheme.textPrimary(isDark).withOpacity(0.5), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1),
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    Text(
+                                                      product["product_name"] ?? "Item",
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary(isDark)),
+                                                    ),
+                                                    const SizedBox(height: 10),
+                                                    Text(
+                                                      "LKR ${price.toStringAsFixed(0)}",
+                                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppTheme.accentBlue(isDark)),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       );
                                     },
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // Product Image Box
-                                        Expanded(
-                                          child: Stack(
-                                            children: [
-                                              Container(
-                                                width: double.infinity,
-                                                decoration: BoxDecoration(
-                                                  color: const Color(0xFFF8FAFC),
-                                                  borderRadius: const BorderRadius.vertical(
-                                                    top: Radius.circular(16),
-                                                  ),
-                                                ),
-                                                child: ClipRRect(
-                                                  borderRadius: const BorderRadius.vertical(
-                                                    top: Radius.circular(16),
-                                                  ),
-                                                  child: product["image_url"] != null
-                                                      ? Image.network(
-                                                          product["image_url"],
-                                                          fit: BoxFit.cover,
-                                                          errorBuilder: (context, error, stackTrace) =>
-                                                              const Center(child: Icon(Icons.broken_image, size: 40)),
-                                                        )
-                                                      : const Center(child: Icon(Icons.image, size: 40)),
-                                                ),
-                                              ),
-                                              // Stock Badge
-                                              Positioned(
-                                                top: 10,
-                                                left: 10,
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                  decoration: BoxDecoration(
-                                                    color: isOutOfStock
-                                                        ? const Color(0xFFFEE2E2)
-                                                        : const Color(0xFFDCFCE7),
-                                                    borderRadius: BorderRadius.circular(20),
-                                                  ),
-                                                  child: Text(
-                                                    isOutOfStock ? "Out of Stock" : "In Stock",
-                                                    style: TextStyle(
-                                                      color: isOutOfStock
-                                                          ? const Color(0xFFEF4444)
-                                                          : const Color(0xFF16A34A),
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-
-                                        // Product Details
-                                        Padding(
-                                          padding: const EdgeInsets.all(12),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                product["brand"] ?? "Generic",
-                                                style: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                product["product_name"] ?? "Unnamed Item",
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.black87,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    "LKR ${price.toStringAsFixed(0)}",
-                                                    style: const TextStyle(
-                                                      fontSize: 15,
-                                                      fontWeight: FontWeight.w800,
-                                                      color: Color(0xFF2563EB),
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    product["category"] ?? "",
-                                                    style: const TextStyle(
-                                                      fontSize: 10,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    childCount: filteredProducts.length,
                                   ),
-                                );
-                              },
-                            ),
+                                ),
+                              ),
+                      ],
                     ),
-                  ],
-                ),
+        ],
+      ),
     );
   }
 }
