@@ -52,3 +52,6 @@ key.properties
 
 # Firebase credentials
 firebase_key.json
+# Vector Databases
+chroma_db/
+backend/app/chroma_db/
