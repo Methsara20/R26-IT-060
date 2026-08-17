@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "171031337876",
+    "project_id": "finalyear-6bafb",
+    "storage_bucket": "finalyear-6bafb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171031337876:android:9e4647477ab0758be4cd81",
+        "android_client_info": {
+          "package_name": "NexaRetail.com"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD83DKTM1b1rHWFMdGo--vM1oZ_PG_0GNg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
