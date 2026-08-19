@@ -10,10 +10,10 @@ class AppTheme {
   static Color orbWarning(bool isDark) => isDark ? const Color(0xFFEF4444) : const Color(0xFFFCA5A5);
   
   // Glassmorphism
-  static Color glassBackground(bool isDark) => isDark ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.6);
-  static Color glassBorder(bool isDark) => isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05);
-  static Color glassCard(bool isDark) => isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.8);
-  static Color glassInput(bool isDark) => isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.03);
+  static Color glassBackground(bool isDark) => isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.6);
+  static Color glassBorder(bool isDark) => isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05);
+  static Color glassCard(bool isDark) => isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.8);
+  static Color glassInput(bool isDark) => isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.03);
 
   // Text Colors
   static Color textPrimary(bool isDark) => isDark ? Colors.white : const Color(0xFF0F172A);
