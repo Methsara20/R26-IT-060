@@ -1,0 +1,14 @@
+firebase-key.json
+backend/firebase-key.json
+.streamlit/secrets.toml
+venv/
+__pycache__/
+*.pyc
+.env
+model/__pycache__/
+components/__pycache__/
+shared/__pycache__/
+backend/__pycache__/
+backend/model/__pycache__/
+flutter_app/build/
+flutter_app/.dart_tool/

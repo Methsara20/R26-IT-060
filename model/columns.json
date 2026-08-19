@@ -1,0 +1,113 @@
+{
+  "model_type": "redemption_probability",
+  "features": [
+    "age_group",
+    "gender",
+    "loyalty_tier",
+    "channel",
+    "preferred_category",
+    "offer_type",
+    "visit_frequency",
+    "total_spend_lkr",
+    "avg_basket_value_lkr",
+    "days_since_last_purchase",
+    "customer_past_redemption_rate",
+    "discount_pct",
+    "is_seasonal_window",
+    "is_salary_cycle",
+    "is_school_holiday"
+  ],
+  "categorical_features": [
+    "age_group",
+    "gender",
+    "loyalty_tier",
+    "channel",
+    "preferred_category",
+    "offer_type"
+  ],
+  "numeric_features": [
+    "visit_frequency",
+    "total_spend_lkr",
+    "avg_basket_value_lkr",
+    "days_since_last_purchase",
+    "customer_past_redemption_rate",
+    "discount_pct",
+    "is_seasonal_window",
+    "is_salary_cycle",
+    "is_school_holiday"
+  ],
+  "target": "redeemed",
+  "offer_types": [
+    "BOGO",
+    "Discount",
+    "Flash Sale",
+    "Loyalty Reward",
+    "New Arrival",
+    "Seasonal Sale"
+  ],
+  "accuracy": 0.7435,
+  "roc_auc": 0.8214,
+  "baseline_redemption_rate": 0.5592,
+  "feature_importance": {
+    "age_group": 0.034299999475479126,
+    "gender": 0.02969999983906746,
+    "loyalty_tier": 0.045899998396635056,
+    "channel": 0.026799999177455902,
+    "preferred_category": 0.02850000001490116,
+    "offer_type": 0.03229999914765358,
+    "visit_frequency": 0.031599998474121094,
+    "total_spend_lkr": 0.030700000002980232,
+    "avg_basket_value_lkr": 0.03009999915957451,
+    "days_since_last_purchase": 0.03359999880194664,
+    "customer_past_redemption_rate": 0.03440000116825104,
+    "discount_pct": 0.03359999880194664,
+    "is_seasonal_window": 0.42410001158714294,
+    "is_salary_cycle": 0.15000000596046448,
+    "is_school_holiday": 0.03449999913573265
+  },
+  "encoders": {
+    "age_group": [
+      "18-25",
+      "26-34",
+      "35-45",
+      "46-60"
+    ],
+    "gender": [
+      "Female",
+      "Male"
+    ],
+    "loyalty_tier": [
+      "Bronze",
+      "Gold",
+      "Platinum",
+      "Silver"
+    ],
+    "channel": [
+      "App Push",
+      "Email",
+      "In-Store",
+      "SMS"
+    ],
+    "preferred_category": [
+      "Coat",
+      "Dress",
+      "Handbag",
+      "Jewellery",
+      "Perfume",
+      "Shoes",
+      "Sunglasses",
+      "Top",
+      "Trousers",
+      "Watch"
+    ],
+    "offer_type": [
+      "BOGO",
+      "Discount",
+      "Flash Sale",
+      "Loyalty Reward",
+      "New Arrival",
+      "Seasonal Sale"
+    ]
+  },
+  "training_rows": 29996
+}
