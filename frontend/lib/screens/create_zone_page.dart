@@ -20,6 +20,8 @@ class _CreateZonePageState extends State<CreateZonePage> {
     try {
       final point = await LocationService.getCurrentPoint();
 
+      if (!mounted) return;
+
       setState(() {
         points[index] = point;
       });
@@ -31,6 +33,7 @@ class _CreateZonePageState extends State<CreateZonePage> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Location error: $e"),
@@ -70,6 +73,8 @@ class _CreateZonePageState extends State<CreateZonePage> {
         points: points.map((point) => point!).toList(),
       );
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(response["message"].toString()),
@@ -78,6 +83,7 @@ class _CreateZonePageState extends State<CreateZonePage> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Create zone failed: $e"),
@@ -100,7 +106,7 @@ class _CreateZonePageState extends State<CreateZonePage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
