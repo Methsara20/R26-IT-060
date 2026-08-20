@@ -46,9 +46,9 @@ class _CartPageState extends State<CartPage> {
                 margin: const EdgeInsets.only(right: 24),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentBlue(isDark).withOpacity(0.15),
+                  color: AppTheme.accentBlue(isDark).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppTheme.accentBlue(isDark).withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.accentBlue(isDark).withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   "${cartItems.length} items",
@@ -71,7 +71,7 @@ class _CartPageState extends State<CartPage> {
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.orbPrimary(isDark).withOpacity(0.2),
+                  color: AppTheme.orbPrimary(isDark).withValues(alpha: 0.2),
                 ),
               ),
             ),
@@ -116,9 +116,9 @@ class _CartPageState extends State<CartPage> {
                               padding: const EdgeInsets.only(right: 32),
                               margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
-                                color: AppTheme.accentRed(isDark).withOpacity(0.2),
+                                color: AppTheme.accentRed(isDark).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(24),
-                                border: Border.all(color: AppTheme.accentRed(isDark).withOpacity(0.5)),
+                                border: Border.all(color: AppTheme.accentRed(isDark).withValues(alpha: 0.5)),
                               ),
                               child: Icon(Icons.delete_outline, color: AppTheme.accentRed(isDark), size: 32),
                             ),
@@ -186,7 +186,7 @@ class _CartPageState extends State<CartPage> {
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(32, 24, 32, 40),
                           decoration: BoxDecoration(
-                            color: AppTheme.backgroundColor(isDark).withOpacity(0.8),
+                            color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.8),
                             border: Border(top: BorderSide(color: AppTheme.glassBorder(isDark))),
                           ),
                           child: SafeArea(
