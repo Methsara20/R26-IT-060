@@ -99,7 +99,7 @@ class _CatalogPageState extends State<CatalogPage> {
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.orbPrimary(isDark).withOpacity(0.2),
+                  color: AppTheme.orbPrimary(isDark).withValues(alpha: 0.2),
                 ),
               ),
             ),
@@ -114,7 +114,7 @@ class _CatalogPageState extends State<CatalogPage> {
                 height: 250,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                  color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -183,7 +183,7 @@ class _CatalogPageState extends State<CatalogPage> {
                                     const SizedBox(height: 6),
                                     Text(
                                       "Discover your perfect style today",
-                                      style: TextStyle(fontSize: 15, color: AppTheme.textPrimary(isDark).withOpacity(0.6)),
+                                      style: TextStyle(fontSize: 15, color: AppTheme.textPrimary(isDark).withValues(alpha: 0.6)),
                                     ),
                                     const SizedBox(height: 28),
         
@@ -202,8 +202,8 @@ class _CatalogPageState extends State<CatalogPage> {
                                         style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 16),
                                         decoration: InputDecoration(
                                           hintText: "Search clothing or brands...",
-                                          hintStyle: TextStyle(color: AppTheme.textPrimary(isDark).withOpacity(0.4)),
-                                          prefixIcon: Icon(Icons.search, color: AppTheme.textPrimary(isDark).withOpacity(0.4)),
+                                          hintStyle: TextStyle(color: AppTheme.textPrimary(isDark).withValues(alpha: 0.4)),
+                                          prefixIcon: Icon(Icons.search, color: AppTheme.textPrimary(isDark).withValues(alpha: 0.4)),
                                           border: InputBorder.none,
                                           contentPadding: const EdgeInsets.symmetric(vertical: 18),
                                         ),
@@ -246,13 +246,13 @@ class _CatalogPageState extends State<CatalogPage> {
                                           borderRadius: BorderRadius.circular(24),
                                           border: Border.all(color: isSelected ? AppTheme.accentBlue(isDark) : AppTheme.glassBorder(isDark)),
                                           boxShadow: isSelected 
-                                            ? [BoxShadow(color: AppTheme.accentBlue(isDark).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))] 
+                                            ? [BoxShadow(color: AppTheme.accentBlue(isDark).withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4))] 
                                             : null,
                                         ),
                                         child: Text(
                                           cat,
                                           style: TextStyle(
-                                            color: isSelected ? Colors.white : AppTheme.textPrimary(isDark).withOpacity(0.7),
+                                            color: isSelected ? Colors.white : AppTheme.textPrimary(isDark).withValues(alpha: 0.7),
                                             fontWeight: FontWeight.w700,
                                             fontSize: 13,
                                             letterSpacing: 0.5,
@@ -273,7 +273,7 @@ class _CatalogPageState extends State<CatalogPage> {
                             padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
                             child: Text(
                               "${filteredProducts.length} items found",
-                              style: TextStyle(fontSize: 13, color: AppTheme.textPrimary(isDark).withOpacity(0.5), fontWeight: FontWeight.w600),
+                              style: TextStyle(fontSize: 13, color: AppTheme.textPrimary(isDark).withValues(alpha: 0.5), fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -282,7 +282,7 @@ class _CatalogPageState extends State<CatalogPage> {
                         filteredProducts.isEmpty
                             ? SliverFillRemaining(
                                 child: Center(
-                                  child: Text("No items match your criteria", style: TextStyle(fontSize: 16, color: AppTheme.textPrimary(isDark).withOpacity(0.5))),
+                                  child: Text("No items match your criteria", style: TextStyle(fontSize: 16, color: AppTheme.textPrimary(isDark).withValues(alpha: 0.5))),
                                 ),
                               )
                             : SliverPadding(
@@ -354,8 +354,8 @@ class _CatalogPageState extends State<CatalogPage> {
                                                             child: Container(
                                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                                               decoration: BoxDecoration(
-                                                                color: AppTheme.accentRed(isDark).withOpacity(0.2),
-                                                                border: Border.all(color: AppTheme.accentRed(isDark).withOpacity(0.5)),
+                                                                color: AppTheme.accentRed(isDark).withValues(alpha: 0.2),
+                                                                border: Border.all(color: AppTheme.accentRed(isDark).withValues(alpha: 0.5)),
                                                                 borderRadius: BorderRadius.circular(8),
                                                               ),
                                                               child: Text(
@@ -376,7 +376,7 @@ class _CatalogPageState extends State<CatalogPage> {
                                                   children: [
                                                     Text(
                                                       (product["brand"] ?? "Brand").toString().toUpperCase(),
-                                                      style: TextStyle(color: AppTheme.textPrimary(isDark).withOpacity(0.5), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1),
+                                                      style: TextStyle(color: AppTheme.textPrimary(isDark).withValues(alpha: 0.5), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1),
                                                     ),
                                                     const SizedBox(height: 6),
                                                     Text(
