@@ -33,7 +33,8 @@ hashes/
 key.properties
 **/*.keystore
 **/*.jks
-
+fileHashes.bin
+fileHashes.lock
 # iOS
 **/ios/Pods/
 **/ios/.symlinks/
