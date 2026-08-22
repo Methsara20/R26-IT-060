@@ -130,7 +130,10 @@ def google_login(data: GoogleLoginRequest):
         decoded_token = id_token.verify_oauth2_token(
             data.id_token, 
             requests.Request(),
-            "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com"
+            audience=[
+                "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
+                "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com",  # iOS client
+            ]
         )
         email = decoded_token.get("email")
     except Exception as e:
