@@ -1,4 +1,4 @@
-package NexaRetail.com
+package com.example.frontend
 
 import io.flutter.embedding.android.FlutterActivity
 
