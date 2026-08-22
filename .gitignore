@@ -56,7 +56,7 @@ firebase_key.json
 # Vector Databases
 chroma_db/
 backend/app/chroma_db/
-
+gradle
 # Firebase configuration files
 google-services.json
 GoogleService-Info.plist
