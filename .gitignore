@@ -74,5 +74,16 @@ GoogleService-Info.plist
 chroma_db/
 backend/app/chroma_db/
 
+# Flutter Ephemeral & Generated files
+**/ephemeral/
+**/Flutter/ephemeral/
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
+**/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+**/linux/flutter/
+**/windows/flutter/generated_*
+
 .png
 
