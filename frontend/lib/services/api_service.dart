@@ -131,9 +131,15 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getProducts() async {
-    final response = await http.get(Uri.parse("$baseUrl/products"));
-    final decoded = _handleResponse(response);
-    return decoded["products"] ?? [];
+    try {
+      final response = await http
+          .get(Uri.parse("$baseUrl/products"))
+          .timeout(const Duration(seconds: 15));
+      final decoded = _handleResponse(response);
+      return decoded["products"] ?? [];
+    } catch (e) {
+      return [];
+    }
   }
 
   static Future<String> predictBrandSize({
