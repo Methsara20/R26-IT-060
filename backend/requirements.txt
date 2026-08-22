@@ -63,3 +63,4 @@ google-generativeai==0.8.6
 sentence-transformers==5.7.0
 passlib[bcrypt]
 python-jose[cryptography]
+python-multipart
