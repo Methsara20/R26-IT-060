@@ -30,25 +30,41 @@ def create_profile(data: ProfileCreateRequest):
 
     recommended_size = get_size(data.height, data.weight)
 
-    body_measurements = predict_body_measurements(
-        height=data.height,
-        weight=data.weight,
-        gender=data.gender,
-    )
+    try:
+        body_measurements = predict_body_measurements(
+            height=data.height,
+            weight=data.weight,
+            gender=data.gender,
+        )
+    except Exception as e:
+        import traceback
+        return {
+            "error_caught": True,
+            "message": str(e),
+            "traceback": traceback.format_exc()
+        }
 
-    profile_data = {
-        "email": data.email,
-        "hashed_password": hash_password(data.password),
-        "height": data.height,
-        "weight": data.weight,
-        "gender": data.gender,
-        "recommended_size": recommended_size,
-        "predicted_shoulder_width": body_measurements["predicted_shoulder_width"],
-        "predicted_waist": body_measurements["predicted_waist"],
-        "predicted_leg_length": body_measurements["predicted_leg_length"],
-        "created_at": firestore.SERVER_TIMESTAMP,
-        "updated_at": firestore.SERVER_TIMESTAMP,
-    }
+    try:
+        profile_data = {
+            "email": data.email,
+            "hashed_password": hash_password(data.password),
+            "height": data.height,
+            "weight": data.weight,
+            "gender": data.gender,
+            "recommended_size": recommended_size,
+            "predicted_shoulder_width": body_measurements["predicted_shoulder_width"],
+            "predicted_waist": body_measurements["predicted_waist"],
+            "predicted_leg_length": body_measurements["predicted_leg_length"],
+            "created_at": firestore.SERVER_TIMESTAMP,
+            "updated_at": firestore.SERVER_TIMESTAMP,
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "error_caught": True,
+            "message": str(e),
+            "traceback": traceback.format_exc()
+        }
 
     doc_ref = db.collection("profiles").add(profile_data)
 
@@ -63,40 +79,50 @@ def create_profile(data: ProfileCreateRequest):
 
 @router.post("/login")
 def login(data: LoginRequest):
-    docs = db.collection("profiles").where("email", "==", data.email).stream()
+    try:
+        docs = db.collection("profiles").where("email", "==", data.email).stream()
 
-    user_doc = None
-    user_data = None
+        user_doc = None
+        user_data = None
 
-    for doc in docs:
-        user_doc = doc
-        user_data = doc.to_dict()
-        break
+        for doc in docs:
+            user_doc = doc
+            user_data = doc.to_dict()
+            break
 
-    if not user_data:
-        raise HTTPException(status_code=404, detail="Account not found")
+        if not user_data:
+            raise HTTPException(status_code=404, detail="Account not found")
 
-    if not verify_password(data.password, user_data["hashed_password"]):
-        raise HTTPException(status_code=401, detail="Invalid password")
+        if not verify_password(data.password, user_data["hashed_password"]):
+            raise HTTPException(status_code=401, detail="Invalid password")
 
-    access_token = create_access_token({
-        "sub": user_data["email"],
-        "profile_id": user_doc.id,
-    })
+        access_token = create_access_token({
+            "sub": user_data["email"],
+            "profile_id": user_doc.id,
+        })
 
-    return {
-        "message": "Login successful",
-        "access_token": access_token,
-        "token_type": "bearer",
-        "profile_id": user_doc.id,
-        "email": user_data["email"],
-        "recommended_size": user_data.get("recommended_size"),
-        "body_measurements": {
-            "predicted_shoulder_width": user_data.get("predicted_shoulder_width"),
-            "predicted_waist": user_data.get("predicted_waist"),
-            "predicted_leg_length": user_data.get("predicted_leg_length"),
-        },
-    }
+        return {
+            "message": "Login successful",
+            "access_token": access_token,
+            "token_type": "bearer",
+            "profile_id": user_doc.id,
+            "email": user_data["email"],
+            "recommended_size": user_data.get("recommended_size"),
+            "body_measurements": {
+                "predicted_shoulder_width": user_data.get("predicted_shoulder_width"),
+                "predicted_waist": user_data.get("predicted_waist"),
+                "predicted_leg_length": user_data.get("predicted_leg_length"),
+            },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        return {
+            "error_caught": True,
+            "message": str(e),
+            "traceback": traceback.format_exc()
+        }
 
 @router.post("/google-login")
 def google_login(data: GoogleLoginRequest):
