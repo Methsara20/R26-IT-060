@@ -7,10 +7,10 @@ import 'dart:ui';
 class StylistChatSheet extends StatefulWidget {
   final String customerEmail;
 
-  const StylistChatSheet({Key? key, required this.customerEmail}) : super(key: key);
+  const StylistChatSheet({super.key, required this.customerEmail});
 
   @override
-  _StylistChatSheetState createState() => _StylistChatSheetState();
+  State<StylistChatSheet> createState() => _StylistChatSheetState();
 }
 
 class _StylistChatSheetState extends State<StylistChatSheet> with TickerProviderStateMixin {
@@ -96,7 +96,7 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
             color: AppTheme.backgroundColor(isDark),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 30, spreadRadius: 10),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 30, spreadRadius: 10),
             ],
             border: Border.all(color: AppTheme.glassBorder(isDark)),
           ),
@@ -115,7 +115,7 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
                       height: 250,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                        color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.15),
                       ),
                     ),
                   ),
@@ -142,7 +142,7 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentBlue(isDark).withOpacity(0.15),
+                                  color: AppTheme.accentBlue(isDark).withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(Icons.auto_awesome, color: AppTheme.accentBlue(isDark), size: 24),
@@ -201,7 +201,7 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
                                   if (!isUser) ...[
                                     CircleAvatar(
                                       radius: 16,
-                                      backgroundColor: AppTheme.accentBlue(isDark).withOpacity(0.2),
+                                      backgroundColor: AppTheme.accentBlue(isDark).withValues(alpha: 0.2),
                                       child: Icon(Icons.auto_awesome, color: AppTheme.accentBlue(isDark), size: 18),
                                     ),
                                     const SizedBox(width: 12),
@@ -225,7 +225,7 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
                                         border: isUser ? null : Border.all(color: AppTheme.glassBorder(isDark)),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: isUser ? AppTheme.accentBlue(isDark).withOpacity(0.3) : Colors.black.withOpacity(0.04),
+                                            color: isUser ? AppTheme.accentBlue(isDark).withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.04),
                                             blurRadius: 15,
                                             offset: const Offset(0, 8),
                                           )
@@ -282,7 +282,7 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
                             bottom: MediaQuery.of(context).viewInsets.bottom + 24,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.backgroundColor(isDark).withOpacity(0.8),
+                            color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.8),
                             border: Border(top: BorderSide(color: AppTheme.glassBorder(isDark))),
                           ),
                           child: Column(
@@ -307,9 +307,9 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
                                         margin: const EdgeInsets.only(right: 12),
                                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.accentBlue(isDark).withOpacity(0.1),
+                                          color: AppTheme.accentBlue(isDark).withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(20),
-                                          border: Border.all(color: AppTheme.accentBlue(isDark).withOpacity(0.3)),
+                                          border: Border.all(color: AppTheme.accentBlue(isDark).withValues(alpha: 0.3)),
                                         ),
                                         child: Center(
                                           child: Text(
@@ -367,7 +367,7 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
                                           shape: BoxShape.circle,
                                           boxShadow: [
                                             BoxShadow(
-                                              color: AppTheme.accentBlue(isDark).withOpacity(0.4),
+                                              color: AppTheme.accentBlue(isDark).withValues(alpha: 0.4),
                                               blurRadius: 12,
                                               offset: const Offset(0, 4),
                                             )
