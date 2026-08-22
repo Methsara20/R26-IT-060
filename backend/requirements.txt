@@ -61,7 +61,6 @@ langchain-chroma
 chromadb==1.5.9
 google-generativeai==0.8.6
 sentence-transformers==5.7.0
-bcrypt==3.2.2
-passlib
+bcrypt
 python-jose[cryptography]
 python-multipart
