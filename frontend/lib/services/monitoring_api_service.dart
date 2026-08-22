@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class MonitoringApiService {
-  static const String baseUrl = "http://0.0.0.0:8000";
+  static const String baseUrl = "https://r26-it-060.onrender.com";
 
   static Future<Map<String, dynamic>> startMonitoring({
     required String customerId,
