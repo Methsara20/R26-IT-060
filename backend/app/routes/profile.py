@@ -262,23 +262,23 @@ def update_profile(profile_id: str, data: ProfileUpdateRequest):
     if "height" in update_data or "weight" in update_data or "gender" in update_data:
         new_height = update_data.get("height", old_data.get("height"))
         new_weight = update_data.get("weight", old_data.get("weight"))
-        new_gender = update_data.get("gender", old_data.get("gender"))
+        new_gender = update_data.get("gender", old_data.get("gender")) or "Unisex"
 
-        update_data["recommended_size"] = get_size(new_height, new_weight)
-
-        body_measurements = predict_body_measurements(
-            height=new_height,
-            weight=new_weight,
-            gender=new_gender,
-        )
-
-        update_data["predicted_shoulder_width"] = body_measurements[
-            "predicted_shoulder_width"
-        ]
-        update_data["predicted_waist"] = body_measurements["predicted_waist"]
-        update_data["predicted_leg_length"] = body_measurements[
-            "predicted_leg_length"
-        ]
+        if new_height is not None and new_weight is not None:
+            try:
+                update_data["recommended_size"] = get_size(new_height, new_weight)
+                
+                body_measurements = predict_body_measurements(
+                    height=new_height,
+                    weight=new_weight,
+                    gender=new_gender,
+                )
+                
+                update_data["predicted_shoulder_width"] = body_measurements["predicted_shoulder_width"]
+                update_data["predicted_waist"] = body_measurements["predicted_waist"]
+                update_data["predicted_leg_length"] = body_measurements["predicted_leg_length"]
+            except Exception as e:
+                print(f"Warning: ML sizing failed during profile update: {e}")
 
     if not update_data:
         raise HTTPException(status_code=400, detail="No data provided to update")
