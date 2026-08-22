@@ -47,9 +47,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 margin: const EdgeInsets.only(right: 24),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentRed(isDark).withOpacity(0.15),
+                  color: AppTheme.accentRed(isDark).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppTheme.accentRed(isDark).withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.accentRed(isDark).withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -79,7 +79,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.accentRed(isDark).withOpacity(0.15),
+                  color: AppTheme.accentRed(isDark).withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -168,7 +168,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                           child: Container(
                                             padding: const EdgeInsets.all(10),
                                             decoration: BoxDecoration(
-                                              color: AppTheme.backgroundColor(isDark).withOpacity(0.5),
+                                              color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.5),
                                               shape: BoxShape.circle,
                                               border: Border.all(color: AppTheme.glassBorder(isDark)),
                                             ),

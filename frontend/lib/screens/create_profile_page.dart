@@ -221,7 +221,7 @@ class _CreateProfilePageState extends State<CreateProfilePage> with SingleTicker
                     height: 300,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.orbPrimary(isDark).withOpacity(0.15),
+                      color: AppTheme.orbPrimary(isDark).withValues(alpha: 0.15),
                     ),
                   ),
                 ),
@@ -236,7 +236,7 @@ class _CreateProfilePageState extends State<CreateProfilePage> with SingleTicker
                     height: 300,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                      color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.15),
                     ),
                   ),
                 ),
@@ -377,7 +377,7 @@ class _CreateProfilePageState extends State<CreateProfilePage> with SingleTicker
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButtonFormField<String>(
-                                    value: selectedGender,
+                                    initialValue: selectedGender,
                                     icon: Icon(Icons.keyboard_arrow_down, color: AppTheme.iconMuted(isDark)),
                                     dropdownColor: AppTheme.backgroundColor(isDark),
                                     style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 15),
@@ -421,9 +421,9 @@ class _CreateProfilePageState extends State<CreateProfilePage> with SingleTicker
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppTheme.accentRed(isDark).withOpacity(0.15),
+                              color: AppTheme.accentRed(isDark).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppTheme.accentRed(isDark).withOpacity(0.3)),
+                              border: Border.all(color: AppTheme.accentRed(isDark).withValues(alpha: 0.3)),
                             ),
                             child: Row(
                               children: [

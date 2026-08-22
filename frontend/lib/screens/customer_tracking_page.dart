@@ -46,6 +46,7 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
     } catch (e) {
       if (!silent) {
         setState(() => _isLoading = false);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Error fetching tracking data: $e"),
@@ -60,6 +61,7 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
   Future<void> _resolveAlert(String requestId) async {
     try {
       await MonitoringApiService.resolveRequest(requestId);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Assistance request marked as Resolved"),
@@ -69,6 +71,7 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
       );
       _fetchTrackingData();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(
@@ -174,7 +177,7 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -409,7 +412,7 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
             border: Border.all(color: const Color(0xFFFECACA), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
