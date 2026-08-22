@@ -130,7 +130,10 @@ def google_login(data: GoogleLoginRequest):
         decoded_token = id_token.verify_oauth2_token(
             data.id_token, 
             requests.Request(),
-            "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com"
+            audience=[
+                "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
+                "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com",  # iOS client
+            ]
         )
         email = decoded_token.get("email")
     except Exception as e:
@@ -331,4 +334,4 @@ class BrandSizingRequest(BaseModel):
 def predict_brand_size(req: BrandSizingRequest):
     from app.services.brand_sizing_service import predict_brand_specific_size
     size = predict_brand_specific_size(req.standard_size, req.brand, req.category)
-    return {"brand_specific_size": size}
+    return {"brand_specific_size": size}
