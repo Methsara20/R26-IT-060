@@ -21,6 +21,7 @@ class _ViewZonesPageState extends State<ViewZonesPage> {
         zones = response["zones"] ?? [];
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error: $e"),
@@ -37,6 +38,7 @@ class _ViewZonesPageState extends State<ViewZonesPage> {
     try {
       final response = await ZoneApiService.deleteZone(zoneId);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(response["message"].toString()),
@@ -46,6 +48,7 @@ class _ViewZonesPageState extends State<ViewZonesPage> {
 
       loadZones();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Delete failed: $e"),
@@ -117,7 +120,7 @@ class _ViewZonesPageState extends State<ViewZonesPage> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
+                            color: Colors.black.withValues(alpha: 0.03),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),

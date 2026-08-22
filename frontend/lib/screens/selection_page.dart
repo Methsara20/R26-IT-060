@@ -73,7 +73,7 @@ class _SelectionPageState extends State<SelectionPage> with SingleTickerProvider
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.orbPrimary(isDark).withOpacity(0.15),
+                  color: AppTheme.orbPrimary(isDark).withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -88,7 +88,7 @@ class _SelectionPageState extends State<SelectionPage> with SingleTickerProvider
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                  color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -107,7 +107,7 @@ class _SelectionPageState extends State<SelectionPage> with SingleTickerProvider
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppTheme.orbPrimary(isDark).withOpacity(0.15),
+                        color: AppTheme.orbPrimary(isDark).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Icon(Icons.diamond_outlined, size: 36, color: AppTheme.accentBlue(isDark)),
@@ -239,7 +239,7 @@ class _PremiumRoleCardState extends State<_PremiumRoleCard> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: widget.gradientColors.last.withOpacity(0.4),
+                color: widget.gradientColors.last.withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -250,7 +250,7 @@ class _PremiumRoleCardState extends State<_PremiumRoleCard> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(widget.icon, color: Colors.white, size: 28),
@@ -273,14 +273,14 @@ class _PremiumRoleCardState extends State<_PremiumRoleCard> {
                       widget.subtitle,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         height: 1.3,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.6), size: 18),
+              Icon(Icons.arrow_forward_ios, color: Colors.white.withValues(alpha: 0.6), size: 18),
             ],
           ),
         ),

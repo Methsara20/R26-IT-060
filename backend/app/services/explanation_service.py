@@ -1,11 +1,7 @@
 import time
 from google import genai
 
-from app.config.settings import GEMINI_API_KEY
-
-client = genai.Client(
-    api_key=GEMINI_API_KEY
-)
+from app.services.llm_manager import llm_manager
 
 # LOCAL BUSINESS EXPLANATION
 
@@ -233,20 +229,7 @@ BASE EXPLANATION:
 Rewrite the explanation naturally.
 """
 
-        response = (
-            client.models.generate_content(
-
-                model="gemini-2.0-flash",
-
-                contents=prompt
-            )
-        )
-
-        enhanced_text = getattr(
-            response,
-            "text",
-            ""
-        )
+        enhanced_text = llm_manager.generate_content_with_fallback(prompt)
 
         if enhanced_text:
             return enhanced_text.strip()

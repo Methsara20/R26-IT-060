@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from firebase_admin import firestore
+from firebase_admin import firestore, auth
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 from app.models.profile import ProfileCreateRequest, ProfileUpdateRequest
-from app.models.auth import LoginRequest
+from app.models.auth import LoginRequest, GoogleLoginRequest
 from pydantic import BaseModel
 from app.services.profile_service import get_size
 from app.services.auth_service import hash_password, verify_password
@@ -83,6 +85,59 @@ def login(data: LoginRequest):
     })
 
     return {
+        "message": "Login successful",
+        "access_token": access_token,
+        "token_type": "bearer",
+        "profile_id": user_doc.id,
+        "email": user_data["email"],
+        "recommended_size": user_data.get("recommended_size"),
+        "body_measurements": {
+            "predicted_shoulder_width": user_data.get("predicted_shoulder_width"),
+            "predicted_waist": user_data.get("predicted_waist"),
+            "predicted_leg_length": user_data.get("predicted_leg_length"),
+        },
+    }
+
+@router.post("/google-login")
+def google_login(data: GoogleLoginRequest):
+    try:
+        decoded_token = id_token.verify_oauth2_token(
+            data.id_token, 
+            requests.Request(),
+            "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com"
+        )
+        email = decoded_token.get("email")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {e}")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="No email found in Google token")
+
+    docs = db.collection("profiles").where("email", "==", email).stream()
+    
+    user_doc = None
+    user_data = None
+    for doc in docs:
+        user_doc = doc
+        user_data = doc.to_dict()
+        break
+
+    if not user_data:
+        # The user successfully verified via Google, but has no sizing profile.
+        # We return a flag telling the frontend to redirect to GoogleSetupPage.
+        return {
+            "requires_setup": True,
+            "email": email,
+            "message": "Account verified via Google, but body measurements are missing."
+        }
+    
+    access_token = create_access_token({
+        "sub": user_data["email"],
+        "profile_id": user_doc.id,
+    })
+
+    return {
+        "requires_setup": False,
         "message": "Login successful",
         "access_token": access_token,
         "token_type": "bearer",

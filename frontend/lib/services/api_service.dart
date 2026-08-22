@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 class ApiService {
-  static const String baseUrl = "http://192.168.1.2:8000";
+  static const String baseUrl = "http://0.0.0.0:8000";
 
   static Future<Map<String, dynamic>> createProfile({
     required String email,
@@ -36,6 +36,16 @@ class ApiService {
       Uri.parse("$baseUrl/profile/login"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email, "password": password}),
+    );
+
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> googleLogin(String idToken) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/google-login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_token": idToken}),
     );
 
     return _handleResponse(response);

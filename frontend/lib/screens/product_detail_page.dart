@@ -135,7 +135,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                     height: 200,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                      color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.15),
                     ),
                   ),
                 ),
@@ -157,7 +157,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                             child: Container(
                               margin: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppTheme.backgroundColor(isDark).withOpacity(0.5),
+                                color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.5),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: AppTheme.glassBorder(isDark)),
                               ),
@@ -176,7 +176,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                               child: Container(
                                 margin: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.backgroundColor(isDark).withOpacity(0.5),
+                                  color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.5),
                                   shape: BoxShape.circle,
                                   border: Border.all(color: AppTheme.glassBorder(isDark)),
                                 ),
@@ -200,7 +200,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                           ],
                           flexibleSpace: FlexibleSpaceBar(
                             background: Container(
-                              color: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.02),
+                              color: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.02),
                               child: widget.product["image_url"] != null
                                   ? Image.network(
                                       widget.product["image_url"],
@@ -219,7 +219,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                             opacity: _fadeAnim,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: AppTheme.backgroundColor(isDark).withOpacity(0.8),
+                                color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.8),
                                 borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                                 border: Border(top: BorderSide(color: AppTheme.glassBorder(isDark))),
                               ),
@@ -238,16 +238,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           children: [
                                             _buildTag(
                                               (widget.product["gender"] ?? "Unisex").toString().toUpperCase(),
-                                              AppTheme.accentBlue(isDark).withOpacity(0.2),
+                                              AppTheme.accentBlue(isDark).withValues(alpha: 0.2),
                                               AppTheme.accentBlue(isDark),
-                                              AppTheme.accentBlue(isDark).withOpacity(0.5),
+                                              AppTheme.accentBlue(isDark).withValues(alpha: 0.5),
                                             ),
                                             const SizedBox(width: 8),
                                             _buildTag(
                                               isOutOfStock ? "OUT OF STOCK" : "IN STOCK",
-                                              isOutOfStock ? AppTheme.accentRed(isDark).withOpacity(0.2) : AppTheme.accentGreen(isDark).withOpacity(0.2),
+                                              isOutOfStock ? AppTheme.accentRed(isDark).withValues(alpha: 0.2) : AppTheme.accentGreen(isDark).withValues(alpha: 0.2),
                                               isOutOfStock ? AppTheme.accentRed(isDark) : AppTheme.accentGreen(isDark),
-                                              isOutOfStock ? AppTheme.accentRed(isDark).withOpacity(0.5) : AppTheme.accentGreen(isDark).withOpacity(0.5),
+                                              isOutOfStock ? AppTheme.accentRed(isDark).withValues(alpha: 0.5) : AppTheme.accentGreen(isDark).withValues(alpha: 0.5),
                                             ),
                                             const Spacer(),
                                             if (!isOutOfStock)
@@ -290,7 +290,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                           const SizedBox(height: 12),
                                           Text(
                                             description,
-                                            style: TextStyle(fontSize: 15, color: AppTheme.textPrimary(isDark).withOpacity(0.7), height: 1.6),
+                                            style: TextStyle(fontSize: 15, color: AppTheme.textPrimary(isDark).withValues(alpha: 0.7), height: 1.6),
                                           ),
                                         ],
 
@@ -306,11 +306,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                                 color: AppTheme.glassCard(isDark),
                                                 borderRadius: BorderRadius.circular(24),
                                                 border: Border.all(
-                                                  color: sizeAdjusted ? const Color(0xFFF59E0B).withOpacity(0.3) : AppTheme.accentBlue(isDark).withOpacity(0.3),
+                                                  color: sizeAdjusted ? const Color(0xFFF59E0B).withValues(alpha: 0.3) : AppTheme.accentBlue(isDark).withValues(alpha: 0.3),
                                                 ),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: sizeAdjusted ? const Color(0xFFF59E0B).withOpacity(0.05) : AppTheme.accentBlue(isDark).withOpacity(0.05),
+                                                    color: sizeAdjusted ? const Color(0xFFF59E0B).withValues(alpha: 0.05) : AppTheme.accentBlue(isDark).withValues(alpha: 0.05),
                                                     blurRadius: 20,
                                                   ),
                                                 ],
@@ -320,7 +320,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                                   Container(
                                                     padding: const EdgeInsets.all(12),
                                                     decoration: BoxDecoration(
-                                                      color: sizeAdjusted ? const Color(0xFFF59E0B).withOpacity(0.15) : AppTheme.accentBlue(isDark).withOpacity(0.15),
+                                                      color: sizeAdjusted ? const Color(0xFFF59E0B).withValues(alpha: 0.15) : AppTheme.accentBlue(isDark).withValues(alpha: 0.15),
                                                       borderRadius: BorderRadius.circular(16),
                                                     ),
                                                     child: Icon(
@@ -349,7 +349,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                                                               : "Your standard $aiBrandSize is the perfect fit for $brand",
                                                           style: TextStyle(
                                                             fontSize: 13,
-                                                            color: AppTheme.textPrimary(isDark).withOpacity(0.6),
+                                                            color: AppTheme.textPrimary(isDark).withValues(alpha: 0.6),
                                                             height: 1.4,
                                                           ),
                                                         ),
@@ -404,7 +404,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> with SingleTicker
                       child: Container(
                         padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
                         decoration: BoxDecoration(
-                          color: AppTheme.backgroundColor(isDark).withOpacity(0.8),
+                          color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.8),
                           border: Border(top: BorderSide(color: AppTheme.glassBorder(isDark))),
                         ),
                         child: Row(

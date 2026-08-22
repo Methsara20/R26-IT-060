@@ -83,7 +83,7 @@ class _DeleteProfilePageState extends State<DeleteProfilePage> with SingleTicker
                     height: 300,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.accentRed(isDark).withOpacity(0.15),
+                      color: AppTheme.accentRed(isDark).withValues(alpha: 0.15),
                     ),
                   ),
                 ),
@@ -98,7 +98,7 @@ class _DeleteProfilePageState extends State<DeleteProfilePage> with SingleTicker
                     height: 300,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                      color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.15),
                     ),
                   ),
                 ),
@@ -118,7 +118,7 @@ class _DeleteProfilePageState extends State<DeleteProfilePage> with SingleTicker
                           borderRadius: BorderRadius.circular(32),
                           border: Border.all(color: AppTheme.glassBorder(isDark)),
                           boxShadow: [
-                            BoxShadow(color: AppTheme.accentRed(isDark).withOpacity(0.1), blurRadius: 40, offset: const Offset(0, 20)),
+                            BoxShadow(color: AppTheme.accentRed(isDark).withValues(alpha: 0.1), blurRadius: 40, offset: const Offset(0, 20)),
                           ],
                         ),
                         child: Column(
@@ -127,7 +127,7 @@ class _DeleteProfilePageState extends State<DeleteProfilePage> with SingleTicker
                             Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: AppTheme.accentRed(isDark).withOpacity(0.15),
+                                color: AppTheme.accentRed(isDark).withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(Icons.warning_rounded, size: 64, color: AppTheme.accentRed(isDark)),
@@ -175,9 +175,9 @@ class _DeleteProfilePageState extends State<DeleteProfilePage> with SingleTicker
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentRed(isDark).withOpacity(0.15),
+                                  color: AppTheme.accentRed(isDark).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppTheme.accentRed(isDark).withOpacity(0.3)),
+                                  border: Border.all(color: AppTheme.accentRed(isDark).withValues(alpha: 0.3)),
                                 ),
                                 child: Row(
                                   children: [

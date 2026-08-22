@@ -99,6 +99,7 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
   Future<void> _requestHelp() async {
     try {
       await MonitoringApiService.requestManualAssistance(widget.customerEmail);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -115,6 +116,7 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to request assistance: $e'),
@@ -197,7 +199,7 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppTheme.accentRed(isDark).withOpacity(0.4),
+                color: AppTheme.accentRed(isDark).withValues(alpha: 0.4),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),

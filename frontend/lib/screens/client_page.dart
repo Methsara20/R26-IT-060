@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/app_state.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'create_profile_page.dart';
+import 'google_setup_page.dart';
 import 'store_page.dart';
 import 'customer_main_page.dart';
 import 'dart:ui';
@@ -103,6 +105,66 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
     }
   }
 
+  Future<void> loginWithGoogle() async {
+    setState(() => isLoading = true);
+    setState(() => resultMessage = "");
+
+    try {
+      final idToken = await AuthService.signInWithGoogle();
+      if (idToken == null) {
+        setState(() => isLoading = false);
+        return; // User cancelled
+      }
+
+      final result = await ApiService.googleLogin(idToken);
+
+      if (!mounted) return;
+
+      if (result["requires_setup"] == true) {
+        // Redirect to a specialized setup page for new Google users
+        final setupResult = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GoogleSetupPage(email: result["email"]),
+          ),
+        );
+
+        if (setupResult != null && setupResult is Map<String, dynamic> && mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CustomerMainPage(
+                customerEmail: setupResult["email"],
+                recommendedSize: setupResult["recommended_size"],
+                profileId: setupResult["profile_id"],
+                bodyMeasurements: setupResult["body_measurements"],
+              ),
+            ),
+          );
+        }
+      } else {
+        // Existing user, log them straight in
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CustomerMainPage(
+              customerEmail: result["email"],
+              recommendedSize: result["recommended_size"],
+              profileId: result["profile_id"],
+              bodyMeasurements: result["body_measurements"],
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => resultMessage = e.toString());
+    }
+
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = AppState().isDarkMode;
@@ -122,7 +184,7 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.orbPrimary(isDark).withOpacity(0.15),
+                  color: AppTheme.orbPrimary(isDark).withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -137,7 +199,7 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.orbSecondary(isDark).withOpacity(0.15),
+                  color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -155,7 +217,7 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: AppTheme.orbPrimary(isDark).withOpacity(0.15),
+                          color: AppTheme.orbPrimary(isDark).withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(Icons.shopping_bag_rounded, size: 52, color: AppTheme.accentBlue(isDark)),
@@ -234,13 +296,40 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
                                 ),
                               ),
                               const SizedBox(height: 16),
+                              
+                              // Google Login Button
+                              SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(color: AppTheme.glassBorder(isDark)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    backgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.02),
+                                  ),
+                                  onPressed: isLoading ? null : loginWithGoogle,
+                                  icon: Image.network(
+                                    'https://img.icons8.com/color/48/000000/google-logo.png',
+                                    height: 24,
+                                  ),
+                                  label: Text(
+                                    "Continue with Google",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.textPrimary(isDark),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
                               TextButton(
                                 onPressed: () async {
                                   final result = await Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (_) => const CreateProfilePage()),
                                   );
-                                  if (result != null && result is Map<String, dynamic> && mounted) {
+                                  if (result != null && result is Map<String, dynamic> && context.mounted) {
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
@@ -277,9 +366,9 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentRed(isDark).withOpacity(0.15),
+                            color: AppTheme.accentRed(isDark).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppTheme.accentRed(isDark).withOpacity(0.3)),
+                            border: Border.all(color: AppTheme.accentRed(isDark).withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             children: [

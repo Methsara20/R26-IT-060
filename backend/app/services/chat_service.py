@@ -3,41 +3,14 @@ import re
 
 from google import genai
 
-from app.config.settings import GEMINI_API_KEY
 from app.services.explanation_service import generate_explanation
-
-# Gemini Client
-client = genai.Client(api_key=GEMINI_API_KEY)
+from app.services.llm_manager import llm_manager
 
 # GEMINI CALL
 
 def call_model(prompt):
-    for attempt in range(3):
-        try:
-            response = client.models.generate_content(
-                model="gemini-flash-latest",
-                contents=prompt
-            )
+    return llm_manager.generate_content_with_fallback(prompt)
 
-            return getattr(response, "text", str(response))
-
-        except Exception as e:
-            if "503" in str(e) or "UNAVAILABLE" in str(e):
-                time.sleep(2)
-            else:
-                break
-
-    # 🔥 Fallback model
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
-
-        return getattr(response, "text", str(response))
-
-    except Exception:
-        return "AI service is temporarily busy. Please try again."
 
 
 # MAIN CHAT HANDLER

@@ -1,7 +1,9 @@
 import os
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import google.generativeai as genai
+from google import genai
+
+from app.services.llm_manager import llm_manager
 
 from app.firebase_config import db
 from app.services.rag_service import retrieve_relevant_products
@@ -16,12 +18,6 @@ class StylistChatRequest(BaseModel):
 
 @router.post("/chat")
 def stylist_chat(data: StylistChatRequest):
-    # Ensure Gemini API key is configured
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured on the server.")
-        
-    genai.configure(api_key=api_key)
     
     # 1. Fetch the user's profile to get their measurements
     user_doc = db.collection("profiles").document(data.customer_id).get()
@@ -80,15 +76,12 @@ def stylist_chat(data: StylistChatRequest):
     """
     
     try:
-        # 4. Generate response using Gemini
-        model = genai.GenerativeModel('gemini-flash-latest')
-        response = model.generate_content([
-            {"role": "system", "parts": [{"text": system_prompt}]},
-            {"role": "user", "parts": [{"text": data.message}]}
-        ])
-        
+        # 4. Generate response using load-balanced Gemini client
+        prompt = f"{system_prompt}\n\nUSER QUESTION: {data.message}"
+        response_text = llm_manager.generate_content_with_fallback(prompt)
+
         return {
-            "response": response.text,
+            "response": response_text,
             "relevant_products": relevant_products,
             "used_size": predicted_size
         }

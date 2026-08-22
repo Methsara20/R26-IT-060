@@ -181,7 +181,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(32),
           border: Border.all(color: AppTheme.glassBorder(isDark)),
           boxShadow: [
-            if (imageBytes != null) BoxShadow(color: AppTheme.accentBlue(isDark).withOpacity(0.15), blurRadius: 40, offset: const Offset(0, 10)),
+            if (imageBytes != null) BoxShadow(color: AppTheme.accentBlue(isDark).withValues(alpha: 0.15), blurRadius: 40, offset: const Offset(0, 10)),
           ],
         ),
         child: ClipRRect(
@@ -221,7 +221,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppTheme.backgroundColor(isDark).withOpacity(0.5),
+                          color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: AppTheme.glassBorder(isDark)),
                         ),
@@ -267,7 +267,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                   child: Container(
                     width: 300,
                     height: 300,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: AppTheme.orbPrimary(isDark).withOpacity(0.15)),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: AppTheme.orbPrimary(isDark).withValues(alpha: 0.15)),
                   ),
                 ),
               ),
@@ -279,7 +279,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                   child: Container(
                     width: 300,
                     height: 300,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: AppTheme.orbSecondary(isDark).withOpacity(0.15)),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.15)),
                   ),
                 ),
               ),
@@ -296,7 +296,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                     flexibleSpace: ClipRRect(
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: Container(color: AppTheme.backgroundColor(isDark).withOpacity(0.7)),
+                        child: Container(color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.7)),
                       ),
                     ),
                   ),
@@ -432,7 +432,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                                               child: Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                                 decoration: BoxDecoration(
-                                                  color: AppTheme.backgroundColor(isDark).withOpacity(0.5),
+                                                  color: AppTheme.backgroundColor(isDark).withValues(alpha: 0.5),
                                                   borderRadius: BorderRadius.circular(20),
                                                   border: Border.all(color: AppTheme.glassBorder(isDark)),
                                                 ),
@@ -476,7 +476,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                                       colors: [AppTheme.accentBlue(isDark), AppTheme.orbSecondary(isDark)],
                                     ),
                                     boxShadow: [
-                                      BoxShadow(color: AppTheme.accentBlue(isDark).withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 10)),
+                                      BoxShadow(color: AppTheme.accentBlue(isDark).withValues(alpha: 0.4), blurRadius: 20, offset: const Offset(0, 10)),
                                     ],
                                   ),
                                   child: ElevatedButton(
@@ -512,9 +512,9 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: message.contains("success") ? AppTheme.accentGreen(isDark).withOpacity(0.1) : AppTheme.accentRed(isDark).withOpacity(0.1),
+                                    color: message.contains("success") ? AppTheme.accentGreen(isDark).withValues(alpha: 0.1) : AppTheme.accentRed(isDark).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: message.contains("success") ? AppTheme.accentGreen(isDark).withOpacity(0.3) : AppTheme.accentRed(isDark).withOpacity(0.3)),
+                                    border: Border.all(color: message.contains("success") ? AppTheme.accentGreen(isDark).withValues(alpha: 0.3) : AppTheme.accentRed(isDark).withValues(alpha: 0.3)),
                                   ),
                                   child: Row(
                                     children: [
@@ -537,7 +537,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                                     decoration: BoxDecoration(
                                       color: AppTheme.glassCard(isDark),
                                       borderRadius: BorderRadius.circular(24),
-                                      border: Border.all(color: AppTheme.accentGreen(isDark).withOpacity(0.3)),
+                                      border: Border.all(color: AppTheme.accentGreen(isDark).withValues(alpha: 0.3)),
                                     ),
                                     child: Row(
                                       children: [
@@ -565,7 +565,7 @@ class _TryOnPageState extends State<TryOnPage> with TickerProviderStateMixin {
                                     borderRadius: BorderRadius.circular(32),
                                     border: Border.all(color: AppTheme.glassBorder(isDark)),
                                     boxShadow: [
-                                      BoxShadow(color: AppTheme.orbSecondary(isDark).withOpacity(0.2), blurRadius: 40, offset: const Offset(0, 20)),
+                                      BoxShadow(color: AppTheme.orbSecondary(isDark).withValues(alpha: 0.2), blurRadius: 40, offset: const Offset(0, 20)),
                                     ],
                                   ),
                                   child: ClipRRect(
