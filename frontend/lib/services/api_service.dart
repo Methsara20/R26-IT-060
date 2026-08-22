@@ -1,0 +1,172 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+
+class ApiService {
+  static const String baseUrl = "https://r26-it-060.onrender.com";
+
+  static Future<Map<String, dynamic>> createProfile({
+    required String email,
+    required String password,
+    required double height,
+    required double weight,
+    required String gender,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/create"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": email,
+        "password": password,
+        "height": height,
+        "weight": weight,
+        "gender": gender,
+      }),
+    );
+
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email, "password": password}),
+    );
+
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> googleLogin(String idToken) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/google-login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_token": idToken}),
+    );
+
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> updateProfile({
+    required String profileId,
+    double? height,
+    double? weight,
+    String? gender,
+    String? password,
+  }) async {
+    final Map<String, dynamic> data = {};
+
+    if (height != null) data["height"] = height;
+    if (weight != null) data["weight"] = weight;
+    if (gender != null && gender.isNotEmpty) data["gender"] = gender;
+    if (password != null && password.isNotEmpty) data["password"] = password;
+
+    final response = await http.put(
+      Uri.parse("$baseUrl/profile/update/$profileId"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(data),
+    );
+
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> deleteProfile(String profileId) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/profile/delete/$profileId"),
+      headers: {"Content-Type": "application/json"},
+    );
+
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> generateTryOn({
+    required XFile humanImage,
+    XFile? clothImage,
+    Uint8List? clothBytes,
+  }) async {
+    final request = http.MultipartRequest(
+      "POST",
+      Uri.parse("$baseUrl/tryon/generate"),
+    );
+
+    final humanBytes = await humanImage.readAsBytes();
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        "human_image",
+        humanBytes,
+        filename: humanImage.name,
+      ),
+    );
+
+    if (clothImage != null) {
+      final bytes = await clothImage.readAsBytes();
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          "cloth_image",
+          bytes,
+          filename: clothImage.name,
+        ),
+      );
+    } else if (clothBytes != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          "cloth_image",
+          clothBytes,
+          filename: "product.png",
+        ),
+      );
+    } else {
+      throw Exception("No clothing image or product bytes provided");
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    return _handleResponse(response);
+  }
+
+  static Future<List<dynamic>> getProducts() async {
+    final response = await http.get(Uri.parse("$baseUrl/products"));
+    final decoded = _handleResponse(response);
+    return decoded["products"] ?? [];
+  }
+
+  static Future<String> predictBrandSize({
+    required String standardSize,
+    required String brand,
+    required String category,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/predict_brand_size"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "standard_size": standardSize,
+        "brand": brand,
+        "category": category,
+      }),
+    );
+
+    final decoded = _handleResponse(response);
+    return decoded["brand_specific_size"] ?? standardSize;
+  }
+
+  static Map<String, dynamic> _handleResponse(http.Response response) {
+    final decoded =
+        response.body.isNotEmpty &&
+            response.headers["content-type"]?.contains("application/json") ==
+                true
+        ? jsonDecode(response.body)
+        : <String, dynamic>{};
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return decoded;
+    }
+
+    throw Exception(decoded["detail"] ?? "Something went wrong");
+  }
+}

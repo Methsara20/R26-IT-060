@@ -46,3 +46,4 @@ app.*.map.json
 .png
 # Gradle Caches
 .gradle/
+gradle

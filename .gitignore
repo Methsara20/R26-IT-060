@@ -1,12 +1,13 @@
 backend/.env
 
-# Python cache files
+# Python cache files & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
 /_pycache_/
 _pyache_
 _pycache_/
 .pyc
-
-# Virtual environments
 .venv/
 /.venv/
 venv/
@@ -14,16 +15,23 @@ venv/
 # macOS system files
 .DS_Store
 backend/app/.DS_Store
+**/.DS_Store
 
-# Build folders
+# Build folders & Flutter / Dart
 /build/
-
-# Firebase credentials
-firebase_key.json
+build/
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
 
 # Android / Gradle files
-gradle-wrapper.jar
+.gradle/
 /.gradle
+gradle
+gradle-wrapper.jar
 /captures/
 /gradlew
 /gradlew.bat
@@ -31,10 +39,40 @@ gradle-wrapper.jar
 GeneratedPluginRegistrant.java
 .cxx/
 hashes/
+fileHashes.bin
+fileHashes.lock
+
+# Keystores & Properties
+key.properties
+*.keystore
+*.jks
+**/*.keystore
+**/*.jks
+
+# iOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+
+# IDEs
+.idea/
+*.iml
+*.iws
+
+# Firebase credentials & config
+firebase_key.json
+google-services.json
+GoogleService-Info.plist
+
+# Vector Databases
+chroma_db/
+backend/app/chroma_db/
+
 .png
 
-# Remember to never publicly share your keystore.
-# See https://flutter.dev/to/reference-keystore
-key.properties
-*/.keystore
-*/.jks
