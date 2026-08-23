@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/monitoring_api_service.dart';
 
 class CustomerTrackingPage extends StatefulWidget {
@@ -13,14 +14,15 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
   Timer? _refreshTimer;
   List<dynamic> _activeSessions = [];
   List<dynamic> _pendingRequests = [];
+  final Set<String> _knownRequestIds = {};
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _fetchTrackingData();
-    // Refresh tracking dashboard every 3 seconds for a real-time feel
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    // Refresh tracking dashboard every 1 second for hyper-instant real-time fetching
+    _refreshTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _fetchTrackingData(silent: true);
     });
   }
@@ -37,7 +39,58 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
     }
     try {
       final List<dynamic> rawSessions = await MonitoringApiService.getActiveSessions();
-      final requests = await MonitoringApiService.getActiveRequests();
+      final List<dynamic> requests = await MonitoringApiService.getActiveRequests();
+
+      // Detect new incoming assistance alerts
+      dynamic newAlert;
+      for (var req in requests) {
+        final reqId = (req["request_id"] ?? "").toString();
+        if (reqId.isNotEmpty && !_knownRequestIds.contains(reqId)) {
+          _knownRequestIds.add(reqId);
+          newAlert = req;
+        }
+      }
+
+      // Play audio chime, haptic impact & pop notification banner if new alert arrives
+      if (newAlert != null && silent && mounted) {
+        SystemSound.play(SystemSoundType.alert);
+        HapticFeedback.heavyImpact();
+
+        final custName = newAlert["customer_name"] ?? newAlert["customer_id"] ?? "Customer";
+        final zoneName = newAlert["zone_name"] ?? "Store Area";
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "🚨 STAFF ASSISTANCE NEEDED!",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                      ),
+                      Text(
+                        "$custName in $zoneName needs help!",
+                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFDC2626), // Urgent Red Banner
+            duration: const Duration(seconds: 5),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+        );
+      }
 
       // Deduplicate active sessions by customer_id
       final Map<String, dynamic> uniqueSessions = {};
@@ -117,16 +170,23 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
           elevation: 0,
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.black87),
-          bottom: const TabBar(
-            labelColor: Color(0xFF2563EB),
+          bottom: TabBar(
+            labelColor: const Color(0xFF2563EB),
             unselectedLabelColor: Colors.black54,
-            indicatorColor: Color(0xFF2563EB),
+            indicatorColor: const Color(0xFF2563EB),
             indicatorWeight: 3,
             tabs: [
-              Tab(icon: Icon(Icons.track_changes), text: "Live Tracking"),
+              const Tab(icon: Icon(Icons.track_changes), text: "Live Tracking"),
               Tab(
-                icon: Icon(Icons.warning_amber_rounded),
-                text: "Assistance Alerts",
+                icon: Badge(
+                  label: Text("${_pendingRequests.length}"),
+                  isLabelVisible: _pendingRequests.isNotEmpty,
+                  backgroundColor: const Color(0xFFDC2626),
+                  child: const Icon(Icons.warning_amber_rounded),
+                ),
+                text: _pendingRequests.isNotEmpty
+                    ? "Alerts (${_pendingRequests.length})"
+                    : "Assistance Alerts",
               ),
             ],
           ),
@@ -180,14 +240,22 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
         final entry = _formatTime(session["entry_time"]);
         final lastUpd = _formatTime(session["last_updated"]);
 
+        final hasPendingAlert = _pendingRequests.any((r) => r["customer_id"] == email);
+
         return Container(
           margin: const EdgeInsets.only(bottom: 20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: hasPendingAlert ? const Color(0xFFFEF2F2) : Colors.white,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: hasPendingAlert ? const Color(0xFFDC2626) : Colors.transparent,
+              width: hasPendingAlert ? 2.5 : 0,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: hasPendingAlert
+                    ? Colors.red.withValues(alpha: 0.15)
+                    : Colors.black.withValues(alpha: 0.04),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -198,6 +266,26 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (hasPendingAlert)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDC2626),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.white, size: 16),
+                        SizedBox(width: 6),
+                        Text(
+                          "🚨 STAFF ASSISTANCE NEEDED",
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
