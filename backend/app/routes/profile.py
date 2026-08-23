@@ -124,17 +124,27 @@ def login(data: LoginRequest):
             "traceback": traceback.format_exc()
         }
 
+ALLOWED_CLIENT_IDS = {
+    "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
+    "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com",  # iOS client
+    "171031337876-jfru9mjtq8ua2bqkhb7pplv0nf66b1i.apps.googleusercontent.com",   # iOS client variant
+    "171031337876-fjchepjlb2bafo89au0njerhr432gabh.apps.googleusercontent.com",  # Android client 1
+    "171031337876-lniv56nmin67quomilspharlvq242np8.apps.googleusercontent.com",  # Android client 2
+}
+
+
 @router.post("/google-login")
 def google_login(data: GoogleLoginRequest):
     try:
         decoded_token = id_token.verify_oauth2_token(
             data.id_token, 
             requests.Request(),
-            audience=[
-                "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
-                "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com",  # iOS client
-            ]
+            audience=None
         )
+        token_aud = decoded_token.get("aud")
+        if token_aud not in ALLOWED_CLIENT_IDS:
+            raise ValueError(f"Token has wrong audience {token_aud}")
+
         email = decoded_token.get("email")
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid Google token: {e}")

@@ -36,10 +36,20 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
       setState(() => _isLoading = true);
     }
     try {
-      final sessions = await MonitoringApiService.getActiveSessions();
+      final List<dynamic> rawSessions = await MonitoringApiService.getActiveSessions();
       final requests = await MonitoringApiService.getActiveRequests();
+
+      // Deduplicate active sessions by customer_id
+      final Map<String, dynamic> uniqueSessions = {};
+      for (var s in rawSessions) {
+        final cid = (s["customer_id"] ?? "").toString();
+        if (cid.isNotEmpty && !uniqueSessions.containsKey(cid)) {
+          uniqueSessions[cid] = s;
+        }
+      }
+
       setState(() {
-        _activeSessions = sessions;
+        _activeSessions = uniqueSessions.values.toList();
         _pendingRequests = requests;
         _isLoading = false;
       });
@@ -231,21 +241,33 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: intent == "Browsing" ? const Color(0xFFFEF08A) : const Color(0xFFF1F5F9),
+                              color: intent == "Browsing" 
+                                  ? const Color(0xFFFEF08A) 
+                                  : (intent == "Transiting" || intent == "Passing Through"
+                                      ? const Color(0xFFDBEAFE) 
+                                      : const Color(0xFFF1F5F9)),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               children: [
                                 Icon(
-                                  intent == "Browsing" ? Icons.search : Icons.directions_walk, 
+                                  intent == "Browsing" 
+                                      ? Icons.search 
+                                      : (intent == "Transiting" || intent == "Passing Through"
+                                          ? Icons.directions_walk 
+                                          : Icons.location_on), 
                                   size: 14, 
-                                  color: Colors.black87
+                                  color: intent == "Transiting" || intent == "Passing Through"
+                                      ? const Color(0xFF1E40AF)
+                                      : Colors.black87
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "AI: $intent",
-                                  style: const TextStyle(
-                                    color: Colors.black87,
+                                  style: TextStyle(
+                                    color: intent == "Transiting" || intent == "Passing Through"
+                                        ? const Color(0xFF1E40AF)
+                                        : Colors.black87,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                   ),
