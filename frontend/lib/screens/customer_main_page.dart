@@ -59,7 +59,13 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
     if (permission == LocationPermission.deniedForever) return;
 
     try {
-      Position pos = await Geolocator.getCurrentPosition();
+      Position? pos = await Geolocator.getLastKnownPosition();
+      pos ??= await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 3),
+        ),
+      );
       String name = widget.customerEmail.split('@')[0];
 
       await MonitoringApiService.startMonitoring(
@@ -72,14 +78,19 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
 
       _heartbeatTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
         try {
-          Position currentPos = await Geolocator.getCurrentPosition();
+          Position currentPos = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 3),
+            ),
+          );
           await MonitoringApiService.updateMonitoring(
             customerId: widget.customerEmail,
             lat: currentPos.latitude,
             lon: currentPos.longitude,
             alt: currentPos.altitude,
           );
-          debugPrint('📍 GPS Heartbeat sent from background main page! Lat: ${currentPos.latitude}');
+          debugPrint('📍 GPS Heartbeat sent! Lat: ${currentPos.latitude}');
         } catch (e) {
           debugPrint('Failed to update location: $e');
         }

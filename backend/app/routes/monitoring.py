@@ -234,8 +234,16 @@ def update_monitoring(data: MonitoringUpdateRequest):
             if elapsed_since_last > 0:
                 current_speed = distance / elapsed_since_last
 
-        if current_zone_id == "in_transit" or current_speed > 0.4:
+        if current_zone_id == "in_transit" or current_speed > 0.25:
             intent = "Transiting"
+        else:
+            # Check zone entry time: keep Transiting for 10 seconds after entering a new zone
+            entry_time = session_data.get("entry_time")
+            if entry_time:
+                if entry_time.tzinfo is None:
+                    entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+                if (now - entry_time).total_seconds() < 10:
+                    intent = "Transiting"
 
         session_doc.reference.update({
             "last_updated": firestore.SERVER_TIMESTAMP,
