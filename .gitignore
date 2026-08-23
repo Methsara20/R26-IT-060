@@ -1,27 +1,36 @@
 backend/.env
 
-# Python
+# Python cache files & virtual environments
 __pycache__/
 *.py[cod]
 *$py.class
+/_pycache_/
+_pyache_
+_pycache_/
+.pyc
 .venv/
+/.venv/
 venv/
 
-# macOS
+# macOS system files
 .DS_Store
+backend/app/.DS_Store
 **/.DS_Store
 
-# Flutter / Dart
-.dart_tool/
+# Build folders & Flutter / Dart
+/build/
 build/
+.dart_tool/
 .packages
 .pub-cache/
 .pub/
 .flutter-plugins
 .flutter-plugins-dependencies
 
-# Android
+# Android / Gradle files
 .gradle/
+/.gradle
+gradle
 gradle-wrapper.jar
 /captures/
 /gradlew
@@ -30,11 +39,16 @@ gradle-wrapper.jar
 GeneratedPluginRegistrant.java
 .cxx/
 hashes/
-key.properties
-**/*.keystore
-**/*.jks
 fileHashes.bin
 fileHashes.lock
+
+# Keystores & Properties
+key.properties
+*.keystore
+*.jks
+**/*.keystore
+**/*.jks
+
 # iOS
 **/ios/Pods/
 **/ios/.symlinks/
@@ -51,13 +65,25 @@ fileHashes.lock
 *.iml
 *.iws
 
-# Firebase credentials
+# Firebase credentials & config
 firebase_key.json
+google-services.json
+GoogleService-Info.plist
+
 # Vector Databases
 chroma_db/
 backend/app/chroma_db/
-gradle
-# Firebase configuration files
-google-services.json
-GoogleService-Info.plist
+
+# Flutter Ephemeral & Generated files
+**/ephemeral/
+**/Flutter/ephemeral/
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
+**/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+**/linux/flutter/
+**/windows/flutter/generated_*
+
+.png
 

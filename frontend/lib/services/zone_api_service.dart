@@ -36,8 +36,14 @@ class ZoneApiService {
   }
 
   static Future<Map<String, dynamic>> getAllZones() async {
-    final response = await http.get(Uri.parse("$baseUrl/zone/all"));
-    return jsonDecode(response.body);
+    try {
+      final response = await http
+          .get(Uri.parse("$baseUrl/zone/all"))
+          .timeout(const Duration(seconds: 15));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"zones": []};
+    }
   }
 
   static Future<Map<String, dynamic>> deleteZone(String zoneId) async {
