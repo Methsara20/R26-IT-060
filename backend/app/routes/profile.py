@@ -37,12 +37,7 @@ def create_profile(data: ProfileCreateRequest):
             gender=data.gender,
         )
     except Exception as e:
-        import traceback
-        return {
-            "error_caught": True,
-            "message": str(e),
-            "traceback": traceback.format_exc()
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
     try:
         profile_data = {
@@ -59,12 +54,7 @@ def create_profile(data: ProfileCreateRequest):
             "updated_at": firestore.SERVER_TIMESTAMP,
         }
     except Exception as e:
-        import traceback
-        return {
-            "error_caught": True,
-            "message": str(e),
-            "traceback": traceback.format_exc()
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
     doc_ref = db.collection("profiles").add(profile_data)
 
@@ -117,12 +107,7 @@ def login(data: LoginRequest):
     except HTTPException:
         raise
     except Exception as e:
-        import traceback
-        return {
-            "error_caught": True,
-            "message": str(e),
-            "traceback": traceback.format_exc()
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/google-login")
 def google_login(data: GoogleLoginRequest):
