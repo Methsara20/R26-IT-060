@@ -37,12 +37,7 @@ def create_profile(data: ProfileCreateRequest):
             gender=data.gender,
         )
     except Exception as e:
-        import traceback
-        return {
-            "error_caught": True,
-            "message": str(e),
-            "traceback": traceback.format_exc()
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
     try:
         profile_data = {
@@ -59,12 +54,7 @@ def create_profile(data: ProfileCreateRequest):
             "updated_at": firestore.SERVER_TIMESTAMP,
         }
     except Exception as e:
-        import traceback
-        return {
-            "error_caught": True,
-            "message": str(e),
-            "traceback": traceback.format_exc()
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
     doc_ref = db.collection("profiles").add(profile_data)
 
@@ -117,12 +107,7 @@ def login(data: LoginRequest):
     except HTTPException:
         raise
     except Exception as e:
-        import traceback
-        return {
-            "error_caught": True,
-            "message": str(e),
-            "traceback": traceback.format_exc()
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
 ALLOWED_CLIENT_IDS = {
     "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
@@ -139,7 +124,10 @@ def google_login(data: GoogleLoginRequest):
         decoded_token = id_token.verify_oauth2_token(
             data.id_token, 
             requests.Request(),
-            audience=None
+            audience=[
+                "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
+                "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com",  # iOS client
+            ]
         )
         token_aud = decoded_token.get("aud")
         if token_aud not in ALLOWED_CLIENT_IDS:
@@ -344,4 +332,4 @@ class BrandSizingRequest(BaseModel):
 def predict_brand_size(req: BrandSizingRequest):
     from app.services.brand_sizing_service import predict_brand_specific_size
     size = predict_brand_specific_size(req.standard_size, req.brand, req.category)
-    return {"brand_specific_size": size}
+    return {"brand_specific_size": size}

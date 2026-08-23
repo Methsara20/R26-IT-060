@@ -22,12 +22,12 @@ class LLMManager:
         key = next(self.key_iterator)
         return genai.Client(api_key=key)
 
-    def generate_content_with_fallback(self, prompt: str, model: str = "gemini-flash-latest") -> str:
+    def generate_content_with_fallback(self, prompt: str, model: str = "gemini-1.5-flash") -> str:
         if not self.api_keys:
             raise HTTPException(status_code=500, detail="GEMINI_API_KEYS not configured on the server.")
 
-        # Try up to twice the number of keys we have available
-        max_attempts = len(self.api_keys) * 2
+        # Limit attempts to prevent hanging the API for too long during quota exhaustion
+        max_attempts = min(3, len(self.api_keys) * 2)
         
         for attempt in range(max_attempts):
             client = self._get_next_client()
