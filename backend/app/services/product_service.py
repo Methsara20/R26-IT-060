@@ -59,6 +59,13 @@ def get_all_products(force_refresh: bool = False):
         print("Loading products from Firestore...")
 
         products = get_all_documents(PRODUCTS_COLLECTION)
+        
+        # Workaround for Firestore gRPC cold start silent drop bug
+        if not products:
+            import time
+            time.sleep(1)
+            print("Retrying products fetch due to empty stream (gRPC cold start)...")
+            products = get_all_documents(PRODUCTS_COLLECTION)
 
         try:
             inventory_docs = db.collection("inventory_current").stream()
