@@ -234,7 +234,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
             if elapsed_since_last > 0:
                 current_speed = distance / elapsed_since_last
 
-        if current_zone_id == "in_transit" or current_speed > 0.25:
+        if current_zone_id == "in_transit" or current_speed > 0.15:
             intent = "Transiting"
         else:
             # Check zone entry time: keep Transiting for 10 seconds after entering a new zone
@@ -260,7 +260,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
 
         elapsed_seconds = (now - entry_time).total_seconds()
 
-        if elapsed_seconds >= 30 and intent == "Browsing":
+        if elapsed_seconds >= 15 and intent == "Browsing":
             pending_requests = list(
                 db.collection("assistance_requests")
                 .where(filter=firestore.FieldFilter("customer_id", "==", data.customer_id))
@@ -296,7 +296,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
                 last_notify = req_data.get("last_notification_time", now)
                 notify_elapsed = (now - last_notify).total_seconds()
 
-                if notify_elapsed >= 30:
+                if notify_elapsed >= 15:
                     new_count = req_data.get("notification_count", 0) + 1
                     req_doc.reference.update({
                         "notification_count": new_count,

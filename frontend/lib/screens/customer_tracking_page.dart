@@ -19,8 +19,8 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
   void initState() {
     super.initState();
     _fetchTrackingData();
-    // Refresh tracking dashboard every 2 seconds for instant real-time fetching
-    _refreshTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+    // Refresh tracking dashboard every 1 second for hyper-instant real-time fetching
+    _refreshTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _fetchTrackingData(silent: true);
     });
   }

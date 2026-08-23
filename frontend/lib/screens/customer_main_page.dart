@@ -76,12 +76,12 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
         alt: pos.altitude,
       );
 
-      _heartbeatTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      _heartbeatTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
         try {
           Position currentPos = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.high,
-              timeLimit: Duration(seconds: 3),
+              accuracy: LocationAccuracy.bestForNavigation,
+              timeLimit: Duration(seconds: 2),
             ),
           );
           await MonitoringApiService.updateMonitoring(
@@ -90,7 +90,7 @@ class _CustomerMainPageState extends State<CustomerMainPage> {
             lon: currentPos.longitude,
             alt: currentPos.altitude,
           );
-          debugPrint('📍 GPS Heartbeat sent! Lat: ${currentPos.latitude}');
+          debugPrint('📍 Instant GPS Heartbeat sent! Lat: ${currentPos.latitude}');
         } catch (e) {
           debugPrint('Failed to update location: $e');
         }
