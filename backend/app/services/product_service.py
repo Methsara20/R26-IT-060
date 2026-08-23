@@ -82,9 +82,10 @@ def get_all_products(force_refresh: bool = False):
             enriched["price_lkr"] = enriched.get("selling_price", 0.0)
             enriched_products.append(enriched)
 
-        _products_cache = enriched_products
+        if enriched_products:
+            _products_cache = enriched_products
 
-    return _products_cache
+    return _products_cache or []
 
 
 def get_product_by_id(product_id: str):

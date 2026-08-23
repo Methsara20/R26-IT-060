@@ -9,12 +9,29 @@ from app.services.trajectory_service import calculate_distance, classify_intent
 router = APIRouter()
 
 
+_zones_cache = None
+_zones_last_updated = None
+
+def _get_zones():
+    global _zones_cache, _zones_last_updated
+    now = datetime.datetime.now(datetime.timezone.utc)
+    
+    if _zones_cache is None or _zones_last_updated is None or (now - _zones_last_updated).total_seconds() > 300:
+        docs = db.collection("zones").stream()
+        _zones_cache = []
+        for doc in docs:
+            zone = doc.to_dict()
+            zone["id"] = doc.id
+            _zones_cache.append(zone)
+        _zones_last_updated = now
+        
+    return _zones_cache
+
 def _resolve_zone(latitude: float, longitude: float, altitude: float):
-    zones = db.collection("zones").stream()
-    for doc in zones:
-        zone = doc.to_dict()
+    zones = _get_zones()
+    for zone in zones:
         if is_point_in_zone(latitude, longitude, altitude, zone):
-            return doc.id, zone.get("zone_name", "Unknown Zone")
+            return zone["id"], zone.get("zone_name", "Unknown Zone")
     return None, None
 
 
