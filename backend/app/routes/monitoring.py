@@ -13,19 +13,13 @@ _zones_cache = None
 _zones_last_updated = None
 
 def _get_zones():
-    global _zones_cache, _zones_last_updated
-    now = datetime.datetime.now(datetime.timezone.utc)
-    
-    if _zones_cache is None or _zones_last_updated is None or (now - _zones_last_updated).total_seconds() > 300:
-        docs = db.collection("zones").stream()
-        _zones_cache = []
-        for doc in docs:
-            zone = doc.to_dict()
-            zone["id"] = doc.id
-            _zones_cache.append(zone)
-        _zones_last_updated = now
-        
-    return _zones_cache
+    docs = db.collection("zones").stream()
+    zones = []
+    for doc in docs:
+        zone = doc.to_dict()
+        zone["id"] = doc.id
+        zones.append(zone)
+    return zones
 
 def _resolve_zone(latitude: float, longitude: float, altitude: float):
     zones = _get_zones()

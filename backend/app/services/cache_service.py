@@ -24,10 +24,4 @@ class SimpleTTLCache:
 # Product catalog rarely changes, cache for 5 minutes
 products_cache = SimpleTTLCache(ttl_seconds=300)
 
-# User profiles (height, weight, etc.) change infrequently, cache for 10 minutes
-profiles_cache = SimpleTTLCache(ttl_seconds=600)
-
-# Zone configurations (name, capacity) change rarely, cache for 5 minutes
-zones_cache = SimpleTTLCache(ttl_seconds=300)
-
 
