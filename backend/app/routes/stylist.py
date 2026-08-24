@@ -18,15 +18,22 @@ class StylistChatRequest(BaseModel):
 
 @router.post("/chat")
 def stylist_chat(data: StylistChatRequest):
+    from app.services.cache_service import profiles_cache
     
     # 1. Fetch the user's profile to get their measurements
-    user_doc = db.collection("profiles").document(data.customer_id).get()
+    user_data = profiles_cache.get(data.customer_id)
+    if not user_data:
+        user_doc = db.collection("profiles").document(data.customer_id).get()
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            profiles_cache.set(data.customer_id, user_data)
+        else:
+            user_data = {}
     
     predicted_measurements = {}
     predicted_size = "Unknown"
     
-    if user_doc.exists:
-        user_data = user_doc.to_dict()
+    if user_data:
         height = user_data.get("height")
         weight = user_data.get("weight")
         gender = user_data.get("gender", "Unisex")
