@@ -18,8 +18,11 @@ class StylistChatRequest(BaseModel):
 
 @router.post("/chat")
 def stylist_chat(data: StylistChatRequest):
+    print(f"\n[STYLIST] New chat request from customer '{data.customer_id}'")
+    print(f"[STYLIST] Message: '{data.message}'")
     
     # 1. Fetch the user's profile to get their measurements
+    print(f"[STYLIST] Fetching profile for {data.customer_id}...")
     user_doc = db.collection("profiles").document(data.customer_id).get()
     
     predicted_measurements = {}
@@ -41,14 +44,21 @@ def stylist_chat(data: StylistChatRequest):
                     "leg_length": f"{measurements[2]:.1f} cm"
                 }
                 predicted_size = get_size(height, weight)
+                print(f"[STYLIST] Profile found! Predicted Size: {predicted_size}")
             except Exception as e:
-                print(f"Failed to get ML measurements for RAG: {e}")
+                print(f"[STYLIST] Failed to get ML measurements for RAG: {e}")
+    else:
+        print("[STYLIST] No profile found for this customer.")
 
     # 2. Retrieve relevant products from ChromaDB using LangChain
+    print("[STYLIST] Searching Vector Database for relevant products...")
     relevant_products = retrieve_relevant_products(data.message, top_k=3)
     
     if not relevant_products:
+        print("[STYLIST] No relevant products found.")
         return {"response": "I couldn't find any items matching your request in our catalog."}
+        
+    print(f"[STYLIST] Found {len(relevant_products)} relevant products.")
 
     # 3. Construct the prompt for the LLM
     product_context = "\n\n".join([
@@ -77,9 +87,12 @@ def stylist_chat(data: StylistChatRequest):
     
     try:
         # 4. Generate response using load-balanced Gemini client
+        print("[STYLIST] Calling Gemini AI...")
         prompt = f"{system_prompt}\n\nUSER QUESTION: {data.message}"
         response_text = llm_manager.generate_content_with_fallback(prompt)
-
+        
+        print("[STYLIST] Gemini AI responded successfully!")
+        
         return {
             "response": response_text,
             "relevant_products": relevant_products,
