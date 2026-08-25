@@ -18,42 +18,42 @@ router = APIRouter()
 @router.post("/create")
 def create_profile(data: ProfileCreateRequest):
     email_lower = data.email.lower()
-    existing_docs = db.collection("profiles").stream()
+    email_variants = list(set([data.email, email_lower]))
+    existing_docs = db.collection("profiles").where("email", "in", email_variants).stream()
 
     for doc in existing_docs:
         d = doc.to_dict()
         doc_email = d.get("email")
-        if doc_email and doc_email.lower() == email_lower:
-            if data.password.startswith("GOOGLE_AUTH_PLACEHOLDER_"):
-                recommended_size = get_size(data.height, data.weight)
-                try:
-                    body_measurements = predict_body_measurements(
-                        height=data.height,
-                        weight=data.weight,
-                        gender=data.gender,
-                    )
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=str(e))
+        if data.password.startswith("GOOGLE_AUTH_PLACEHOLDER_"):
+            recommended_size = get_size(data.height, data.weight)
+            try:
+                body_measurements = predict_body_measurements(
+                    height=data.height,
+                    weight=data.weight,
+                    gender=data.gender,
+                )
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
 
-                update_data = {
-                    "height": data.height,
-                    "weight": data.weight,
-                    "gender": data.gender,
-                    "recommended_size": recommended_size,
-                    "predicted_shoulder_width": body_measurements["predicted_shoulder_width"],
-                    "predicted_waist": body_measurements["predicted_waist"],
-                    "predicted_leg_length": body_measurements["predicted_leg_length"],
-                    "updated_at": firestore.SERVER_TIMESTAMP,
-                }
-                doc.reference.update(update_data)
-                return {
-                    "message": "Profile updated successfully",
-                    "profile_id": doc.id,
-                    "email": doc_email,
-                    "recommended_size": recommended_size,
-                    "body_measurements": body_measurements,
-                }
-            raise HTTPException(status_code=400, detail="Email already registered")
+            update_data = {
+                "height": data.height,
+                "weight": data.weight,
+                "gender": data.gender,
+                "recommended_size": recommended_size,
+                "predicted_shoulder_width": body_measurements["predicted_shoulder_width"],
+                "predicted_waist": body_measurements["predicted_waist"],
+                "predicted_leg_length": body_measurements["predicted_leg_length"],
+                "updated_at": firestore.SERVER_TIMESTAMP,
+            }
+            doc.reference.update(update_data)
+            return {
+                "message": "Profile updated successfully",
+                "profile_id": doc.id,
+                "email": doc_email,
+                "recommended_size": recommended_size,
+                "body_measurements": body_measurements,
+            }
+        raise HTTPException(status_code=400, detail="Email already registered")
 
     if len(data.password) < 8:
         raise HTTPException(
@@ -103,7 +103,9 @@ def create_profile(data: ProfileCreateRequest):
 @router.post("/login")
 def login(data: LoginRequest):
     try:
-        docs = db.collection("profiles").where("email", "==", data.email).stream()
+        email_lower = data.email.lower()
+        email_variants = list(set([data.email, email_lower]))
+        docs = db.collection("profiles").where("email", "in", email_variants).stream()
 
         user_doc = None
         user_data = None
@@ -171,17 +173,16 @@ def google_login(data: GoogleLoginRequest):
         raise HTTPException(status_code=400, detail="No email found in Google token")
 
     email_lower = email.lower()
-    docs = db.collection("profiles").stream()
+    email_variants = list(set([email, email_lower]))
+    docs = db.collection("profiles").where("email", "in", email_variants).stream()
     
     user_doc = None
     user_data = None
     for doc in docs:
         d = doc.to_dict()
-        doc_email = d.get("email")
-        if doc_email and doc_email.lower() == email_lower:
-            user_doc = doc
-            user_data = d
-            break
+        user_doc = doc
+        user_data = d
+        break
 
     if not user_data:
         # The user successfully verified via Google, but has no sizing profile.
