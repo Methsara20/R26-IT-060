@@ -119,26 +119,40 @@ def retrieve_relevant_products(query: str, top_k: int = 3) -> List[Dict[str, Any
     """
     Retrieves the most relevant products from ChromaDB based on the user's query.
     """
-    vector_store = get_vector_store()
-    
     try:
+        vector_store = get_vector_store()
+        
         if vector_store._collection.count() == 0:
             print("ChromaDB empty! Ingesting products on-the-fly...")
             ingest_products_to_chroma()
-    except Exception as e:
-        print(f"Error checking Chroma count: {e}")
-    
-    # Perform similarity search
-    results = vector_store.similarity_search(query, k=top_k)
-    
-    formatted_results = []
-    for doc in results:
-        formatted_results.append({
-            "description": doc.page_content,
-            "product_id": doc.metadata.get("product_id"),
-            "product_name": doc.metadata.get("product_name"),
-            "brand": doc.metadata.get("brand"),
-            "price": doc.metadata.get("selling_price")
-        })
+            
+        # Perform similarity search
+        results = vector_store.similarity_search(query, k=top_k)
         
-    return formatted_results
+        formatted_results = []
+        for doc in results:
+            formatted_results.append({
+                "description": doc.page_content,
+                "product_id": doc.metadata.get("product_id"),
+                "product_name": doc.metadata.get("product_name"),
+                "brand": doc.metadata.get("brand"),
+                "price": doc.metadata.get("selling_price")
+            })
+            
+        return formatted_results
+    except Exception as e:
+        print(f"CRITICAL RAG ERROR (likely invalid API key for embeddings): {e}")
+        print("Falling back to default catalog products...")
+        from app.services.product_service import get_all_products
+        products = get_all_products()
+        
+        formatted_results = []
+        for p in products[:top_k]:
+            formatted_results.append({
+                "description": p.get("description", ""),
+                "product_id": p.get("product_id", p.get("id")),
+                "product_name": p.get("product_name", ""),
+                "brand": p.get("brand", ""),
+                "price": p.get("price_lkr", p.get("selling_price", 0))
+            })
+        return formatted_results
