@@ -4,11 +4,25 @@ os.environ["OMP_NUM_THREADS"] = "1"
 
 import json
 from typing import List, Dict, Any
-import torch
-torch.set_num_threads(1)
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
+import requests
+from app.services.llm_manager import llm_manager
+
+class GeminiEmbeddings:
+    def _embed(self, text: str) -> list[float]:
+        api_key = llm_manager.api_keys[0] if getattr(llm_manager, "api_keys", None) else os.getenv("GEMINI_API_KEY", "")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+        resp = requests.post(url, json={"model": "models/text-embedding-004", "content": {"parts": [{"text": text}]}})
+        resp.raise_for_status()
+        return resp.json()["embedding"]["values"]
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return [self._embed(t) for t in texts]
+
+    def embed_query(self, text: str) -> list[float]:
+        return self._embed(text)
+
+from langchain_chroma import Chroma
 
 from app.firebase_config import db
 from app.constants.collections import PRODUCTS_COLLECTION
@@ -22,8 +36,8 @@ _vector_store = None
 def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
-        print("Loading HuggingFace Embedding model...")
-        _embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        print("Loading lightweight Gemini Embedding model (preventing OOM)...")
+        _embedding_model = GeminiEmbeddings()
     return _embedding_model
 
 def get_vector_store():
@@ -31,7 +45,7 @@ def get_vector_store():
     if _vector_store is None:
         print(f"Connecting to ChromaDB at {CHROMA_DB_DIR}")
         _vector_store = Chroma(
-            collection_name="products",
+            collection_name="products_gemini",
             embedding_function=get_embedding_model(),
             persist_directory=CHROMA_DB_DIR
         )
@@ -106,6 +120,13 @@ def retrieve_relevant_products(query: str, top_k: int = 3) -> List[Dict[str, Any
     Retrieves the most relevant products from ChromaDB based on the user's query.
     """
     vector_store = get_vector_store()
+    
+    try:
+        if vector_store._collection.count() == 0:
+            print("ChromaDB empty! Ingesting products on-the-fly...")
+            ingest_products_to_chroma()
+    except Exception as e:
+        print(f"Error checking Chroma count: {e}")
     
     # Perform similarity search
     results = vector_store.similarity_search(query, k=top_k)
