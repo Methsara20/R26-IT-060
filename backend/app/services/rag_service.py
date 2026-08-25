@@ -53,11 +53,12 @@ def get_vector_store():
 
 def ingest_products_to_chroma():
     """
-    Pulls products from Firestore and loads them into ChromaDB.
-    This should be run once, or whenever inventory significantly changes.
+    Pulls products from memory cache and loads them into ChromaDB.
+    This saves duplicate Firebase reads when Render restarts.
     """
-    print("Fetching products from Firestore...")
-    docs = db.collection(PRODUCTS_COLLECTION).stream()
+    print("Fetching products from cache for ChromaDB ingestion...")
+    from app.services.product_service import get_all_products
+    products = get_all_products()
     
     # Load reviews if they exist
     reviews_data = {}
@@ -67,10 +68,9 @@ def ingest_products_to_chroma():
             reviews_data = json.load(f)
     
     documents: List[Document] = []
-    for doc in docs:
-        data = doc.to_dict()
+    for data in products:
         desc = data.get("description", "")
-        pid = data.get("product_id", doc.id)
+        pid = data.get("product_id", data.get("id"))
         
         if not desc:
             continue
