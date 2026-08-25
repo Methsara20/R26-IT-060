@@ -17,10 +17,43 @@ router = APIRouter()
 
 @router.post("/create")
 def create_profile(data: ProfileCreateRequest):
-    existing_users = db.collection("profiles").where("email", "==", data.email).stream()
+    email_lower = data.email.lower()
+    existing_docs = db.collection("profiles").stream()
 
-    for _ in existing_users:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    for doc in existing_docs:
+        d = doc.to_dict()
+        doc_email = d.get("email")
+        if doc_email and doc_email.lower() == email_lower:
+            if data.password.startswith("GOOGLE_AUTH_PLACEHOLDER_"):
+                recommended_size = get_size(data.height, data.weight)
+                try:
+                    body_measurements = predict_body_measurements(
+                        height=data.height,
+                        weight=data.weight,
+                        gender=data.gender,
+                    )
+                except Exception as e:
+                    raise HTTPException(status_code=500, detail=str(e))
+
+                update_data = {
+                    "height": data.height,
+                    "weight": data.weight,
+                    "gender": data.gender,
+                    "recommended_size": recommended_size,
+                    "predicted_shoulder_width": body_measurements["predicted_shoulder_width"],
+                    "predicted_waist": body_measurements["predicted_waist"],
+                    "predicted_leg_length": body_measurements["predicted_leg_length"],
+                    "updated_at": firestore.SERVER_TIMESTAMP,
+                }
+                doc.reference.update(update_data)
+                return {
+                    "message": "Profile updated successfully",
+                    "profile_id": doc.id,
+                    "email": doc_email,
+                    "recommended_size": recommended_size,
+                    "body_measurements": body_measurements,
+                }
+            raise HTTPException(status_code=400, detail="Email already registered")
 
     if len(data.password) < 8:
         raise HTTPException(
@@ -124,10 +157,7 @@ def google_login(data: GoogleLoginRequest):
         decoded_token = id_token.verify_oauth2_token(
             data.id_token, 
             requests.Request(),
-            audience=[
-                "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
-                "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com",  # iOS client
-            ]
+            audience=list(ALLOWED_CLIENT_IDS)
         )
         token_aud = decoded_token.get("aud")
         if token_aud not in ALLOWED_CLIENT_IDS:
@@ -140,14 +170,18 @@ def google_login(data: GoogleLoginRequest):
     if not email:
         raise HTTPException(status_code=400, detail="No email found in Google token")
 
-    docs = db.collection("profiles").where("email", "==", email).stream()
+    email_lower = email.lower()
+    docs = db.collection("profiles").stream()
     
     user_doc = None
     user_data = None
     for doc in docs:
-        user_doc = doc
-        user_data = doc.to_dict()
-        break
+        d = doc.to_dict()
+        doc_email = d.get("email")
+        if doc_email and doc_email.lower() == email_lower:
+            user_doc = doc
+            user_data = d
+            break
 
     if not user_data:
         # The user successfully verified via Google, but has no sizing profile.
