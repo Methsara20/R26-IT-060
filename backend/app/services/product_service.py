@@ -53,9 +53,11 @@ def add_product_image_url(product: dict) -> dict:
 from app.firebase_config import db
 
 def get_all_products(force_refresh: bool = False):
-    global _products_cache
+    from app.services.cache_service import products_cache
+    
+    cached_products = products_cache.get("all_products")
 
-    if _products_cache is None or force_refresh:
+    if not cached_products or force_refresh:
         print("Loading products from Firestore...")
 
         products = get_all_documents(PRODUCTS_COLLECTION)
@@ -90,9 +92,10 @@ def get_all_products(force_refresh: bool = False):
             enriched_products.append(enriched)
 
         if enriched_products:
-            _products_cache = enriched_products
+            products_cache.set("all_products", enriched_products)
+            cached_products = enriched_products
 
-    return _products_cache or []
+    return cached_products or []
 
 
 def get_product_by_id(product_id: str):
@@ -130,5 +133,5 @@ def get_products_by_category(
 
 
 def clear_products_cache():
-    global _products_cache
-    _products_cache = None
+    from app.services.cache_service import products_cache
+    products_cache.clear()

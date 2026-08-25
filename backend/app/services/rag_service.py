@@ -4,6 +4,8 @@ os.environ["OMP_NUM_THREADS"] = "1"
 
 import json
 from typing import List, Dict, Any
+import torch
+torch.set_num_threads(1)
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document

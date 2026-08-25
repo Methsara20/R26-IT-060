@@ -1,14 +1,14 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
-  static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId: '171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com',
-  );
+  static final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   static bool _initialized = false;
 
   static Future<void> _ensureInitialized() async {
     if (!_initialized) {
-      await _googleSignIn.initialize();
+      await _googleSignIn.initialize(
+        serverClientId: '171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com',
+      );
       _initialized = true;
     }
   }
