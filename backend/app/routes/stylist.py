@@ -23,32 +23,35 @@ def stylist_chat(data: StylistChatRequest):
     
     # 1. Fetch the user's profile to get their measurements
     print(f"[STYLIST] Fetching profile for {data.customer_id}...")
-    user_doc = db.collection("profiles").document(data.customer_id).get()
-    
     predicted_measurements = {}
     predicted_size = "Unknown"
     
-    if user_doc.exists:
-        user_data = user_doc.to_dict()
-        height = user_data.get("height")
-        weight = user_data.get("weight")
-        gender = user_data.get("gender", "Unisex")
+    try:
+        user_doc = db.collection("profiles").document(data.customer_id).get()
         
-        if height and weight:
-            # We use the existing ML service to get the body context
-            try:
-                measurements = predict_body_measurements(height, weight, gender)
-                predicted_measurements = {
-                    "shoulder_width": f"{measurements[0]:.1f} cm",
-                    "waist_circumference": f"{measurements[1]:.1f} cm",
-                    "leg_length": f"{measurements[2]:.1f} cm"
-                }
-                predicted_size = get_size(height, weight)
-                print(f"[STYLIST] Profile found! Predicted Size: {predicted_size}")
-            except Exception as e:
-                print(f"[STYLIST] Failed to get ML measurements for RAG: {e}")
-    else:
-        print("[STYLIST] No profile found for this customer.")
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            height = user_data.get("height")
+            weight = user_data.get("weight")
+            gender = user_data.get("gender", "Unisex")
+            
+            if height and weight:
+                # We use the existing ML service to get the body context
+                try:
+                    measurements = predict_body_measurements(height, weight, gender)
+                    predicted_measurements = {
+                        "shoulder_width": f"{measurements[0]:.1f} cm",
+                        "waist_circumference": f"{measurements[1]:.1f} cm",
+                        "leg_length": f"{measurements[2]:.1f} cm"
+                    }
+                    predicted_size = get_size(height, weight)
+                    print(f"[STYLIST] Profile found! Predicted Size: {predicted_size}")
+                except Exception as e:
+                    print(f"[STYLIST] Failed to get ML measurements for RAG: {e}")
+        else:
+            print("[STYLIST] No profile found for this customer.")
+    except Exception as e:
+        print(f"[STYLIST] WARNING: Firebase profile fetch failed (likely quota limit). Proceeding without measurements. Error: {e}")
 
     # 2. Retrieve relevant products from ChromaDB using LangChain
     print("[STYLIST] Searching Vector Database for relevant products...")
