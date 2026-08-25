@@ -483,3 +483,89 @@ def manual_assist(data: ManualAssistRequest):
     })
     
     return {"message": "Manual assistance request triggered"}
+
+
+@router.get("/zone-analytics")
+def get_zone_analytics():
+    zones_docs = db.collection("zones").stream()
+    zones_map = {}
+    for doc in zones_docs:
+        z = doc.to_dict()
+        zid = doc.id
+        zname = z.get("zone_name", "Unknown Zone")
+        zones_map[zid] = {
+            "zone_id": zid,
+            "zone_name": zname,
+            "total_dwell_seconds": 0,
+            "visitor_count": 0,
+            "status": "Normal"
+        }
+
+    monitoring_docs = db.collection("customer_monitoring").stream()
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    for doc in monitoring_docs:
+        data = doc.to_dict()
+        # Add historical zone dwell times
+        history = data.get("zone_history", [])
+        for h in history:
+            zid = h.get("zone_id")
+            zname = h.get("zone_name")
+            dwell = h.get("dwell_time_seconds", 0)
+            if zid and zid in zones_map:
+                zones_map[zid]["total_dwell_seconds"] += dwell
+                zones_map[zid]["visitor_count"] += 1
+            elif zid and zid != "in_transit":
+                zones_map[zid] = {
+                    "zone_id": zid,
+                    "zone_name": zname or "Store Section",
+                    "total_dwell_seconds": dwell,
+                    "visitor_count": 1,
+                    "status": "Normal"
+                }
+
+        # Add current active zone dwell time
+        curr_zid = data.get("zone_id")
+        curr_zname = data.get("zone_name")
+        entry_time = data.get("entry_time")
+        if curr_zid and curr_zid != "in_transit" and entry_time:
+            if entry_time.tzinfo is None:
+                entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+            curr_dwell = int((now - entry_time).total_seconds())
+            if curr_dwell > 0:
+                if curr_zid in zones_map:
+                    zones_map[curr_zid]["total_dwell_seconds"] += curr_dwell
+                    zones_map[curr_zid]["visitor_count"] += 1
+                else:
+                    zones_map[curr_zid] = {
+                        "zone_id": curr_zid,
+                        "zone_name": curr_zname or "Store Section",
+                        "total_dwell_seconds": curr_dwell,
+                        "visitor_count": 1,
+                        "status": "Normal"
+                    }
+
+    analytics_list = list(zones_map.values())
+    if not analytics_list:
+        return {"zones": [], "top_hot_zone": None, "top_dead_zone": None}
+
+    # Sort by total dwell seconds
+    analytics_list.sort(key=lambda x: x["total_dwell_seconds"], reverse=True)
+
+    max_dwell = analytics_list[0]["total_dwell_seconds"]
+    min_dwell = analytics_list[-1]["total_dwell_seconds"]
+
+    for idx, item in enumerate(analytics_list):
+        item["total_dwell_minutes"] = round(item["total_dwell_seconds"] / 60.0, 1)
+        if idx == 0 and item["total_dwell_seconds"] > 0:
+            item["status"] = "Hot"
+        elif idx == len(analytics_list) - 1 and len(analytics_list) > 1:
+            item["status"] = "Dead"
+        else:
+            item["status"] = "Normal"
+
+    return {
+        "zones": analytics_list,
+        "top_hot_zone": analytics_list[0]["zone_name"] if max_dwell > 0 else "None",
+        "top_dead_zone": analytics_list[-1]["zone_name"] if len(analytics_list) > 1 else "None"
+    }
