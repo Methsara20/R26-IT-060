@@ -22,7 +22,7 @@ class LLMManager:
         key = next(self.key_iterator)
         return genai.Client(api_key=key)
 
-    def generate_content_with_fallback(self, prompt: str, model: str = "gemini-3.6-flash") -> str:
+    def generate_content_with_fallback(self, prompt: str, model: str = "gemini-1.5-flash") -> str:
         if not self.api_keys:
             raise HTTPException(status_code=500, detail="GEMINI_API_KEYS not configured on the server.")
 
@@ -52,7 +52,7 @@ class LLMManager:
         try:
             client = self._get_next_client()
             fallback_resp = client.models.generate_content(
-                model="gemini-3.6-flash",
+                model="gemini-1.5-flash",
                 contents=prompt
             )
             return getattr(fallback_resp, "text", str(fallback_resp))
