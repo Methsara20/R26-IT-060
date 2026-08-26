@@ -4,11 +4,25 @@ os.environ["OMP_NUM_THREADS"] = "1"
 
 import json
 from typing import List, Dict, Any
-import torch
-torch.set_num_threads(1)
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
+import requests
+from app.services.llm_manager import llm_manager
+
+class GeminiEmbeddings:
+    def _embed(self, text: str) -> list[float]:
+        api_key = llm_manager.api_keys[0] if getattr(llm_manager, "api_keys", None) else os.getenv("GEMINI_API_KEY", "")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+        resp = requests.post(url, json={"model": "models/text-embedding-004", "content": {"parts": [{"text": text}]}})
+        resp.raise_for_status()
+        return resp.json()["embedding"]["values"]
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return [self._embed(t) for t in texts]
+
+    def embed_query(self, text: str) -> list[float]:
+        return self._embed(text)
+
+from langchain_chroma import Chroma
 
 from app.firebase_config import db
 from app.constants.collections import PRODUCTS_COLLECTION
@@ -22,8 +36,8 @@ _vector_store = None
 def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
-        print("Loading HuggingFace Embedding model...")
-        _embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        print("Loading lightweight Gemini Embedding model (preventing OOM)...")
+        _embedding_model = GeminiEmbeddings()
     return _embedding_model
 
 def get_vector_store():
@@ -31,7 +45,7 @@ def get_vector_store():
     if _vector_store is None:
         print(f"Connecting to ChromaDB at {CHROMA_DB_DIR}")
         _vector_store = Chroma(
-            collection_name="products",
+            collection_name="products_gemini",
             embedding_function=get_embedding_model(),
             persist_directory=CHROMA_DB_DIR
         )
@@ -39,11 +53,12 @@ def get_vector_store():
 
 def ingest_products_to_chroma():
     """
-    Pulls products from Firestore and loads them into ChromaDB.
-    This should be run once, or whenever inventory significantly changes.
+    Pulls products from memory cache and loads them into ChromaDB.
+    This saves duplicate Firebase reads when Render restarts.
     """
-    print("Fetching products from Firestore...")
-    docs = db.collection(PRODUCTS_COLLECTION).stream()
+    print("Fetching products from cache for ChromaDB ingestion...")
+    from app.services.product_service import get_all_products
+    products = get_all_products()
     
     # Load reviews if they exist
     reviews_data = {}
@@ -53,10 +68,9 @@ def ingest_products_to_chroma():
             reviews_data = json.load(f)
     
     documents: List[Document] = []
-    for doc in docs:
-        data = doc.to_dict()
+    for data in products:
         desc = data.get("description", "")
-        pid = data.get("product_id", doc.id)
+        pid = data.get("product_id", data.get("id"))
         
         if not desc:
             continue
@@ -105,19 +119,40 @@ def retrieve_relevant_products(query: str, top_k: int = 3) -> List[Dict[str, Any
     """
     Retrieves the most relevant products from ChromaDB based on the user's query.
     """
-    vector_store = get_vector_store()
-    
-    # Perform similarity search
-    results = vector_store.similarity_search(query, k=top_k)
-    
-    formatted_results = []
-    for doc in results:
-        formatted_results.append({
-            "description": doc.page_content,
-            "product_id": doc.metadata.get("product_id"),
-            "product_name": doc.metadata.get("product_name"),
-            "brand": doc.metadata.get("brand"),
-            "price": doc.metadata.get("selling_price")
-        })
+    try:
+        vector_store = get_vector_store()
         
-    return formatted_results
+        if vector_store._collection.count() == 0:
+            print("ChromaDB empty! Ingesting products on-the-fly...")
+            ingest_products_to_chroma()
+            
+        # Perform similarity search
+        results = vector_store.similarity_search(query, k=top_k)
+        
+        formatted_results = []
+        for doc in results:
+            formatted_results.append({
+                "description": doc.page_content,
+                "product_id": doc.metadata.get("product_id"),
+                "product_name": doc.metadata.get("product_name"),
+                "brand": doc.metadata.get("brand"),
+                "price": doc.metadata.get("selling_price")
+            })
+            
+        return formatted_results
+    except Exception as e:
+        print(f"CRITICAL RAG ERROR (likely invalid API key for embeddings): {e}")
+        print("Falling back to default catalog products...")
+        from app.services.product_service import get_all_products
+        products = get_all_products()
+        
+        formatted_results = []
+        for p in products[:top_k]:
+            formatted_results.append({
+                "description": p.get("description", ""),
+                "product_id": p.get("product_id", p.get("id")),
+                "product_name": p.get("product_name", ""),
+                "brand": p.get("brand", ""),
+                "price": p.get("price_lkr", p.get("selling_price", 0))
+            })
+        return formatted_results

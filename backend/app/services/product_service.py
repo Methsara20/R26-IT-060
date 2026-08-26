@@ -63,10 +63,13 @@ def get_all_products(force_refresh: bool = False):
         products = get_all_documents(PRODUCTS_COLLECTION)
         
         # Workaround for Firestore gRPC cold start silent drop bug
-        if not products:
+        retry_count = 0
+        while not products and retry_count < 4:
             import time
-            time.sleep(1)
-            print("Retrying products fetch due to empty stream (gRPC cold start)...")
+            retry_count += 1
+            sleep_time = retry_count * 1.5
+            print(f"Retrying products fetch due to empty stream (gRPC cold start) - attempt {retry_count} (sleeping {sleep_time}s)...")
+            time.sleep(sleep_time)
             products = get_all_documents(PRODUCTS_COLLECTION)
 
         try:
