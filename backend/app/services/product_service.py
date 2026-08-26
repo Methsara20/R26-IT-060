@@ -7,12 +7,51 @@ from app.constants.collections import PRODUCTS_COLLECTION
 from app.config.settings import PRODUCT_IMAGE_BASE_URL
 from app.firebase_config import db
 
+FALLBACK_PRODUCTS = [
+    {
+        "product_id": "P001",
+        "product_name": "Classic Denim Jacket",
+        "brand": "NexaRetail",
+        "category": "Outerwear",
+        "price_lkr": 4500.0,
+        "current_stock": 15,
+        "description": "Versatile classic blue denim jacket with front metal buttons and twin flap pockets.",
+        "image_key": "denim_jacket"
+    },
+    {
+        "product_id": "P002",
+        "product_name": "Slim Fit Cotton T-Shirt",
+        "brand": "NexaRetail",
+        "category": "Tops",
+        "price_lkr": 2200.0,
+        "current_stock": 25,
+        "description": "Breathable 100% organic cotton t-shirt with modern slim silhouette.",
+        "image_key": "cotton_tshirt"
+    },
+    {
+        "product_id": "P003",
+        "product_name": "Tailored Chino Pants",
+        "brand": "NexaRetail",
+        "category": "Bottoms",
+        "price_lkr": 3800.0,
+        "current_stock": 20,
+        "description": "Smart casual stretch chino pants with tapered fit and slant pockets.",
+        "image_key": "chino_pants"
+    },
+    {
+        "product_id": "P004",
+        "product_name": "Summer Floral Dress",
+        "brand": "NexaRetail",
+        "category": "Dresses",
+        "price_lkr": 5200.0,
+        "current_stock": 12,
+        "description": "Lightweight breezy floral print dress with soft waist cinching.",
+        "image_key": "floral_dress"
+    }
+]
+
 
 def add_product_image_url(product: dict) -> dict:
-    """
-    Adds a public image URL to product dict.
-    Supports image_key (GitHub Pages) or direct image_url.
-    """
     result = product.copy()
     image_key = result.get("image_key")
 
@@ -27,15 +66,15 @@ def add_product_image_url(product: dict) -> dict:
 
 
 def fetch_raw_products_from_firestore():
-    """
-    Fetches raw products from Firestore using stream first,
-    falling back to direct .get() to bypass gRPC silent stream drops.
-    """
-    products = get_all_documents(PRODUCTS_COLLECTION)
+    products = []
+    try:
+        products = get_all_documents(PRODUCTS_COLLECTION)
+    except Exception as e:
+        print(f"[ProductService] Stream error: {e}")
 
-    if not products:
-        print("Stream returned 0 products. Falling back to direct db.collection().get()...")
+    if not products and db is not None:
         try:
+            print("Stream returned 0 products. Falling back to direct db.collection().get()...")
             docs = db.collection(PRODUCTS_COLLECTION).get()
             products = []
             for doc in docs:
@@ -43,7 +82,7 @@ def fetch_raw_products_from_firestore():
                 p["id"] = doc.id
                 products.append(p)
         except Exception as e:
-            print(f"Error executing direct .get() on products collection: {e}")
+            print(f"[ProductService] Error executing direct .get(): {e}")
 
     return products
 
@@ -63,47 +102,41 @@ def get_all_products(force_refresh: bool = False):
 
         # Retry loop for Firestore cold start
         retry_count = 0
-        while not products and retry_count < 3:
+        while not products and retry_count < 2:
             import time
             retry_count += 1
-            sleep_time = retry_count * 1.0
             print(f"Retrying product fetch (attempt {retry_count})...")
-            time.sleep(sleep_time)
+            time.sleep(0.5)
             products = fetch_raw_products_from_firestore()
+
+        if not products:
+            print("[ProductService] Firestore empty or quota reached. Using default product catalog.")
+            products = FALLBACK_PRODUCTS.copy()
 
         # Load current stock map
         stock_map = {}
-        try:
-            inventory_docs = db.collection("inventory_current").get()
-            for doc in inventory_docs:
-                data = doc.to_dict()
-                pid = data.get("product_id")
-                if pid:
-                    stock_map[pid] = stock_map.get(pid, 0) + int(data.get("current_stock", 0))
-        except Exception as e:
-            print(f"Error loading inventory: {e}")
+        if db is not None:
+            try:
+                inventory_docs = db.collection("inventory_current").get()
+                for doc in inventory_docs:
+                    data = doc.to_dict()
+                    pid = data.get("product_id")
+                    if pid:
+                        stock_map[pid] = stock_map.get(pid, 0) + int(data.get("current_stock", 0))
+            except Exception as e:
+                print(f"[ProductService] Error loading inventory: {e}")
 
         enriched_products = []
         for product in products:
             enriched = add_product_image_url(product)
-            pid = enriched.get("product_id") or enriched.get("id")
+            pid = enriched.get("product_id") or enriched.get("id") or "P00"
             
-            # Normalize product_id
             enriched["product_id"] = pid
-            
-            # Normalize product_name / name
             enriched["product_name"] = enriched.get("product_name") or enriched.get("name") or "Product Item"
-            
-            # Normalize brand
-            enriched["brand"] = enriched.get("brand") or "Brand"
-            
-            # Normalize category
+            enriched["brand"] = enriched.get("brand") or "NexaRetail"
             enriched["category"] = enriched.get("category") or "General"
-            
-            # Normalize stock
             enriched["current_stock"] = stock_map.get(pid, enriched.get("current_stock", 10))
             
-            # Normalize price
             price_val = (
                 enriched.get("price_lkr") or 
                 enriched.get("selling_price") or 
@@ -120,10 +153,8 @@ def get_all_products(force_refresh: bool = False):
         if enriched_products:
             products_cache.set("all_products", enriched_products)
             cached_products = enriched_products
-        else:
-            products_cache.clear()
 
-    return cached_products or []
+    return cached_products or FALLBACK_PRODUCTS
 
 
 def get_product_by_id(product_id: str):
@@ -136,13 +167,15 @@ def get_product_by_id(product_id: str):
         ):
             return product
 
-    product = get_document_by_id(
-        PRODUCTS_COLLECTION,
-        product_id
-    )
-
-    if product:
-        return add_product_image_url(product)
+    try:
+        product = get_document_by_id(
+            PRODUCTS_COLLECTION,
+            product_id
+        )
+        if product:
+            return add_product_image_url(product)
+    except Exception as e:
+        print(f"[ProductService] get_product_by_id error: {e}")
 
     return None
 
