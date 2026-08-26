@@ -115,7 +115,8 @@ class MongoCollectionReference(MongoQuery):
 
 class MongoFirestoreClient:
     def __init__(self, uri):
-        self.client = pymongo.MongoClient(uri)
+        import certifi
+        self.client = pymongo.MongoClient(uri, tlsCAFile=certifi.where())
         # Using a default database named "smart_retail_db" since no DB name is in the generic URI
         self.db = self.client.get_database("smart_retail_db")
 
