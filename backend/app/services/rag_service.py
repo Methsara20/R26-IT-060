@@ -10,11 +10,24 @@ from app.services.llm_manager import llm_manager
 
 class GeminiEmbeddings:
     def _embed(self, text: str) -> list[float]:
-        api_key = llm_manager.api_keys[0] if getattr(llm_manager, "api_keys", None) else os.getenv("GEMINI_API_KEY", "")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
-        resp = requests.post(url, json={"model": "models/text-embedding-004", "content": {"parts": [{"text": text}]}})
-        resp.raise_for_status()
-        return resp.json()["embedding"]["values"]
+        api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY", "")]
+        for key in api_keys:
+            if not key or key == "dummy_key":
+                continue
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={key}"
+                resp = requests.post(
+                    url, 
+                    json={"model": "models/text-embedding-004", "content": {"parts": [{"text": text}]}},
+                    timeout=10
+                )
+                if resp.status_code == 200:
+                    return resp.json()["embedding"]["values"]
+            except Exception as e:
+                print(f"[GeminiEmbeddings] Embedding request failed with key: {e}")
+                continue
+
+        raise RuntimeError("Embedding service failed on all configured Gemini API keys.")
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         return [self._embed(t) for t in texts]
@@ -23,20 +36,18 @@ class GeminiEmbeddings:
         return self._embed(text)
 
 from langchain_chroma import Chroma
-
 from app.firebase_config import db
 from app.constants.collections import PRODUCTS_COLLECTION
 
 CHROMA_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chroma_db")
 
-# We will initialize the embedding model lazily to save startup time
 _embedding_model = None
 _vector_store = None
 
 def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
-        print("Loading lightweight Gemini Embedding model (preventing OOM)...")
+        print("Loading lightweight Gemini Embedding model...")
         _embedding_model = GeminiEmbeddings()
     return _embedding_model
 
@@ -54,7 +65,6 @@ def get_vector_store():
 def ingest_products_to_chroma():
     """
     Pulls products from memory cache and loads them into ChromaDB.
-    This saves duplicate Firebase reads when Render restarts.
     """
     print("Fetching products from cache for ChromaDB ingestion...")
     from app.services.product_service import get_all_products
@@ -69,8 +79,8 @@ def ingest_products_to_chroma():
     
     documents: List[Document] = []
     for data in products:
-        desc = data.get("description", "")
-        pid = data.get("product_id", data.get("id"))
+        desc = data.get("description", "") or data.get("product_name", "")
+        pid = data.get("product_id") or data.get("id") or "prod"
         
         if not desc:
             continue
@@ -83,12 +93,18 @@ def ingest_products_to_chroma():
                 desc += f"\n{i}. \"{rev}\""
             
         # Store essential metadata for retrieval
+        price_val = data.get("price_lkr") or data.get("selling_price") or data.get("price") or 0.0
+        try:
+            float_price = float(price_val)
+        except (ValueError, TypeError):
+            float_price = 0.0
+
         metadata = {
-            "product_id": data.get("product_id", doc.id),
-            "product_name": data.get("product_name", ""),
-            "brand": data.get("brand", ""),
-            "category": data.get("category", ""),
-            "selling_price": float(data.get("selling_price", 0.0)),
+            "product_id": pid,
+            "product_name": data.get("product_name") or data.get("name") or "Item",
+            "brand": data.get("brand") or "Brand",
+            "category": data.get("category") or "General",
+            "selling_price": float_price,
             "image_key": data.get("image_key", "")
         }
         
@@ -99,25 +115,28 @@ def ingest_products_to_chroma():
         return {"status": "error", "message": "No products with descriptions found."}
         
     print(f"Adding {len(documents)} documents to ChromaDB...")
-    vector_store = get_vector_store()
     
-    # We clear the existing collection to avoid duplicates if re-running
     try:
-        vector_store.delete_collection()
-    except Exception:
-        pass # Collection might not exist yet
+        vector_store = get_vector_store()
+        try:
+            vector_store.delete_collection()
+        except Exception:
+            pass
+            
+        global _vector_store
+        _vector_store = None
+        vector_store = get_vector_store()
         
-    # Recreate the store after deletion
-    global _vector_store
-    _vector_store = None
-    vector_store = get_vector_store()
-    
-    vector_store.add_documents(documents)
-    return {"status": "success", "message": f"Successfully ingested {len(documents)} products."}
+        vector_store.add_documents(documents)
+        return {"status": "success", "message": f"Successfully ingested {len(documents)} products."}
+    except Exception as e:
+        print(f"Error during ChromaDB ingestion: {e}")
+        return {"status": "error", "message": str(e)}
 
 def retrieve_relevant_products(query: str, top_k: int = 3) -> List[Dict[str, Any]]:
     """
     Retrieves the most relevant products from ChromaDB based on the user's query.
+    Falls back to product catalog if vector search fails.
     """
     try:
         vector_store = get_vector_store()
@@ -133,26 +152,34 @@ def retrieve_relevant_products(query: str, top_k: int = 3) -> List[Dict[str, Any
         for doc in results:
             formatted_results.append({
                 "description": doc.page_content,
-                "product_id": doc.metadata.get("product_id"),
-                "product_name": doc.metadata.get("product_name"),
-                "brand": doc.metadata.get("brand"),
-                "price": doc.metadata.get("selling_price")
+                "product_id": doc.metadata.get("product_id") or "prod",
+                "product_name": doc.metadata.get("product_name") or "Fashion Item",
+                "brand": doc.metadata.get("brand") or "Brand",
+                "price": float(doc.metadata.get("selling_price") or 0.0)
             })
             
-        return formatted_results
+        if formatted_results:
+            return formatted_results
     except Exception as e:
-        print(f"CRITICAL RAG ERROR (likely invalid API key for embeddings): {e}")
-        print("Falling back to default catalog products...")
-        from app.services.product_service import get_all_products
-        products = get_all_products()
-        
-        formatted_results = []
-        for p in products[:top_k]:
-            formatted_results.append({
-                "description": p.get("description", ""),
-                "product_id": p.get("product_id", p.get("id")),
-                "product_name": p.get("product_name", ""),
-                "brand": p.get("brand", ""),
-                "price": p.get("price_lkr", p.get("selling_price", 0))
-            })
-        return formatted_results
+        print(f"[RAG] Vector search error (falling back to product catalog): {e}")
+
+    # Fallback to direct product catalog
+    from app.services.product_service import get_all_products
+    products = get_all_products()
+    
+    formatted_results = []
+    for p in products[:top_k]:
+        price_val = p.get("price_lkr") or p.get("selling_price") or p.get("price") or 0.0
+        try:
+            float_price = float(price_val)
+        except (ValueError, TypeError):
+            float_price = 0.0
+
+        formatted_results.append({
+            "description": p.get("description") or p.get("product_name") or "Fashion product",
+            "product_id": p.get("product_id") or p.get("id") or "prod",
+            "product_name": p.get("product_name") or p.get("name") or "Fashion Item",
+            "brand": p.get("brand") or "Brand",
+            "price": float_price
+        })
+    return formatted_results
