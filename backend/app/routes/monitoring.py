@@ -9,12 +9,23 @@ from app.services.trajectory_service import calculate_distance, classify_intent
 router = APIRouter()
 
 
-def _resolve_zone(latitude: float, longitude: float, altitude: float):
-    zones = db.collection("zones").stream()
-    for doc in zones:
+_zones_cache = None
+_zones_last_updated = None
+
+def _get_zones():
+    docs = db.collection("zones").stream()
+    zones = []
+    for doc in docs:
         zone = doc.to_dict()
+        zone["id"] = doc.id
+        zones.append(zone)
+    return zones
+
+def _resolve_zone(latitude: float, longitude: float, altitude: float):
+    zones = _get_zones()
+    for zone in zones:
         if is_point_in_zone(latitude, longitude, altitude, zone):
-            return doc.id, zone.get("zone_name", "Unknown Zone")
+            return zone["id"], zone.get("zone_name", "Unknown Zone")
     return None, None
 
 
@@ -58,8 +69,10 @@ def _get_updated_history(session_data, now_dt):
 @router.post("/start")
 def start_monitoring(data: MonitoringStartRequest):
     zone_id, zone_name = _resolve_zone(data.latitude, data.longitude, data.altitude)
+    if not zone_id:
+        zone_id, zone_name = "in_transit", "In Transit"
 
-    # Complete any existing active sessions for this customer
+    # Complete any existing active sessions for this customer to ensure 1 active session per customer
     active_sessions = (
         db.collection("customer_monitoring")
         .where(filter=firestore.FieldFilter("customer_id", "==", data.customer_id))
@@ -72,12 +85,9 @@ def start_monitoring(data: MonitoringStartRequest):
     # Resolve any stale assistance requests
     _resolve_pending_requests(data.customer_id)
 
-    if not zone_id:
-        return {"message": "Customer is not in any predefined zone", "monitoring_id": None}
-
     new_session = {
         "customer_id": data.customer_id,
-        "customer_name": data.customer_name,
+        "customer_name": data.customer_name or data.customer_id,
         "zone_id": zone_id,
         "zone_name": zone_name,
         "entry_time": firestore.SERVER_TIMESTAMP,
@@ -86,6 +96,7 @@ def start_monitoring(data: MonitoringStartRequest):
         "latitude": data.latitude,
         "longitude": data.longitude,
         "altitude": data.altitude,
+        "intent": "Transiting" if zone_id == "in_transit" else "Browsing",
         "zone_history": []
     }
 
@@ -99,56 +110,46 @@ def update_monitoring(data: MonitoringUpdateRequest):
         db.collection("customer_monitoring")
         .where(filter=firestore.FieldFilter("customer_id", "==", data.customer_id))
         .where(filter=firestore.FieldFilter("status", "==", "Active"))
-        .limit(1)
         .stream()
     )
 
-    if not active_sessions:
-        # No session exists yet — auto-create one if in a zone
-        zone_id, zone_name = _resolve_zone(data.latitude, data.longitude, data.altitude)
-        if zone_id:
-            new_session = {
-                "customer_id": data.customer_id,
-                "customer_name": data.customer_id,
-                "zone_id": zone_id,
-                "zone_name": zone_name,
-                "entry_time": firestore.SERVER_TIMESTAMP,
-                "last_updated": firestore.SERVER_TIMESTAMP,
-                "status": "Active",
-                "latitude": data.latitude,
-                "longitude": data.longitude,
-                "altitude": data.altitude,
-                "zone_history": []
-            }
-            db.collection("customer_monitoring").add(new_session)
-            return {"message": "Session auto-created", "zone_name": zone_name}
-        return {"message": "No active monitoring session found."}
-
-    session_doc = active_sessions[0]
-    session_data = session_doc.to_dict()
-
     current_zone_id, current_zone_name = _resolve_zone(data.latitude, data.longitude, data.altitude)
-
     if not current_zone_id:
-        now = datetime.datetime.now(datetime.timezone.utc)
-        updated_history = _get_updated_history(session_data, now)
-        session_doc.reference.update({
-            "status": "Completed",
+        current_zone_id, current_zone_name = "in_transit", "In Transit"
+
+    if not active_sessions:
+        # No session exists yet — auto-create one
+        new_session = {
+            "customer_id": data.customer_id,
+            "customer_name": data.customer_id,
+            "zone_id": current_zone_id,
+            "zone_name": current_zone_name,
+            "entry_time": firestore.SERVER_TIMESTAMP,
             "last_updated": firestore.SERVER_TIMESTAMP,
+            "status": "Active",
             "latitude": data.latitude,
             "longitude": data.longitude,
             "altitude": data.altitude,
-            "zone_history": updated_history
-        })
-        _resolve_pending_requests(data.customer_id)
-        return {"message": "Customer left geofenced zones. Session completed."}
+            "intent": "Transiting" if current_zone_id == "in_transit" else "Browsing",
+            "zone_history": []
+        }
+        db.collection("customer_monitoring").add(new_session)
+        return {"message": "Session auto-created", "zone_name": current_zone_name}
 
+    # Deduplicate: use the first session, mark any extra duplicate active sessions as Completed
+    session_doc = active_sessions[0]
+    for dup in active_sessions[1:]:
+        dup.reference.update({"status": "Completed"})
+
+    session_data = session_doc.to_dict()
     stored_zone_id = session_data.get("zone_id")
     now = datetime.datetime.now(datetime.timezone.utc)
 
     if current_zone_id != stored_zone_id:
-        # Customer moved to a new zone — append to history, reset timer
+        # Customer moved to a new zone or into transit — append to history, reset timer
         updated_history = _get_updated_history(session_data, now)
+        intent = "Transiting" if current_zone_id == "in_transit" else "Browsing"
+
         session_doc.reference.update({
             "zone_id": current_zone_id,
             "zone_name": current_zone_name,
@@ -157,6 +158,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
             "latitude": data.latitude,
             "longitude": data.longitude,
             "altitude": data.altitude,
+            "intent": intent,
             "zone_history": updated_history
         })
         
@@ -204,19 +206,17 @@ def update_monitoring(data: MonitoringUpdateRequest):
         last_updated = session_data.get("last_updated")
 
         distance = 0.0
-        intent = "Unknown"
+        intent = "Browsing"
         current_speed = 0.0
 
         if prev_lat and prev_lon and last_updated:
             distance = calculate_distance(prev_lat, prev_lon, data.latitude, data.longitude)
             
-            # last_updated from Firestore may be timezone aware
             if last_updated.tzinfo is None:
                 last_updated = last_updated.replace(tzinfo=datetime.timezone.utc)
             
             elapsed_since_last = (now - last_updated).total_seconds()
             
-            # calculate overall zone dwell time for ML model
             entry_time = session_data.get("entry_time")
             dwell_time = 0.0
             if entry_time:
@@ -227,6 +227,17 @@ def update_monitoring(data: MonitoringUpdateRequest):
             intent = classify_intent(distance, elapsed_since_last, zone_dwell_time_seconds=dwell_time)
             if elapsed_since_last > 0:
                 current_speed = distance / elapsed_since_last
+
+        if current_zone_id == "in_transit" or current_speed > 0.15:
+            intent = "Transiting"
+        else:
+            # Check zone entry time: keep Transiting for 10 seconds after entering a new zone
+            entry_time = session_data.get("entry_time")
+            if entry_time:
+                if entry_time.tzinfo is None:
+                    entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+                if (now - entry_time).total_seconds() < 10:
+                    intent = "Transiting"
 
         session_doc.reference.update({
             "last_updated": firestore.SERVER_TIMESTAMP,
@@ -243,7 +254,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
 
         elapsed_seconds = (now - entry_time).total_seconds()
 
-        if elapsed_seconds >= 30 and intent == "Browsing":
+        if elapsed_seconds >= 15 and intent == "Browsing":
             pending_requests = list(
                 db.collection("assistance_requests")
                 .where(filter=firestore.FieldFilter("customer_id", "==", data.customer_id))
@@ -279,7 +290,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
                 last_notify = req_data.get("last_notification_time", now)
                 notify_elapsed = (now - last_notify).total_seconds()
 
-                if notify_elapsed >= 30:
+                if notify_elapsed >= 15:
                     new_count = req_data.get("notification_count", 0) + 1
                     req_doc.reference.update({
                         "notification_count": new_count,
@@ -330,15 +341,16 @@ def get_active_sessions():
     )
     
     now = datetime.datetime.now(datetime.timezone.utc)
-    # Heartbeat is every 3 seconds now. Expire after 60 seconds of inactivity to prevent accidental drops.
     stale_limit = now - datetime.timedelta(seconds=60)
     
-    result = []
+    raw_sessions = []
     for doc in active_sessions:
         data = doc.to_dict()
         
         last_updated = data.get("last_updated")
         if last_updated:
+            if last_updated.tzinfo is None:
+                last_updated = last_updated.replace(tzinfo=datetime.timezone.utc)
             if last_updated < stale_limit:
                 updated_history = _get_updated_history(data, now)
                 doc.reference.update({
@@ -349,12 +361,38 @@ def get_active_sessions():
                 _resolve_pending_requests(data.get("customer_id"))
                 continue
                 
-        data["monitoring_id"] = doc.id
-        if "entry_time" in data and data["entry_time"]:
-            data["entry_time"] = data["entry_time"].isoformat()
-        if "last_updated" in data and data["last_updated"]:
-            data["last_updated"] = data["last_updated"].isoformat()
-        result.append(data)
+        data["_doc_id"] = doc.id
+        data["_doc_ref"] = doc.reference
+        data["_last_updated"] = last_updated if last_updated else now
+        raw_sessions.append(data)
+
+    # Deduplicate by customer_id: keep latest session, complete older duplicates
+    customer_map = {}
+    for s in raw_sessions:
+        cid = s.get("customer_id")
+        if not cid:
+            continue
+        if cid not in customer_map:
+            customer_map[cid] = [s]
+        else:
+            customer_map[cid].append(s)
+
+    result = []
+    for cid, s_list in customer_map.items():
+        s_list.sort(key=lambda x: x["_last_updated"], reverse=True)
+        latest = s_list[0]
+        
+        for older in s_list[1:]:
+            older["_doc_ref"].update({"status": "Completed"})
+
+        clean_data = {k: v for k, v in latest.items() if not k.startswith("_")}
+        clean_data["monitoring_id"] = latest["_doc_id"]
+        if "entry_time" in clean_data and clean_data["entry_time"]:
+            clean_data["entry_time"] = clean_data["entry_time"].isoformat()
+        if "last_updated" in clean_data and clean_data["last_updated"]:
+            clean_data["last_updated"] = clean_data["last_updated"].isoformat()
+        result.append(clean_data)
+
     return result
 
 
@@ -445,3 +483,89 @@ def manual_assist(data: ManualAssistRequest):
     })
     
     return {"message": "Manual assistance request triggered"}
+
+
+@router.get("/zone-analytics")
+def get_zone_analytics():
+    zones_docs = db.collection("zones").stream()
+    zones_map = {}
+    for doc in zones_docs:
+        z = doc.to_dict()
+        zid = doc.id
+        zname = z.get("zone_name", "Unknown Zone")
+        zones_map[zid] = {
+            "zone_id": zid,
+            "zone_name": zname,
+            "total_dwell_seconds": 0,
+            "visitor_count": 0,
+            "status": "Normal"
+        }
+
+    monitoring_docs = db.collection("customer_monitoring").stream()
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    for doc in monitoring_docs:
+        data = doc.to_dict()
+        # Add historical zone dwell times
+        history = data.get("zone_history", [])
+        for h in history:
+            zid = h.get("zone_id")
+            zname = h.get("zone_name")
+            dwell = h.get("dwell_time_seconds", 0)
+            if zid and zid in zones_map:
+                zones_map[zid]["total_dwell_seconds"] += dwell
+                zones_map[zid]["visitor_count"] += 1
+            elif zid and zid != "in_transit":
+                zones_map[zid] = {
+                    "zone_id": zid,
+                    "zone_name": zname or "Store Section",
+                    "total_dwell_seconds": dwell,
+                    "visitor_count": 1,
+                    "status": "Normal"
+                }
+
+        # Add current active zone dwell time
+        curr_zid = data.get("zone_id")
+        curr_zname = data.get("zone_name")
+        entry_time = data.get("entry_time")
+        if curr_zid and curr_zid != "in_transit" and entry_time:
+            if entry_time.tzinfo is None:
+                entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+            curr_dwell = int((now - entry_time).total_seconds())
+            if curr_dwell > 0:
+                if curr_zid in zones_map:
+                    zones_map[curr_zid]["total_dwell_seconds"] += curr_dwell
+                    zones_map[curr_zid]["visitor_count"] += 1
+                else:
+                    zones_map[curr_zid] = {
+                        "zone_id": curr_zid,
+                        "zone_name": curr_zname or "Store Section",
+                        "total_dwell_seconds": curr_dwell,
+                        "visitor_count": 1,
+                        "status": "Normal"
+                    }
+
+    analytics_list = list(zones_map.values())
+    if not analytics_list:
+        return {"zones": [], "top_hot_zone": None, "top_dead_zone": None}
+
+    # Sort by total dwell seconds
+    analytics_list.sort(key=lambda x: x["total_dwell_seconds"], reverse=True)
+
+    max_dwell = analytics_list[0]["total_dwell_seconds"]
+    min_dwell = analytics_list[-1]["total_dwell_seconds"]
+
+    for idx, item in enumerate(analytics_list):
+        item["total_dwell_minutes"] = round(item["total_dwell_seconds"] / 60.0, 1)
+        if idx == 0 and item["total_dwell_seconds"] > 0:
+            item["status"] = "Hot"
+        elif idx == len(analytics_list) - 1 and len(analytics_list) > 1:
+            item["status"] = "Dead"
+        else:
+            item["status"] = "Normal"
+
+    return {
+        "zones": analytics_list,
+        "top_hot_zone": analytics_list[0]["zone_name"] if max_dwell > 0 else "None",
+        "top_dead_zone": analytics_list[-1]["zone_name"] if len(analytics_list) > 1 else "None"
+    }

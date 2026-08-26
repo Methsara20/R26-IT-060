@@ -46,3 +46,15 @@ app.*.map.json
 .png
 # Gradle Caches
 .gradle/
+gradle
+
+# Ephemeral & Plugin generated files
+**/ephemeral/
+**/Flutter/ephemeral/
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
+**/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+**/linux/flutter/
+**/windows/flutter/generated_*
