@@ -48,7 +48,7 @@ class _ZoneBarChartWidgetState extends State<ZoneBarChartWidget> {
     if (widget.zones.isEmpty) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -62,7 +62,7 @@ class _ZoneBarChartWidgetState extends State<ZoneBarChartWidget> {
         ),
         child: Column(
           children: [
-            const Icon(Icons.bar_chart_rounded, size: 48, color: Color(0xFF94A3B8)),
+            const Icon(Icons.bar_chart_rounded, size: 44, color: Color(0xFF94A3B8)),
             const SizedBox(height: 12),
             const Text(
               "No Zone Dwell Data Yet",
@@ -92,7 +92,7 @@ class _ZoneBarChartWidgetState extends State<ZoneBarChartWidget> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -111,145 +111,181 @@ class _ZoneBarChartWidgetState extends State<ZoneBarChartWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: const [
-                      Icon(Icons.leaderboard_rounded, color: Color(0xFF2563EB), size: 22),
-                      SizedBox(width: 8),
-                      Text(
-                        "Hot / Dead Zone Analysis",
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.leaderboard_rounded, color: Color(0xFF2563EB), size: 20),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            "Hot / Dead Zone Analysis",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    "Customer Dwell Time & Layout A/B Performance",
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "Customer Dwell Time & Layout Performance",
+                      style: TextStyle(fontSize: 11, color: Colors.black54),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
               if (widget.onRefresh != null)
                 IconButton(
                   onPressed: widget.onRefresh,
                   icon: const Icon(Icons.refresh_rounded, color: Color(0xFF64748B), size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                   tooltip: "Refresh Analytics",
                 ),
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Status Badge Legend
-          Row(
+          // Status Badge Legend - Wrap prevents right overflow on any screen width
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _buildLegendChip("🔥 Hot Zone", const Color(0xFF10B981)),
-              const SizedBox(width: 8),
               _buildLegendChip("⚡ Normal", const Color(0xFF3B82F6)),
-              const SizedBox(width: 8),
               _buildLegendChip("❄️ Dead Zone", const Color(0xFFF59E0B)),
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // Bar Chart Visualization Canvas
-          SizedBox(
-            height: 180,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(widget.zones.length, (index) {
-                final zone = widget.zones[index];
-                final String name = (zone["zone_name"] ?? "Zone").toString();
-                final double dwellMins = ((zone["total_dwell_minutes"] ?? 0) as num).toDouble();
-                final String status = (zone["status"] ?? "Normal").toString();
-                final Color barColor = _getStatusColor(status);
-                final bool isSelected = _selectedZoneIndex == index;
+          // Bar Chart Visualization Canvas with Responsive Scroll
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double availableWidth = constraints.maxWidth;
+              final int count = widget.zones.length;
+              // Minimum bar width is 50px for proper spacing; scroll horizontally if total width > available
+              final double minBarWidth = 50.0;
+              final double calculatedBarWidth = availableWidth / count;
+              final double actualBarWidth = calculatedBarWidth < minBarWidth ? minBarWidth : calculatedBarWidth;
+              final double totalContentWidth = count * actualBarWidth;
 
-                // Height ratio (between 0.15 and 1.0)
-                final double heightRatio = (dwellMins / maxDwell).clamp(0.15, 1.0);
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: totalContentWidth > availableWidth
+                    ? const BouncingScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
+                child: SizedBox(
+                  width: totalContentWidth < availableWidth ? availableWidth : totalContentWidth,
+                  height: 180,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(count, (index) {
+                      final zone = widget.zones[index];
+                      final String name = (zone["zone_name"] ?? "Zone").toString();
+                      final double dwellMins = ((zone["total_dwell_minutes"] ?? 0) as num).toDouble();
+                      final String status = (zone["status"] ?? "Normal").toString();
+                      final Color barColor = _getStatusColor(status);
+                      final bool isSelected = _selectedZoneIndex == index;
 
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedZoneIndex = isSelected ? null : index;
-                      });
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        // Dwell Time Label
-                        Text(
-                          "${dwellMins.toStringAsFixed(1)}m",
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                            color: isSelected ? barColor : const Color(0xFF64748B),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
+                      final double heightRatio = (dwellMins / maxDwell).clamp(0.15, 1.0);
 
-                        // Animated Bar Box
-                        Flexible(
-                          child: FractionallySizedBox(
-                            heightFactor: heightRatio,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeOutCubic,
-                              margin: const EdgeInsets.symmetric(horizontal: 6),
-                              decoration: BoxDecoration(
-                                color: isSelected ? barColor : barColor.withValues(alpha: 0.85),
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                                border: isSelected
-                                    ? Border.all(color: Colors.black.withValues(alpha: 0.2), width: 2)
-                                    : null,
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: barColor.withValues(alpha: 0.4),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        )
-                                      ]
-                                    : null,
-                              ),
+                      return SizedBox(
+                        width: actualBarWidth,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedZoneIndex = isSelected ? null : index;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                // Formatted Dwell Value Label
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    dwellMins >= 1000
+                                        ? "${(dwellMins / 1000).toStringAsFixed(1)}k m"
+                                        : "${dwellMins.toStringAsFixed(1)}m",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                      color: isSelected ? barColor : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+
+                                // Animated Bar Box
+                                Flexible(
+                                  child: FractionallySizedBox(
+                                    heightFactor: heightRatio,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 400),
+                                      curve: Curves.easeOutCubic,
+                                      decoration: BoxDecoration(
+                                        color: isSelected ? barColor : barColor.withValues(alpha: 0.85),
+                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                                        border: isSelected
+                                            ? Border.all(color: Colors.black.withValues(alpha: 0.2), width: 2)
+                                            : null,
+                                        boxShadow: isSelected
+                                            ? [
+                                                BoxShadow(
+                                                  color: barColor.withValues(alpha: 0.4),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 3),
+                                                )
+                                              ]
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 6),
+
+                                // Zone Name Label
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    name.length > 7 ? "${name.substring(0, 6)}…" : name,
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                      color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF475569),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-
-                        const SizedBox(height: 8),
-
-                        // Zone Name Label
-                        Text(
-                          name.length > 8 ? "${name.substring(0, 7)}…" : name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF475569),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    }),
                   ),
-                );
-              }),
-            ),
+                ),
+              );
+            },
           ),
 
           // Selected Zone Detail Tooltip Banner
           if (selectedZone != null) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _getStatusColor(selectedZone["status"] ?? "").withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
@@ -262,9 +298,9 @@ class _ZoneBarChartWidgetState extends State<ZoneBarChartWidget> {
                   Icon(
                     _getStatusIcon(selectedZone["status"] ?? ""),
                     color: _getStatusColor(selectedZone["status"] ?? ""),
-                    size: 24,
+                    size: 22,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,14 +309,16 @@ class _ZoneBarChartWidgetState extends State<ZoneBarChartWidget> {
                           "${selectedZone['zone_name']} (${selectedZone['status'].toString().toUpperCase()})",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: 13,
                             color: _getStatusColor(selectedZone["status"] ?? ""),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          "Total Dwell Time: ${selectedZone['total_dwell_minutes']} mins | Visitors Tracked: ${selectedZone['visitor_count'] ?? 0}",
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          "Total Dwell: ${selectedZone['total_dwell_minutes']} mins | Visitors: ${selectedZone['visitor_count'] ?? 0}",
+                          style: const TextStyle(fontSize: 11, color: Colors.black87),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -306,11 +344,11 @@ class _ZoneBarChartWidgetState extends State<ZoneBarChartWidget> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
+            width: 7,
+            height: 7,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
