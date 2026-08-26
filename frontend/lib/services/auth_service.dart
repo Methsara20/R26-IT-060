@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
@@ -7,10 +8,16 @@ class AuthService {
   static Future<void> _ensureInitialized() async {
     if (!_initialized) {
       try {
-        await _googleSignIn.initialize(
-          clientId: '171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com',
-          serverClientId: '171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com',
-        );
+        if (kIsWeb) {
+          await _googleSignIn.initialize(
+            clientId: '171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com',
+            serverClientId: '171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com',
+          );
+        } else {
+          await _googleSignIn.initialize(
+            serverClientId: '171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com',
+          );
+        }
       } catch (_) {}
       _initialized = true;
     }
@@ -24,27 +31,11 @@ class AuthService {
         await _googleSignIn.signOut();
       } catch (_) {}
 
-      GoogleSignInAccount? account;
+      final GoogleSignInAccount account = await _googleSignIn.authenticate();
 
-      // 1. Primary native account picker flow
-      try {
-        account = await _googleSignIn.signIn();
-      } catch (_) {}
-
-      // 2. Fallback to GIS authenticate flow if signIn returned null
-      if (account == null) {
-        try {
-          account = await _googleSignIn.authenticate();
-        } catch (_) {}
-      }
-
-      if (account == null) {
-        throw Exception("Google Sign-In window was closed. Please select your account again.");
-      }
-
-      final GoogleSignInAuthentication auth = await account.authentication;
+      final GoogleSignInAuthentication auth = account.authentication;
       
-      final String? idToken = auth.idToken ?? auth.accessToken;
+      final String? idToken = auth.idToken;
       
       if (idToken == null || idToken.isEmpty) {
         throw Exception("Google did not return an authentication token. Please try signing in again.");
