@@ -5,36 +5,9 @@ os.environ["OMP_NUM_THREADS"] = "1"
 import json
 from typing import List, Dict, Any
 from langchain_core.documents import Document
-import requests
-from app.services.llm_manager import llm_manager
-
-class GeminiEmbeddings:
-    def _embed(self, text: str) -> list[float]:
-        api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY", "")]
-        for key in api_keys:
-            if not key or key == "dummy_key":
-                continue
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={key}"
-                resp = requests.post(
-                    url, 
-                    json={"model": "models/text-embedding-004", "content": {"parts": [{"text": text}]}},
-                    timeout=10
-                )
-                if resp.status_code == 200:
-                    return resp.json()["embedding"]["values"]
-            except Exception as e:
-                print(f"[GeminiEmbeddings] Embedding request failed with key: {e}")
-                continue
-
-        raise RuntimeError("Embedding service failed on all configured Gemini API keys.")
-
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return [self._embed(t) for t in texts]
-
-    def embed_query(self, text: str) -> list[float]:
-        return self._embed(text)
-
+import torch
+torch.set_num_threads(1)
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from app.firebase_config import db
 from app.constants.collections import PRODUCTS_COLLECTION
@@ -47,8 +20,8 @@ _vector_store = None
 def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
-        print("Loading lightweight Gemini Embedding model...")
-        _embedding_model = GeminiEmbeddings()
+        print("Loading HuggingFace Embedding model...")
+        _embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     return _embedding_model
 
 def get_vector_store():
@@ -56,7 +29,7 @@ def get_vector_store():
     if _vector_store is None:
         print(f"Connecting to ChromaDB at {CHROMA_DB_DIR}")
         _vector_store = Chroma(
-            collection_name="products_gemini",
+            collection_name="products",
             embedding_function=get_embedding_model(),
             persist_directory=CHROMA_DB_DIR
         )
