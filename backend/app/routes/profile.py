@@ -193,8 +193,10 @@ def google_login(data: GoogleLoginRequest):
             "message": "Account verified via Google, but body measurements are missing."
         }
     
+    user_email = user_data.get("email") or email
+
     access_token = create_access_token({
-        "sub": user_data["email"],
+        "sub": user_email,
         "profile_id": user_doc.id,
     })
 
@@ -204,7 +206,7 @@ def google_login(data: GoogleLoginRequest):
         "access_token": access_token,
         "token_type": "bearer",
         "profile_id": user_doc.id,
-        "email": user_data["email"],
+        "email": user_email,
         "recommended_size": user_data.get("recommended_size"),
         "body_measurements": {
             "predicted_shoulder_width": user_data.get("predicted_shoulder_width"),
