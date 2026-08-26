@@ -22,42 +22,31 @@ class LLMManager:
         key = next(self.key_iterator)
         return genai.Client(api_key=key)
 
-    def generate_content_with_fallback(self, prompt: str, model: str = "gemini-1.5-flash") -> str:
+    def generate_content_with_fallback(self, prompt: str, initial_model: str = "gemini-1.5-flash") -> str:
         if not self.api_keys:
             raise HTTPException(status_code=500, detail="GEMINI_API_KEYS not configured on the server.")
 
-        # Limit attempts to prevent hanging the API for too long during quota exhaustion
-        max_attempts = min(3, len(self.api_keys) * 2)
+        models_to_try = [initial_model, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
         
-        for attempt in range(max_attempts):
-            client = self._get_next_client()
-            try:
-                response = client.models.generate_content(
-                    model=model,
-                    contents=prompt
-                )
-                return getattr(response, "text", str(response))
-            except Exception as e:
-                error_str = str(e)
-                # If we hit a rate limit or overloaded server, try the next key
-                if "429" in error_str or "503" in error_str or "UNAVAILABLE" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                    if attempt < max_attempts - 1:
-                        time.sleep(1) # Brief pause before swapping to next key
-                        continue
-                else:
-                    # If it's a different error (e.g. 400 Bad Request), don't retry, just raise
-                    raise HTTPException(status_code=500, detail=f"LLM generation failed: {error_str}")
+        for model in models_to_try:
+            max_attempts = min(3, len(self.api_keys) * 2)
+            
+            for attempt in range(max_attempts):
+                client = self._get_next_client()
+                try:
+                    response = client.models.generate_content(
+                        model=model,
+                        contents=prompt
+                    )
+                    res_text = getattr(response, "text", str(response))
+                    if res_text and res_text.strip():
+                        return res_text
+                except Exception as e:
+                    error_str = str(e)
+                    print(f"[LLMManager] Model {model} attempt {attempt} failed: {error_str}")
+                    time.sleep(0.5)
 
-        # If we exhausted all attempts across all keys, fallback to a different model just in case it's a model-specific outage
-        try:
-            client = self._get_next_client()
-            fallback_resp = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=prompt
-            )
-            return getattr(fallback_resp, "text", str(fallback_resp))
-        except Exception:
-            return "AI service is temporarily busy. Please try again."
+        raise HTTPException(status_code=500, detail="All Gemini API models and keys failed to respond.")
 
 # Export a singleton instance to be used across the app
 llm_manager = LLMManager()
