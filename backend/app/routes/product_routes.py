@@ -15,8 +15,11 @@ router = APIRouter(
 @router.get("")
 def list_products(
     category: str | None = Query(default=None),
+    refresh: bool = Query(default=False),
 ):
-    if category:
+    if refresh:
+        products = get_all_products(force_refresh=True)
+    elif category:
         products = get_products_by_category(category)
     else:
         products = get_all_products()
@@ -25,6 +28,7 @@ def list_products(
         "count": len(products),
         "products": products,
     }
+
 
 @router.get("/{product_id}")
 def product_by_id(product_id: str):
