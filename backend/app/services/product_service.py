@@ -7,49 +7,6 @@ from app.constants.collections import PRODUCTS_COLLECTION
 from app.config.settings import PRODUCT_IMAGE_BASE_URL
 from app.firebase_config import db
 
-FALLBACK_PRODUCTS = [
-    {
-        "product_id": "P001",
-        "product_name": "Classic Denim Jacket",
-        "brand": "NexaRetail",
-        "category": "Outerwear",
-        "price_lkr": 4500.0,
-        "current_stock": 15,
-        "description": "Versatile classic blue denim jacket with front metal buttons and twin flap pockets.",
-        "image_key": "denim_jacket"
-    },
-    {
-        "product_id": "P002",
-        "product_name": "Slim Fit Cotton T-Shirt",
-        "brand": "NexaRetail",
-        "category": "Tops",
-        "price_lkr": 2200.0,
-        "current_stock": 25,
-        "description": "Breathable 100% organic cotton t-shirt with modern slim silhouette.",
-        "image_key": "cotton_tshirt"
-    },
-    {
-        "product_id": "P003",
-        "product_name": "Tailored Chino Pants",
-        "brand": "NexaRetail",
-        "category": "Bottoms",
-        "price_lkr": 3800.0,
-        "current_stock": 20,
-        "description": "Smart casual stretch chino pants with tapered fit and slant pockets.",
-        "image_key": "chino_pants"
-    },
-    {
-        "product_id": "P004",
-        "product_name": "Summer Floral Dress",
-        "brand": "NexaRetail",
-        "category": "Dresses",
-        "price_lkr": 5200.0,
-        "current_stock": 12,
-        "description": "Lightweight breezy floral print dress with soft waist cinching.",
-        "image_key": "floral_dress"
-    }
-]
-
 
 def add_product_image_url(product: dict) -> dict:
     result = product.copy()
@@ -109,10 +66,6 @@ def get_all_products(force_refresh: bool = False):
             time.sleep(0.5)
             products = fetch_raw_products_from_firestore()
 
-        if not products:
-            print("[ProductService] Firestore empty or quota reached. Using default product catalog.")
-            products = FALLBACK_PRODUCTS.copy()
-
         # Load current stock map
         stock_map = {}
         if db is not None:
@@ -154,7 +107,7 @@ def get_all_products(force_refresh: bool = False):
             products_cache.set("all_products", enriched_products)
             cached_products = enriched_products
 
-    return cached_products or FALLBACK_PRODUCTS
+    return cached_products or []
 
 
 def get_product_by_id(product_id: str):
