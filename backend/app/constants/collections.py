@@ -18,3 +18,10 @@ OPTIMIZATION_CANDIDATES_COLLECTION = "optimization_candidates"
 OPTIMIZATION_HISTORY_COLLECTION = "optimization_history"
 STOCK_MOVEMENTS_COLLECTION = "stock_movements"
 INVENTORY_TRANSACTIONS_COLLECTION = "inventory_transactions"
+
+MANAGER_CHAT_SESSIONS_COLLECTION = "manager_chat_sessions"
+MANAGER_CHAT_MESSAGES_SUBCOLLECTION = "messages"
+
+MONTHLY_FORECAST_PROFILES_COLLECTION = "monthly_forecast_profiles"
+
+DECISION_WORKFLOWS_COLLECTION = "decision_workflows"

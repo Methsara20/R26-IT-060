@@ -1,0 +1,199 @@
+# ============================================================
+# Smart Inventory & Stock Flow Optimization System
+# Flutter frontend + FastAPI backend repository
+# ============================================================
+
+# ----------------------------
+# Operating system files
+# ----------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ----------------------------
+# Editors / IDEs
+# ----------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+*.swp
+*.swo
+*~
+.history/
+
+# ----------------------------
+# Flutter / Dart
+# ----------------------------
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+coverage/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# Generated Flutter/Dart files
+*.g.dart
+*.freezed.dart
+
+# Keep lock file for application projects
+# pubspec.lock is intentionally NOT ignored
+
+# Flutter web generated/build artifacts
+web/.dart_tool/
+web/build/
+
+# Android / Gradle
+android/.gradle/
+android/local.properties
+android/key.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+*.jks
+*.keystore
+
+# iOS / macOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+macos/Pods/
+macos/Flutter/ephemeral/
+
+# Windows / Linux generated
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+
+# ----------------------------
+# Python / FastAPI
+# ----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python build / package output
+dist/
+sdist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ----------------------------
+# Environment / secrets
+# ----------------------------
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Firebase / Google service-account credentials
+firebase_key.json
+**/firebase_key.json
+*serviceAccount*.json
+*service-account*.json
+*firebase-adminsdk*.json
+google-services-private.json
+
+# Local secret/config overrides
+secrets/
+.local/
+config.local.*
+settings.local.*
+
+# Local FastAPI settings may contain API credentials. Keep the developer's
+# local file, but never add it to source control.
+/backend/app/config/settings.py
+
+# ----------------------------
+# Logs / runtime files
+# ----------------------------
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# ----------------------------
+# Test / temporary outputs
+# ----------------------------
+tmp/
+temp/
+.cache/
+*.tmp
+*.temp
+*.bak
+*.old
+
+# ----------------------------
+# ML / local generated artifacts
+# Uncomment ONLY if trained model files should not be version-controlled.
+# *.pkl
+# *.joblib
+# *.h5
+# *.onnx
+
+# Local datasets that should not be committed if large/private
+# Uncomment patterns that match your repository policy.
+# app/data/*.csv
+# data/*.csv
+
+# ----------------------------
+# Firebase local emulator data
+# ----------------------------
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# ----------------------------
+# Node tooling if present
+# ----------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ----------------------------
+# Miscellaneous
+# ----------------------------
+*.orig
+*.rej
