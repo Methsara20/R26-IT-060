@@ -15,6 +15,8 @@ from app.routes import stock_movement_routes
 from app.routes.chat_routes import router as chat_router
 from app.routes import weather_routes
 from app.routes import decision_workflow_routes
+from app.routes.marketing_opportunity_routes import router as marketing_opportunity_router
+
 
 app = FastAPI(
     title="Smart Inventory AI Service",
@@ -48,6 +50,7 @@ app.include_router(stock_movement_routes.router)
 app.include_router(chat_router)
 app.include_router(weather_routes.router)
 app.include_router(decision_workflow_routes.router)
+app.include_router(marketing_opportunity_router)
 
 @app.get("/")
 def home():
