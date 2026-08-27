@@ -529,6 +529,11 @@ def get_zone_analytics():
         curr_zname = data.get("zone_name")
         entry_time = data.get("entry_time")
         if curr_zid and curr_zid != "in_transit" and entry_time:
+            if isinstance(entry_time, str):
+                try:
+                    entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+                except ValueError:
+                    entry_time = now
             if entry_time.tzinfo is None:
                 entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
             curr_dwell = int((now - entry_time).total_seconds())
