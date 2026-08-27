@@ -53,9 +53,11 @@ class MongoDocumentReference:
         return processed
 
 class MongoQuery:
-    def __init__(self, collection, query=None):
+    def __init__(self, collection, query=None, limit_val=None, offset_val=None):
         self.collection = collection
         self.query = query or {}
+        self.limit_val = limit_val
+        self.offset_val = offset_val
 
     def where(self, field, op, value):
         new_query = self.query.copy()
@@ -74,10 +76,21 @@ class MongoQuery:
         else:
             raise NotImplementedError(f"Operator {op} not implemented in Mongo bridge.")
         
-        return MongoQuery(self.collection, new_query)
+        return MongoQuery(self.collection, new_query, self.limit_val, self.offset_val)
+
+    def limit(self, limit):
+        return MongoQuery(self.collection, self.query, limit, self.offset_val)
+
+    def offset(self, offset):
+        return MongoQuery(self.collection, self.query, self.limit_val, offset)
 
     def stream(self):
         cursor = self.collection.find(self.query)
+        if self.offset_val is not None:
+            cursor = cursor.skip(self.offset_val)
+        if self.limit_val is not None:
+            cursor = cursor.limit(self.limit_val)
+            
         for doc in cursor:
             yield MongoDocumentSnapshot(doc)
             
