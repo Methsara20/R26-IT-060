@@ -10,21 +10,21 @@ from app.services.llm_manager import llm_manager
 
 class GeminiEmbeddings:
     def _embed(self, text: str) -> list[float]:
+        from google import genai
         api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY", "")]
         for key in api_keys:
             if not key or key == "dummy_key":
                 continue
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={key}"
-                resp = requests.post(
-                    url, 
-                    json={"model": "models/text-embedding-004", "content": {"parts": [{"text": text}]}},
-                    timeout=10
+                client = genai.Client(api_key=key)
+                response = client.models.embed_content(
+                    model="gemini-embedding-2",
+                    contents=text
                 )
-                if resp.status_code == 200:
-                    return resp.json()["embedding"]["values"]
+                if response.embeddings and len(response.embeddings) > 0:
+                    return response.embeddings[0].values
             except Exception as e:
-                print(f"[GeminiEmbeddings] Embedding request failed with key: {e}")
+                print(f"[GeminiEmbeddings] Embedding request failed: {e}")
                 continue
 
         raise RuntimeError("Embedding service failed on all configured Gemini API keys.")
