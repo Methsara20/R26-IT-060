@@ -59,7 +59,21 @@ class MongoQuery:
         self.limit_val = limit_val
         self.offset_val = offset_val
 
-    def where(self, field, op, value):
+    def where(self, *args, **kwargs):
+        if "filter" in kwargs:
+            filter_obj = kwargs["filter"]
+            field = filter_obj.field_path
+            op = filter_obj.op_string
+            value = filter_obj.value
+        elif len(args) == 3:
+            field, op, value = args
+        elif "field" in kwargs and "op" in kwargs and "value" in kwargs:
+            field = kwargs["field"]
+            op = kwargs["op"]
+            value = kwargs["value"]
+        else:
+            raise ValueError(f"Unsupported where arguments: args={args}, kwargs={kwargs}")
+
         new_query = self.query.copy()
         if op == "==":
             new_query[field] = value
