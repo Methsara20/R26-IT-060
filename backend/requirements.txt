@@ -64,3 +64,4 @@ sentence-transformers==5.7.0
 bcrypt
 python-jose[cryptography]
 python-multipart
+pymongo==4.17.0
