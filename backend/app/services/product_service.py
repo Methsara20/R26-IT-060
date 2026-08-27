@@ -51,52 +51,72 @@ def add_product_image_url(product: dict) -> dict:
 
 
 from app.firebase_config import db
+from app.services.firebase_service import get_paginated_documents
 
-def get_all_products(force_refresh: bool = False):
-    global _products_cache
+def get_products_paginated(page: int = 1, limit: int = 50, category: str = None):
+    offset = (page - 1) * limit
+    
+    filters = []
+    if category and category.lower() != "all":
+        # Note: Firestore is case-sensitive, so we use the exact category passed from the frontend
+        filters.append({"field": "category", "op": "==", "value": category})
+        
+    products = get_paginated_documents(PRODUCTS_COLLECTION, limit, offset, filters)
+    
+    if not products:
+        return []
 
-    if _products_cache is None or force_refresh:
-        print("Loading products from Firestore...")
+    # Get inventory only for the products on this page
+    product_ids = [p.get("product_id") or p.get("id") for p in products]
+    product_ids = [pid for pid in product_ids if pid]
+    
+    stock_map = {}
+    try:
+        if product_ids:
+            # Firestore allows 'in' queries with a maximum of 30 items
+            for i in range(0, len(product_ids), 30):
+                chunk = product_ids[i:i+30]
+                inventory_docs = db.collection("inventory_current").where("product_id", "in", chunk).stream()
+                for doc in inventory_docs:
+                    data = doc.to_dict()
+                    pid = data.get("product_id")
+                    if pid:
+                        stock_map[pid] = stock_map.get(pid, 0) + int(data.get("current_stock", 0))
+    except Exception as e:
+        print(f"Error loading inventory: {e}")
 
-        products = get_all_documents(PRODUCTS_COLLECTION)
+    enriched_products = []
+    for product in products:
+        enriched = add_product_image_url(product)
+        pid = enriched.get("product_id") or enriched.get("id")
+        enriched["current_stock"] = stock_map.get(pid, 0)
+        
+        # Alias price
+        enriched["price_lkr"] = enriched.get("selling_price", 0.0)
+        enriched_products.append(enriched)
 
-        try:
-            inventory_docs = db.collection("inventory_current").stream()
-            stock_map = {}
-            for doc in inventory_docs:
-                data = doc.to_dict()
-                pid = data.get("product_id")
-                if pid:
-                    stock_map[pid] = stock_map.get(pid, 0) + int(data.get("current_stock", 0))
-        except Exception as e:
-            print(f"Error loading inventory: {e}")
-            stock_map = {}
+    return enriched_products
 
-        enriched_products = []
-        for product in products:
-            enriched = add_product_image_url(product)
-            pid = enriched.get("product_id")
-            enriched["current_stock"] = stock_map.get(pid, 0)
-            
-            # Alias price
-            enriched["price_lkr"] = enriched.get("selling_price", 0.0)
-            enriched_products.append(enriched)
 
-        _products_cache = enriched_products
-
-    return _products_cache
-
+def get_all_products():
+    """
+    WARNING: This fetches all products and bypasses pagination. 
+    It should ONLY be used by the RAG service for database ingestion 
+    and never for user-facing API routes.
+    """
+    from app.services.firebase_service import get_all_documents
+    products = get_all_documents(PRODUCTS_COLLECTION)
+    
+    enriched_products = []
+    for product in products:
+        enriched = add_product_image_url(product)
+        # RAG expects price_lkr
+        enriched["price_lkr"] = enriched.get("selling_price", 0.0)
+        enriched_products.append(enriched)
+        
+    return enriched_products
 
 def get_product_by_id(product_id: str):
-    products = get_all_products()
-
-    for product in products:
-        if (
-            product.get("product_id") == product_id
-            or product.get("id") == product_id
-        ):
-            return product
-
     product = get_document_by_id(
         PRODUCTS_COLLECTION,
         product_id
@@ -106,21 +126,3 @@ def get_product_by_id(product_id: str):
         return add_product_image_url(product)
 
     return None
-
-def get_products_by_category(
-    category: str,
-) -> list[dict]:
-    normalized_category = category.strip().lower()
-
-    return [
-        product
-        for product in get_all_products()
-        if str(
-            product.get("category", "")
-        ).strip().lower() == normalized_category
-    ]
-
-
-def clear_products_cache():
-    global _products_cache
-    _products_cache = None

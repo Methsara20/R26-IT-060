@@ -29,6 +29,33 @@ def get_all_documents(collection_name: str):
         print(f"[FirebaseService] Exception fetching collection '{collection_name}': {e}")
         return []
 
+def get_paginated_documents(collection_name: str, limit: int, offset: int, filters: list = None):
+    try:
+        col = get_collection(collection_name)
+        if col is None:
+            return []
+        
+        query = col
+        if filters:
+            for f in filters:
+                query = query.where(f["field"], f["op"], f["value"])
+                
+        if offset > 0:
+            query = query.offset(offset)
+        query = query.limit(limit)
+        
+        docs = query.stream()
+        data = []
+        for doc in docs:
+            item = doc.to_dict()
+            item["id"] = doc.id
+            data.append(item)
+
+        return data
+    except Exception as e:
+        print(f"[FirebaseService] Exception paginating collection '{collection_name}': {e}")
+        return []
+
 
 def get_document_by_id(collection_name: str, document_id: str):
     try:
@@ -107,3 +134,4 @@ def delete_document(collection_name: str, document_id: str):
         "collection": collection_name,
         "document_id": document_id
     }
+
