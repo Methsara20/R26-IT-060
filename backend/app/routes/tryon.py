@@ -31,8 +31,11 @@ def save_upload_file(upload_file: UploadFile, folder: str) -> str:
     return file_path
 
 
+from fastapi import Request
+
 @router.post("/generate")
 async def generate_try_on(
+    request: Request,
     human_image: UploadFile = File(...),
     cloth_image: UploadFile = File(...),
 ):
@@ -49,9 +52,11 @@ async def generate_try_on(
             output_path=output_path,
         )
 
+        base_url = str(request.base_url).rstrip("/")
+
         return {
             "message": "Try-on image generated successfully",
-            "image_url": f"http://127.0.0.1:8000/generated/{output_file_name}",
+            "image_url": f"{base_url}/generated/{output_file_name}",
         }
 
     except Exception as e:
