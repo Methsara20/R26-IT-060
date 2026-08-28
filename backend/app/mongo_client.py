@@ -4,7 +4,8 @@ import pymongo
 from bson import ObjectId
 
 class MongoDocumentSnapshot:
-    def __init__(self, doc):
+    def __init__(self, doc, collection=None):
+        self.collection = collection
         self.exists = doc is not None
         if doc:
             # We treat the string version of _id as the Firestore document id
@@ -17,6 +18,12 @@ class MongoDocumentSnapshot:
     def to_dict(self):
         return self._data
 
+    @property
+    def reference(self):
+        if self.collection is not None and self.id is not None:
+            return MongoDocumentReference(self.collection, self.id)
+        return None
+
 class MongoDocumentReference:
     def __init__(self, collection, doc_id):
         self.collection = collection
@@ -24,7 +31,7 @@ class MongoDocumentReference:
 
     def get(self):
         doc = self.collection.find_one({"_id": self.id})
-        return MongoDocumentSnapshot(doc)
+        return MongoDocumentSnapshot(doc, self.collection)
 
     def set(self, data, merge=False):
         data = self._process_data(data)
@@ -59,7 +66,21 @@ class MongoQuery:
         self.limit_val = limit_val
         self.offset_val = offset_val
 
-    def where(self, field, op, value):
+    def where(self, *args, **kwargs):
+        if "filter" in kwargs:
+            filter_obj = kwargs["filter"]
+            field = filter_obj.field_path
+            op = filter_obj.op_string
+            value = filter_obj.value
+        elif len(args) == 3:
+            field, op, value = args
+        elif "field" in kwargs and "op" in kwargs and "value" in kwargs:
+            field = kwargs["field"]
+            op = kwargs["op"]
+            value = kwargs["value"]
+        else:
+            raise ValueError(f"Unsupported where arguments: args={args}, kwargs={kwargs}")
+
         new_query = self.query.copy()
         if op == "==":
             new_query[field] = value
@@ -92,7 +113,7 @@ class MongoQuery:
             cursor = cursor.limit(self.limit_val)
             
         for doc in cursor:
-            yield MongoDocumentSnapshot(doc)
+            yield MongoDocumentSnapshot(doc, self.collection)
             
     def get(self):
         # some firestore queries use .get() instead of stream()
