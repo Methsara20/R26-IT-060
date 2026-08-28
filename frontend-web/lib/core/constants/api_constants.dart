@@ -6,3 +6,4 @@ abstract final class ApiConstants {
 
   static const Duration requestTimeout = Duration(seconds: 20);
 }
+

@@ -6,6 +6,7 @@ class PredictionService {
 
   //  PREDICT
 
+
   static Future<Map<String, dynamic>> predict({
     required String productId,
     required String storeId,

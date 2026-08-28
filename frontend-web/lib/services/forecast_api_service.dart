@@ -17,6 +17,7 @@ class ForecastApiException implements Exception {
   String toString() => message;
 }
 
+
 class ForecastApiService {
   ForecastApiService({http.Client? client}) : _client = client ?? http.Client();
 

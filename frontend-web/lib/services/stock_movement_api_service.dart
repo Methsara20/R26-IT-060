@@ -21,6 +21,7 @@ class StockMovementOutcomeUnknownException extends StockMovementApiException {
     : super('The request is taking longer than expected.');
 }
 
+
 class StockMovementApiService {
   StockMovementApiService({http.Client? client})
     : _client = client ?? http.Client();

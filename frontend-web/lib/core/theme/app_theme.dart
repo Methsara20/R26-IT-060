@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'application_design_tokens.dart';
 
+
 abstract final class AppTheme {
   static const Color primary = ApplicationColors.coreAccent;
   static const Color navy = Color(0xFF12233F);

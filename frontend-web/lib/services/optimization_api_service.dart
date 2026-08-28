@@ -11,6 +11,7 @@ class OptimizationApiException implements Exception {
   String toString() => message;
 }
 
+
 class OptimizationApiService {
   OptimizationApiService({http.Client? client})
     : _client = client ?? http.Client();

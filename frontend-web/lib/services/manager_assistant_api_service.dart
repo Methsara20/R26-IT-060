@@ -13,6 +13,7 @@ class ManagerAssistantApiException implements Exception {
   String toString() => message;
 }
 
+
 class ManagerAssistantApiService {
   ManagerAssistantApiService({http.Client? client})
     : _client = client ?? http.Client();

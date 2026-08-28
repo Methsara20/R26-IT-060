@@ -15,6 +15,7 @@ class SmartInventoryApplication extends StatefulWidget {
       _SmartInventoryApplicationState();
 }
 
+
 class _SmartInventoryApplicationState extends State<SmartInventoryApplication> {
   ThemeMode _themeMode = ThemeMode.light;
 

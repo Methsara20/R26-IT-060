@@ -13,6 +13,7 @@ class InventoryApiException implements Exception {
   String toString() => message;
 }
 
+
 class InventoryApiService {
   InventoryApiService({http.Client? client})
     : _client = client ?? http.Client();
