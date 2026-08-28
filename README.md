@@ -1,42 +1,37 @@
-# AI-Driven Smart Retail Intelligence System
-
----
+# AI-Driven Smart Fashion Retail System
 
 ## Project Overview
 
-This project aims to develop an **AI-driven smart retail system** that enhances customer experience, optimizes inventory management, and improves marketing effectiveness using data analytics, machine learning, and intelligent decision support.
+The **AI-Driven Smart Fashion Retail System** is an integrated intelligent retail platform designed to improve operational efficiency and customer experience in multi-store fashion retail environments.
 
-The system integrates multiple AI components into a **single unified platform** to support real-time retail decision-making.
+The system combines four AI-driven components within a unified architecture:
+
+The system integrates multiple AI components into a **single unified platform** to support real-time retail decision-making, bridging the gap between digital convenience and physical retail shopping.
 
 ---
 
-## Objectives
+## Research Objectives
 
-- Analyze customer behaviour using GPS-based tracking
-- Provide virtual try-on and size recommendation
-- Predict product demand using machine learning
-- Generate personalized marketing insights and promotions
+- Analyze customer behaviour using high-frequency GPS-based tracking.
+- Provide a photorealistic virtual try-on experience and AI-driven size recommendations.
+- Offer 24/7 personalized fashion advice via a Conversational AI Stylist.
+- Predict product demand using machine learning.
+- Generate personalized marketing insights and promotions.
 
 ---
 
 ## System Components
 
-### GPS-Based Customer Behaviour Tracking & Staff Assistance
-Tracks customer movement, zone changes, and time spent in store areas to provide behaviour insights and real-time staff assistance.
+### 1. GPS-Based Customer Behaviour Tracking & Staff Assistance
+Tracks customer movement, zone changes, and time spent in store areas using mobile GPS. It leverages a Random Forest classifier to distinguish between "Browsing" and "Transiting" behaviour, automatically alerting store staff when a customer demonstrates a need for assistance (e.g., prolonged dwell time or pacing).
 
----
+### 2. AI-Based Virtual Try-On, Size Recommendation & AI Stylist
+Addresses sizing inconsistency by using Machine Learning (GridSearchCV-tuned Random Forest) to predict precise body measurements from basic inputs, and then maps those measurements to brand-specific sizes. Includes a **Google Vertex AI** integration allowing users to virtually try on clothing with photorealistic compositing. Furthermore, it features a 24/7 **Conversational AI Stylist** utilizing a **Traditional Retrieval-Augmented Generation (RAG)** architecture (LangChain, HuggingFace Embeddings, ChromaDB) to ground the Large Language Model's styling advice in the store's actual live inventory, preventing AI hallucinations.
 
-### AI-Based Virtual Try-On & Size Recommendation
-Allows users to virtually try clothing using a lightweight 2D approach and provides size recommendations using AI.
-
----
-
-### Smart Inventory & Stock Flow Optimization 
+### 3. Smart Inventory & Stock Flow Optimization 
 Predicts product demand using machine learning (XGBoost) and provides intelligent stock management and restocking recommendations.
 
----
-
-### Personalized Marketing Intelligence Dashboard
+### 4. Personalized Marketing Intelligence Dashboard
 Analyzes customer data to predict effective promotions, evaluate campaigns, and generate AI-based marketing content.
 
 ---
@@ -47,111 +42,148 @@ Analyzes customer data to predict effective promotions, evaluate campaigns, and 
                  │       Data Sources         │
                  │----------------------------│
                  │ • POS Transactions         │
-                 │ • Customer Data            │
-                 │ • Product Data             │
-                 │ • Promotion Data           │
+                 │ • Mobile GPS Data          │
+                 │ • Product Catalog          │
                  └────────────┬───────────────┘
                               ↓
                  ┌────────────────────────────┐
                  │     Backend / API Layer    │
                  │----------------------------│
-                 │ • Flask / FastAPI          │
-                 │ • Data Processing          │
-                 │ • API Integration          │
+                 │ • Python / FastAPI         │
+                 │ • LangChain / ChromaDB     │
+                 │ • Geometry Processing      │
                  └────────────┬───────────────┘
                               ↓
      ┌────────────────────────────────────────────────────┐
      │              AI & Processing Layer                 │
      │----------------------------------------------------│
-     │ 1. GPS Behaviour Tracking & Staff Assistance       │
-     │ 2. Virtual Try-On & Size Recommendation (AI)       │
-     │ 3. Demand Forecasting (XGBoost)                  │
-     │ 4. Marketing Intelligence (XGBoost + AI Posters)   │
+     │ 1. Random Forest (Behaviour Intent & Sizing)       │
+     │ 2. Generative AI (Vertex AI Try-On)                │
+     │ 3. Traditional RAG (Conversational AI Stylist)     │
+     │ 4. XGBoost (Demand Forecasting & Marketing)        │
      └────────────┬───────────────────────────────────────┘
                   ↓
         ┌────────────────────────────┐
         │   Data Storage Layer       │
         │----------------------------│
-        │ • Database (MySQL/Firebase)│
-        │ • Model Outputs            │
+        │ • Firebase Firestore       │
+        │ • ChromaDB (Vector Store)  │
         └────────────┬───────────────┘
                      ↓
         ┌────────────────────────────┐
         │   Frontend / Dashboard     │
         │----------------------------│
-        │ • Admin Dashboard          │
-        │ • Marketing Dashboard      │
-        │ • Smart UI (Try-On)        │
+        │ • Flutter Mobile App       │
+        │ • Flutter Web Dashboard    │
         └────────────┬───────────────┘
                      ↓
         ┌────────────────────────────┐
         │      Final Outputs         │
         │----------------------------│
-        │ • Customer Insights        │
+        │ • Autonomous Staff Alerts  │
+        │ • Fashion Recommendations  │
         │ • Demand Predictions       │
-        │ • Promotion Strategies     │
-        │ • Staff Alerts             │
         └────────────────────────────┘
 
 ---
 
 ## Technologies Used
 
-- **Frontend:** React.js  
-- **Backend:** Flask / FastAPI  
-- **Machine Learning:** XGBoost, Scikit-learn , Randon Forest  
-- **Database:** MySQL / Firebase  
-- **AI Tools:** Generative AI APIs (for virtual try-on & marketing)
+- **Frontend:** Flutter, Dart (Mobile & Web)
+- **Backend:** Python, FastAPI, Uvicorn
+- **Machine Learning:** Scikit-Learn (Random Forest), XGBoost, Pandas
+- **Generative AI & LLMs:** Google Cloud Vertex AI, Gemini
+- **RAG Architecture:** LangChain, HuggingFace (`all-MiniLM-L6-v2`), ChromaDB
+- **Database:** Firebase Firestore (NoSQL)
+- **Geolocation:** Flutter Geolocator, Haversine Formula
 
 ---
 
-## Dataset (Planned)
+## Project Structure
 
-- Retail sales transaction data  
-- Product data  
-- Customer interaction data  
-- Promotion data  
-
----
-
-##  Project Structure
+```text
 project-root/
 │
-├── frontend/ # UI (Dashboard, Smart Mirror)
-├── backend/ # API and server logic
-├── models/ # ML models (forecasting, prediction)
-├── data/ # Dataset (sample / placeholder)
-├── docs/ # Architecture diagrams & documentation
-├── tests/ # Testing files
+├── frontend/             # Flutter Mobile App & Web Dashboard
+├── backend/              # Python FastAPI Server & AI Services
+├── chroma_db/            # Local Vector Database for RAG
+├── docs/                 # Architecture diagrams & documentation
 └── README.md
-
+```
 
 ---
 
 ## Project Status
 
-Currently in **Research and Design Phase (PP1)**  
-- Problem analysis completed  
-- System architecture designed  
-- Initial project setup created  
+Currently in **Implementation & Testing Phase**  
+- ✅ System architecture designed  
+- ✅ Frontend UI overhauled with Premium Light/Dark mode  
+- ✅ GPS Behaviour Tracking integrated  
+- ✅ AI Stylist & RAG pipeline deployed  
+- ✅ ML Sizing and Virtual Try-On completed
 
 ---
 
 ## Team Members
 
-- IT22146588  
-- IT22244598  
-- IT22284952
-- IT22243812
+* IT22146588
+* IT22244598
+* IT22284952
+* IT22243812
+
+---
+
+## Research Contribution
+
+The main contribution of this research is an integrated **AI-Driven Smart Fashion Retail System** that connects customer-facing intelligence with operational retail decision-making.
+
+The platform integrates:
+
+* Demand forecasting
+* Inventory intelligence
+* Stock-flow optimization
+* Personalized marketing
+* Generative promotional content
+* Virtual try-on
+* Brand-specific size recommendation
+* Customer behavior tracking
+* Real-time staff assistance
+
+within a unified smart retail architecture.
+
+---
+
+## Limitations
+
+* Some datasets are simulated or prepared rather than collected entirely from live retail operations
+* Model performance depends on data quality and completeness
+* Logistics calculations use simplified assumptions
+* Virtual try-on quality may vary with pose, image quality, and garment complexity
+* Size recommendations are affected by brands represented in the training data
+* Indoor GPS accuracy may vary depending on environment and device
+* Continuous GPS tracking may increase battery consumption
+* Some operational decisions require human approval
+
+---
+
+## Future Work
+
+Future improvements include:
+
+* Real-time POS integration
+* Live traffic and logistics information
+* Hybrid forecasting models
+* Larger real-world retail datasets
+* Continuous model retraining
+* Improved indoor-positioning technologies
+* Fine-tuned generative models for virtual try-on
+* Larger brand-specific sizing datasets
+* Real-world multi-store deployment
+* Large-scale user evaluation
+* Adaptive and continuously learning AI models
 
 ---
 
 ## Version Control
 
 This project is maintained using GitHub with structured commits showing progress from planning to implementation.
-
----
-
-## Key Contribution
-
-This research proposes an **integrated AI-driven retail intelligence platform** that combines behaviour tracking, virtual try-on, demand forecasting, and marketing intelligence into a single system for practical real-world retail environments.

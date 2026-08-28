@@ -197,3 +197,92 @@ pnpm-debug.log*
 # ----------------------------
 *.orig
 *.rej
+backend/.env
+
+# Python cache files & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+/_pycache_/
+_pyache_
+_pycache_/
+.pyc
+.venv/
+/.venv/
+venv/
+
+# macOS system files
+.DS_Store
+backend/app/.DS_Store
+**/.DS_Store
+
+# Build folders & Flutter / Dart
+/build/
+build/
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android / Gradle files
+.gradle/
+/.gradle
+gradle
+gradle-wrapper.jar
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+hashes/
+fileHashes.bin
+fileHashes.lock
+
+# Keystores & Properties
+key.properties
+*.keystore
+*.jks
+**/*.keystore
+**/*.jks
+
+# iOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+
+# IDEs
+.idea/
+*.iml
+*.iws
+
+# Firebase credentials & config
+firebase_key.json
+google-services.json
+GoogleService-Info.plist
+
+# Vector Databases
+chroma_db/
+backend/app/chroma_db/
+
+# Flutter Ephemeral & Generated files
+**/ephemeral/
+**/Flutter/ephemeral/
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
+**/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+**/linux/flutter/
+**/windows/flutter/generated_*
+
+.png
+
