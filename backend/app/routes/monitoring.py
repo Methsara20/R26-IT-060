@@ -65,7 +65,7 @@ def _get_updated_history(session_data, now_dt):
 
     history.append({
         "zone_id": stored_zone_id,
-        "zone_name": stored_zone_name or "Unknown Zone",
+        "zone_name": stored_zone_name,
         "entry_time": entry_time.isoformat() if hasattr(entry_time, "isoformat") else str(entry_time),
         "exit_time": now_dt.isoformat(),
         "dwell_time_seconds": max(0, int(dwell_time))
