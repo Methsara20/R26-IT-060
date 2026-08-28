@@ -16,3 +16,17 @@ PRODUCT_IMAGE_BASE_URL = (
     "https://Methsara20.github.io/"
     "R26-IT-060/product_images"
 )
+# ==========================================================
+# GROQ - Manager Chatbot
+# ==========================================================
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b")
+GROQ_FALLBACK_MODEL_1 = os.getenv("GROQ_FALLBACK_MODEL_1", "openai/gpt-oss-20b")
+GROQ_FALLBACK_MODEL_2 = os.getenv("GROQ_FALLBACK_MODEL_2", "openai/gpt-oss-120b")
+
+GROQ_MODELS = [
+    GROQ_MODEL,
+    GROQ_FALLBACK_MODEL_1,
+    GROQ_FALLBACK_MODEL_2,
+]
