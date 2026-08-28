@@ -8,6 +8,7 @@ class ModuleDevelopmentPlaceholder extends StatelessWidget {
     super.key,
   });
 
+
   final String title;
   final String description;
   final IconData icon;

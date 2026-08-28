@@ -15,6 +15,7 @@ import '../workflow/inventory_decision_workflow_controller.dart';
 import 'module_development_placeholder.dart';
 import 'widgets/sidebar_support_panel.dart';
 
+
 class InventoryApplicationShell extends StatefulWidget {
   const InventoryApplicationShell({
     required this.themeMode,

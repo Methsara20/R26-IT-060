@@ -10,6 +10,7 @@ class ApplicationPageContainer extends StatelessWidget {
     super.key,
   });
 
+
   final Widget child;
   final double maxWidth;
 

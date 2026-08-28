@@ -2,6 +2,7 @@
 // used by the theme and every shared presentation primitive.
 import 'package:flutter/material.dart';
 
+
 abstract final class ApplicationColors {
   static const coreAccent = Color(0xFF155EEF);
   static const coreAccentDark = Color(0xFF4F83FF);

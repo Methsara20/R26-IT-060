@@ -15,6 +15,7 @@ class ApplicationStatCard extends StatelessWidget {
     super.key,
   });
 
+
   final String label;
   final String value;
   final IconData icon;

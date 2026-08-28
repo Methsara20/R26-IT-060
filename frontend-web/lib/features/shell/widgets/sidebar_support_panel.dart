@@ -12,6 +12,7 @@ class SidebarSupportPanel extends StatelessWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeModeChanged;
 
+
   @override
   Widget build(BuildContext context) {
     final dark = themeMode == ThemeMode.dark;
