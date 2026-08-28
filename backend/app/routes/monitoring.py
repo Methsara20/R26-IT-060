@@ -268,9 +268,17 @@ def update_monitoring(data: MonitoringUpdateRequest):
             "intent": intent
         })
 
-        entry_time = session_data.get("entry_time")
+        # entry_time was retrieved earlier; ensure it is a datetime before subtracting
         if not entry_time:
             return {"message": "Heartbeat updated"}
+
+        if isinstance(entry_time, str):
+            try:
+                entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+            except ValueError:
+                entry_time = now
+        if getattr(entry_time, "tzinfo", None) is None:
+            entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
 
         elapsed_seconds = (now - entry_time).total_seconds()
 
