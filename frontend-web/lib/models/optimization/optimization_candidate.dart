@@ -59,6 +59,7 @@ class QualifiedSourceStore {
   final int stockAfterTransfer;
 }
 
+
 /// Candidate and optional decision fields stored by the optimization engine.
 class OptimizationCandidate {
   const OptimizationCandidate({

@@ -22,6 +22,7 @@ class WorkflowProgressIndicator extends StatelessWidget {
     'Completed',
   ];
 
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(

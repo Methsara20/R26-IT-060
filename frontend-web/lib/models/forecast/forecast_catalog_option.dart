@@ -9,6 +9,7 @@ class ForecastProductOption {
     required this.gender,
   });
 
+
   factory ForecastProductOption.fromJson(Map<String, dynamic> json) {
     final id = (json['product_id'] ?? json['id'])?.toString();
     final name = json['product_name']?.toString();

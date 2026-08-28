@@ -38,6 +38,7 @@ class StockMovement {
       throw const FormatException('Movement ID is missing.');
     }
 
+
     final history = json['status_history'];
     final sourceItems = json['evaluated_sources'];
     return StockMovement(

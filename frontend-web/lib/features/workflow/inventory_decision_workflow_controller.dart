@@ -24,6 +24,7 @@ class InventoryDecisionWorkflowController extends ChangeNotifier {
     notifyListeners();
   }
 
+
   /// Synchronizes only a response confirmed by the stock-movement backend.
   void updateMovement(StockMovement movement) {
     final current = _current;

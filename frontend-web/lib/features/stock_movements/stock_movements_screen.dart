@@ -31,6 +31,7 @@ class StockMovementsScreen extends StatefulWidget {
   State<StockMovementsScreen> createState() => _StockMovementsScreenState();
 }
 
+
 class _StockMovementsScreenState extends State<StockMovementsScreen> {
   final _api = StockMovementApiService();
   List<StockMovement> _movements = const [];

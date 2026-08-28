@@ -10,6 +10,7 @@ class ActiveWorkflowBanner extends StatelessWidget {
 
   final DecisionWorkflow workflow;
 
+
   @override
   Widget build(BuildContext context) {
     return ApplicationAiPanel(

@@ -20,6 +20,7 @@ import 'forecast_selection_summary.dart';
 import 'forecast_type_selector.dart';
 import 'inventory_period_forecast_panel.dart';
 
+
 /// Manager-facing entry point for weather-aware product forecasts.
 class ForecastingOverviewScreen extends StatefulWidget {
   const ForecastingOverviewScreen({

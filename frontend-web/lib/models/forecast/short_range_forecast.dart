@@ -21,6 +21,7 @@ class ForecastWeather {
   final String condition;
 }
 
+
 /// One forecast observation with demand, confidence, date, and weather.
 class ForecastDayResult {
   const ForecastDayResult({

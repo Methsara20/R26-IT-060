@@ -11,6 +11,7 @@ class InventoryRecord {
     this.lastUpdated,
   });
 
+
   factory InventoryRecord.fromJson(Map<String, dynamic> json) {
     final inventoryId = (json['inventory_id'] ?? json['id'])?.toString();
     final storeId = json['store_id']?.toString();

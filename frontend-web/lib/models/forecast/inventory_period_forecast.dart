@@ -19,6 +19,7 @@ class SeasonalWeatherSummary {
         sunnyDays: (json['sunny_days'] as num?)?.toInt(),
       );
 
+
   final double? averageTemperature;
   final double? averageHumidity;
   final double? totalRainfall;

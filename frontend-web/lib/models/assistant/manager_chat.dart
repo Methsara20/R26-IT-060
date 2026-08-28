@@ -11,6 +11,7 @@ class ManagerChatSession {
     this.updatedAt,
   });
 
+
   factory ManagerChatSession.fromJson(Map<String, dynamic> json) {
     final sessionId = json['session_id']?.toString();
     if (sessionId == null || sessionId.isEmpty) {
