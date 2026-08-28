@@ -11,7 +11,7 @@ from app.services.llm_manager import llm_manager
 class GeminiEmbeddings:
     def _embed(self, text: str) -> list[float]:
         from google import genai
-        api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY", "")]
+        api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY_RAG", "")]
         for key in api_keys:
             if not key or key == "dummy_key":
                 continue
@@ -31,7 +31,7 @@ class GeminiEmbeddings:
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         # Use batch endpoint for efficiency (batches of 100)
-        api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY", "")]
+        api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY_RAG", "")]
         key = next((k for k in api_keys if k and k != "dummy_key"), None)
         if not key:
             raise RuntimeError("No valid Gemini API key for embeddings.")

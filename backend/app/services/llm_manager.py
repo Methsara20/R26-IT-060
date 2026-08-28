@@ -6,9 +6,9 @@ from fastapi import HTTPException
 
 class LLMManager:
     def __init__(self):
-        keys_env = os.getenv("GEMINI_API_KEYS", "")
+        keys_env = os.getenv("GEMINI_API_KEY_RAG", "")
         if not keys_env:
-            keys_env = os.getenv("GEMINI_API_KEY", "")
+            keys_env = os.getenv("GEMINI_API_KEY_RAG", "")
             
         self.api_keys = [k.strip() for k in keys_env.split(",") if k.strip()]
         
@@ -24,7 +24,7 @@ class LLMManager:
 
     def generate_content_with_fallback(self, prompt: str, initial_model: str = "gemini-3.6-flash") -> str:
         if not self.api_keys:
-            raise HTTPException(status_code=500, detail="GEMINI_API_KEYS not configured on the server.")
+            raise HTTPException(status_code=500, detail="GEMINI_API_KEY_RAG not configured on the server.")
 
         models_to_try = [initial_model, "gemini-3.6-flash", "gemini-3.6-pro"]
         
