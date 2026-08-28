@@ -1,0 +1,1322 @@
+"""
+Explainable AI service for stock movement recommendations.
+
+Responsibilities:
+1. Build deterministic business-reasoning context.
+2. Generate a safe local fallback explanation.
+3. Use Gemini only as a natural-language enhancement layer.
+4. Save one explanation per stock-movement version.
+5. Reuse the saved explanation for the same movement.
+6. Generate and cache an execution summary after execution.
+
+Gemini does not select the source store, quantity, risk, cost, or action.
+Those decisions are produced by the deterministic business engine.
+"""
+
+import time
+from datetime import datetime
+from typing import Any, Optional
+
+from google import genai
+
+from app.config.settings import GEMINI_API_KEY
+from app.constants.collections import STOCK_MOVEMENTS_COLLECTION
+from app.services.firebase_service import (
+    get_document_by_id,
+    update_document
+)
+
+
+# ==========================================================
+# CONFIGURATION
+# ==========================================================
+
+PRIMARY_AI_MODEL = "gemini-flash-latest"
+FALLBACK_AI_MODEL = "gemini-2.0-flash"
+
+AI_EXPLANATION_VERSION = 1
+MAX_AI_RETRIES = 3
+AI_RETRY_DELAY_SECONDS = 2
+
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+# ==========================================================
+# GENERAL HELPERS
+# ==========================================================
+
+def now() -> str:
+    return datetime.now().isoformat()
+
+
+def to_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def to_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def format_number(value: Any) -> str:
+    number = to_float(value)
+
+    if number.is_integer():
+        return f"{int(number):,}"
+
+    return f"{number:,.2f}"
+
+
+def format_currency(value: Any) -> str:
+    try:
+        return f"LKR {float(value):,.2f}"
+    except (TypeError, ValueError):
+        return "N/A"
+
+
+def clean_ai_text(text: Optional[str]) -> Optional[str]:
+    if not text:
+        return None
+
+    cleaned = text.strip()
+
+    if not cleaned:
+        return None
+
+    return cleaned
+
+def simplify_ai_error(error: Optional[str]) -> Optional[str]:
+    """
+    Convert large Gemini/API exception messages into
+    compact, consistent error codes for Firestore.
+    """
+
+    if not error:
+        return None
+
+    error_upper = error.upper()
+
+    if (
+        "RESOURCE_EXHAUSTED" in error_upper
+        or "429" in error_upper
+        or "QUOTA" in error_upper
+    ):
+        return "GEMINI_QUOTA_EXCEEDED"
+
+    if (
+        "503" in error_upper
+        or "UNAVAILABLE" in error_upper
+    ):
+        return "GEMINI_TEMPORARILY_UNAVAILABLE"
+
+    if (
+        "401" in error_upper
+        or "UNAUTHENTICATED" in error_upper
+        or "API KEY" in error_upper
+    ):
+        return "GEMINI_AUTHENTICATION_FAILED"
+
+    if (
+        "403" in error_upper
+        or "PERMISSION_DENIED" in error_upper
+    ):
+        return "GEMINI_PERMISSION_DENIED"
+
+    if (
+        "TIMEOUT" in error_upper
+        or "DEADLINE_EXCEEDED" in error_upper
+    ):
+        return "GEMINI_REQUEST_TIMEOUT"
+
+    return "GEMINI_GENERATION_FAILED"
+
+
+# ==========================================================
+# GEMINI CLIENT
+# ==========================================================
+
+def call_explanation_model(prompt: str) -> dict:
+    """
+    Call Gemini with retry and fallback support.
+
+    Returns:
+        {
+            "text": str | None,
+            "source": "GEMINI" | "LOCAL_FALLBACK",
+            "model": str | None,
+            "error": str | None
+        }
+    """
+
+    last_error = None
+
+    for attempt in range(MAX_AI_RETRIES):
+        try:
+            response = client.models.generate_content(
+                model=PRIMARY_AI_MODEL,
+                contents=prompt
+            )
+
+            text = clean_ai_text(
+                getattr(response, "text", "")
+            )
+
+            if text:
+                return {
+                    "text": text,
+                    "source": "GEMINI",
+                    "model": PRIMARY_AI_MODEL,
+                    "error": None
+                }
+
+        except Exception as exc:
+            last_error = str(exc)
+
+            retryable = (
+                "503" in last_error
+                or "UNAVAILABLE" in last_error.upper()
+                or "RESOURCE_EXHAUSTED" in last_error.upper()
+                or "429" in last_error
+            )
+
+            if retryable and attempt < MAX_AI_RETRIES - 1:
+                time.sleep(AI_RETRY_DELAY_SECONDS)
+                continue
+
+            break
+
+    try:
+        response = client.models.generate_content(
+            model=FALLBACK_AI_MODEL,
+            contents=prompt
+        )
+
+        text = clean_ai_text(
+            getattr(response, "text", "")
+        )
+
+        if text:
+            return {
+                "text": text,
+                "source": "GEMINI",
+                "model": FALLBACK_AI_MODEL,
+                "error": None
+            }
+
+    except Exception as exc:
+        last_error = str(exc)
+
+    return {
+        "text": None,
+        "source": "LOCAL_FALLBACK",
+        "model": None,
+        "error": last_error
+    }
+
+
+# ==========================================================
+# ALTERNATIVE SOURCE ANALYSIS
+# ==========================================================
+
+def build_alternative_analysis(movement: dict) -> list:
+    """
+    Convert evaluated source stores into human-explainable facts.
+
+    No AI is used here.
+    """
+
+    evaluated_sources = movement.get(
+        "evaluated_sources",
+        []
+    ) or []
+
+    selected_store = movement.get("from_store")
+
+    analysis = []
+
+    for source in evaluated_sources:
+        store_id = source.get("store_id")
+
+        coverage = to_float(
+            source.get("coverage_percentage")
+        )
+
+        distance_km = to_float(
+            source.get("distance_km"),
+            999
+        )
+
+        estimated_time = to_int(
+            source.get("estimated_time_minutes"),
+            999
+        )
+
+        estimated_cost = to_float(
+            source.get("estimated_transfer_cost"),
+            999999
+        )
+
+        remaining_buffer = to_int(
+            source.get("remaining_buffer")
+        )
+
+        reorder_level = to_int(
+            source.get("reorder_level")
+        )
+
+        surplus_qty = to_int(
+            source.get("surplus_qty")
+        )
+
+        risk = source.get(
+            "risk_after_transfer",
+            "UNKNOWN"
+        )
+
+        advantages = []
+        limitations = []
+
+        if coverage >= 100:
+            advantages.append(
+                "Can fully cover the required transfer quantity"
+            )
+        elif coverage > 0:
+            advantages.append(
+                f"Can cover {coverage:.2f}% of the required quantity"
+            )
+            limitations.append(
+                "Cannot fully satisfy the required quantity"
+            )
+        else:
+            limitations.append(
+                "Does not provide useful shortage coverage"
+            )
+
+        if risk == "LOW":
+            advantages.append(
+                "Maintains a safe inventory position after transfer"
+            )
+        elif risk == "MEDIUM":
+            limitations.append(
+                "Leaves the source showroom with a limited stock buffer"
+            )
+        elif risk == "HIGH":
+            limitations.append(
+                "Creates a high inventory risk after transfer"
+            )
+
+        if distance_km <= 10:
+            advantages.append(
+                "Has a short transfer distance"
+            )
+        elif distance_km >= 80:
+            limitations.append(
+                "Requires a long-distance transfer"
+            )
+
+        if estimated_cost <= 1500:
+            advantages.append(
+                "Has a low estimated logistics cost"
+            )
+        elif estimated_cost >= 10000:
+            limitations.append(
+                "Has a high estimated logistics cost"
+            )
+
+        if remaining_buffer <= 0:
+            limitations.append(
+                "Would leave no stock buffer above the reorder level"
+            )
+        elif (
+            reorder_level > 0
+            and remaining_buffer < reorder_level * 0.25
+        ):
+            limitations.append(
+                "Would leave only a small buffer above the reorder level"
+            )
+
+        analysis.append({
+            "store_id": store_id,
+            "rank": source.get("rank"),
+            "selected": store_id == selected_store,
+
+            "current_stock": source.get("current_stock"),
+            "reorder_level": reorder_level,
+            "surplus_qty": surplus_qty,
+            "possible_transfer_qty": source.get(
+                "possible_transfer_qty"
+            ),
+            "stock_after_transfer": source.get(
+                "stock_after_transfer"
+            ),
+            "remaining_buffer": remaining_buffer,
+
+            "coverage_percentage": coverage,
+            "risk_after_transfer": risk,
+
+            "distance_km": distance_km,
+            "estimated_time_minutes": estimated_time,
+            "estimated_transfer_cost": estimated_cost,
+
+            "advantages": advantages,
+            "limitations": limitations
+        })
+
+    return analysis
+
+
+def get_selected_source_analysis(
+    alternatives: list
+) -> Optional[dict]:
+    return next(
+        (
+            source
+            for source in alternatives
+            if source.get("selected")
+        ),
+        None
+    )
+
+
+# ==========================================================
+# TRADE-OFF ANALYSIS
+# ==========================================================
+
+def find_highest_surplus_source(
+    alternatives: list
+) -> Optional[dict]:
+    valid_sources = [
+        source
+        for source in alternatives
+        if source.get("store_id")
+    ]
+
+    if not valid_sources:
+        return None
+
+    return max(
+        valid_sources,
+        key=lambda source: to_int(
+            source.get("surplus_qty")
+        )
+    )
+
+
+def find_closest_alternative(
+    alternatives: list
+) -> Optional[dict]:
+    non_selected = [
+        source
+        for source in alternatives
+        if not source.get("selected")
+    ]
+
+    if not non_selected:
+        return None
+
+    return min(
+        non_selected,
+        key=lambda source: to_float(
+            source.get("distance_km"),
+            999999
+        )
+    )
+
+
+def build_tradeoff_analysis(
+    movement: dict,
+    alternatives: list
+) -> str:
+    selected_store = movement.get("from_store")
+    selected_distance = to_float(
+        movement.get("distance_km")
+    )
+    selected_cost = to_float(
+        movement.get("estimated_transfer_cost")
+    )
+    selected_buffer = to_int(
+        movement.get("remaining_buffer")
+    )
+
+    non_selected = [
+        source
+        for source in alternatives
+        if not source.get("selected")
+    ]
+
+    if not non_selected:
+        return (
+            f"{selected_store} was the only qualified source showroom "
+            f"available for this transfer."
+        )
+
+    highest_surplus = find_highest_surplus_source(
+        alternatives
+    )
+
+    if (
+        highest_surplus
+        and highest_surplus.get("store_id")
+        != selected_store
+    ):
+        alternative_store = highest_surplus.get(
+            "store_id"
+        )
+
+        alternative_surplus = to_int(
+            highest_surplus.get("surplus_qty")
+        )
+
+        alternative_distance = to_float(
+            highest_surplus.get("distance_km")
+        )
+
+        alternative_cost = to_float(
+            highest_surplus.get(
+                "estimated_transfer_cost"
+            )
+        )
+
+        return (
+            f"{alternative_store} had a larger available surplus of "
+            f"{alternative_surplus:,} units, but it was "
+            f"{alternative_distance:,.1f} km away with an estimated "
+            f"transfer cost of {format_currency(alternative_cost)}. "
+            f"{selected_store} could provide the same required coverage "
+            f"from {selected_distance:,.1f} km away at an estimated cost "
+            f"of {format_currency(selected_cost)}, while retaining "
+            f"{selected_buffer:,} units above its reorder level."
+        )
+
+    closest_alternative = find_closest_alternative(
+        alternatives
+    )
+
+    if closest_alternative:
+        alternative_store = closest_alternative.get(
+            "store_id"
+        )
+
+        alternative_distance = to_float(
+            closest_alternative.get("distance_km")
+        )
+
+        alternative_cost = to_float(
+            closest_alternative.get(
+                "estimated_transfer_cost"
+            )
+        )
+
+        return (
+            f"{alternative_store} was also qualified at "
+            f"{alternative_distance:,.1f} km with an estimated cost of "
+            f"{format_currency(alternative_cost)}. However, "
+            f"{selected_store} provided the stronger overall balance "
+            f"between logistics efficiency and remaining inventory safety."
+        )
+
+    return (
+        f"{selected_store} provided the strongest overall balance "
+        f"between shortage coverage, inventory safety, distance, "
+        f"travel time and estimated transfer cost."
+    )
+
+
+# ==========================================================
+# CONFIDENCE EXPLANATION
+# ==========================================================
+
+def build_confidence_factors(
+    movement: dict
+) -> list:
+    factors = []
+
+    coverage = to_float(
+        movement.get("coverage_percentage")
+    )
+
+    distance = to_float(
+        movement.get("distance_km"),
+        999
+    )
+
+    cost = to_float(
+        movement.get("estimated_transfer_cost"),
+        999999
+    )
+
+    remaining_buffer = to_int(
+        movement.get("remaining_buffer")
+    )
+
+    if coverage >= 100:
+        factors.append(
+            "The complete shortage quantity can be covered"
+        )
+    elif coverage >= 75:
+        factors.append(
+            "Most of the shortage quantity can be covered"
+        )
+
+    if movement.get("risk_after_transfer") == "LOW":
+        factors.append(
+            "The supplying showroom remains at low inventory risk"
+        )
+
+    if movement.get("simulation_status") == "SAFE":
+        factors.append(
+            "The transfer simulation confirms a safe stock position"
+        )
+
+    if remaining_buffer > 0:
+        factors.append(
+            f"The source retains a buffer of "
+            f"{remaining_buffer:,} units above its reorder level"
+        )
+
+    if distance <= 10:
+        factors.append(
+            "The supplying showroom is located nearby"
+        )
+
+    if cost <= 1500:
+        factors.append(
+            "The estimated logistics cost is low"
+        )
+
+    if len(
+        movement.get("evaluated_sources", []) or []
+    ) > 1:
+        factors.append(
+            "Multiple qualified source showrooms were evaluated"
+        )
+
+    return factors
+
+
+# ==========================================================
+# EXPECTED BUSINESS IMPACT
+# ==========================================================
+
+def build_expected_business_impact(
+    movement: dict
+) -> list:
+    impacts = []
+
+    target_before = to_int(
+        movement.get("target_stock_before")
+    )
+
+    target_after = to_int(
+        movement.get("target_stock_after")
+    )
+
+    target_reorder = to_int(
+        movement.get("target_reorder_level")
+    )
+
+    source_after = to_int(
+        movement.get("source_stock_after")
+    )
+
+    source_reorder = to_int(
+        movement.get("source_reorder_level")
+    )
+
+    if target_after > target_before:
+        impacts.append(
+            f"Target inventory increases from "
+            f"{target_before:,} to {target_after:,} units"
+        )
+
+    if target_after >= target_reorder:
+        impacts.append(
+            "The target showroom reaches its required stock level"
+        )
+    else:
+        impacts.append(
+            "The target shortage is reduced but not fully resolved"
+        )
+
+    if source_after >= source_reorder:
+        impacts.append(
+            "The supplying showroom remains above its reorder level"
+        )
+
+    impacts.append(
+        "Inventory becomes more balanced between the two showrooms"
+    )
+
+    return impacts
+
+
+# ==========================================================
+# DETERMINISTIC EXPLANATION CONTEXT
+# ==========================================================
+
+def build_stock_movement_explanation_context(
+    movement: dict
+) -> dict:
+    alternatives = build_alternative_analysis(
+        movement
+    )
+
+    selected_source = get_selected_source_analysis(
+        alternatives
+    )
+
+    tradeoff = build_tradeoff_analysis(
+        movement,
+        alternatives
+    )
+
+    confidence_factors = build_confidence_factors(
+        movement
+    )
+
+    expected_impact = build_expected_business_impact(
+        movement
+    )
+
+    return {
+        "movement_id": movement.get("movement_id"),
+        "movement_status": movement.get(
+            "movement_status"
+        ),
+        "recommendation_version": movement.get(
+            "recommendation_version"
+        ),
+
+        "business_goal": (
+            f"Restore stock availability at "
+            f"{movement.get('to_store')} while keeping the supplying "
+            f"showroom above its safe inventory threshold and minimizing "
+            f"unnecessary logistics effort."
+        ),
+
+        "product": {
+            "product_id": movement.get("product_id"),
+            "product_name": movement.get(
+                "product_name"
+            ),
+            "category": movement.get("category"),
+            "subcategory": movement.get(
+                "subcategory"
+            ),
+            "brand": movement.get("brand"),
+            "gender": movement.get("gender")
+        },
+
+        "decision": {
+            "selected_store": movement.get(
+                "from_store"
+            ),
+            "target_store": movement.get(
+                "to_store"
+            ),
+            "recommended_qty": movement.get(
+                "recommended_qty"
+            ),
+            "coverage_percentage": movement.get(
+                "coverage_percentage"
+            )
+        },
+
+        "inventory_analysis": {
+            "source_stock_before": movement.get(
+                "source_stock_before"
+            ),
+            "source_stock_after": movement.get(
+                "source_stock_after"
+            ),
+            "source_reorder_level": movement.get(
+                "source_reorder_level"
+            ),
+            "remaining_buffer": movement.get(
+                "remaining_buffer"
+            ),
+
+            "target_stock_before": movement.get(
+                "target_stock_before"
+            ),
+            "target_stock_after": movement.get(
+                "target_stock_after"
+            ),
+            "target_reorder_level": movement.get(
+                "target_reorder_level"
+            )
+        },
+
+        "logistics_analysis": {
+            "distance_km": movement.get(
+                "distance_km"
+            ),
+            "estimated_time_minutes": movement.get(
+                "estimated_time_minutes"
+            ),
+            "estimated_transfer_cost": movement.get(
+                "estimated_transfer_cost"
+            )
+        },
+
+        "risk_analysis": {
+            "risk_after_transfer": movement.get(
+                "risk_after_transfer"
+            ),
+            "simulation_status": movement.get(
+                "simulation_status"
+            )
+        },
+
+        "confidence_analysis": {
+            "confidence": movement.get(
+                "recommendation_confidence"
+            ),
+            "confidence_label": movement.get(
+                "recommendation_confidence_label"
+            ),
+            "supporting_factors": (
+                confidence_factors
+            )
+        },
+
+        "tradeoff_analysis": tradeoff,
+        "expected_business_impact": (
+            expected_impact
+        ),
+
+        "selected_source_analysis": (
+            selected_source
+        ),
+
+        "alternative_analysis": alternatives,
+
+        "final_decision": (
+            f"Transfer "
+            f"{format_number(movement.get('recommended_qty'))} units "
+            f"of {movement.get('product_name')} from "
+            f"{movement.get('from_store')} to "
+            f"{movement.get('to_store')}."
+        )
+    }
+
+
+# ==========================================================
+# COMPACT GEMINI PROMPT
+# ==========================================================
+
+def build_compact_recommendation_prompt(
+    context: dict
+) -> str:
+    product = context.get("product", {})
+    decision = context.get("decision", {})
+    inventory = context.get(
+        "inventory_analysis",
+        {}
+    )
+    logistics = context.get(
+        "logistics_analysis",
+        {}
+    )
+    risk = context.get("risk_analysis", {})
+    confidence = context.get(
+        "confidence_analysis",
+        {}
+    )
+
+    confidence_factors = "; ".join(
+        confidence.get("supporting_factors", [])
+    )
+
+    business_impact = "; ".join(
+        context.get(
+            "expected_business_impact",
+            []
+        )
+    )
+
+    return f"""
+You are a senior retail inventory operations analyst.
+
+A deterministic inventory optimization engine has already selected
+the stock transfer recommendation.
+
+Your role is only to explain the confirmed decision in natural,
+manager-friendly language.
+
+STRICT RULES:
+- Use only the facts supplied below.
+- Do not alter the selected store, destination or quantity.
+- Do not invent numbers, stores, costs, benefits or risks.
+- Do not expose internal ranking formulas.
+- Clearly explain why the selected store was preferred.
+- Mention the most important trade-off.
+- Mention the expected inventory impact.
+- Use no more than five sentences.
+- Use a professional retail operations tone.
+
+BUSINESS GOAL:
+{context.get('business_goal')}
+
+DECISION:
+Product: {product.get('product_name')}
+Quantity: {decision.get('recommended_qty')} units
+From store: {decision.get('selected_store')}
+To store: {decision.get('target_store')}
+Shortage coverage: {decision.get('coverage_percentage')}%
+
+INVENTORY SAFETY:
+Source stock before: {inventory.get('source_stock_before')}
+Source stock after: {inventory.get('source_stock_after')}
+Source reorder level: {inventory.get('source_reorder_level')}
+Remaining source buffer: {inventory.get('remaining_buffer')}
+Target stock before: {inventory.get('target_stock_before')}
+Target stock after: {inventory.get('target_stock_after')}
+Target reorder level: {inventory.get('target_reorder_level')}
+
+LOGISTICS:
+Distance: {logistics.get('distance_km')} km
+Estimated travel time: {logistics.get('estimated_time_minutes')} minutes
+Estimated cost: {format_currency(logistics.get('estimated_transfer_cost'))}
+
+RISK:
+Risk after transfer: {risk.get('risk_after_transfer')}
+Simulation status: {risk.get('simulation_status')}
+
+TRADE-OFF:
+{context.get('tradeoff_analysis')}
+
+CONFIDENCE:
+Confidence level: {confidence.get('confidence_label')}
+Supporting facts: {confidence_factors}
+
+EXPECTED BUSINESS IMPACT:
+{business_impact}
+
+Write the final manager explanation.
+""".strip()
+
+
+# ==========================================================
+# LOCAL RECOMMENDATION FALLBACK
+# ==========================================================
+
+def generate_local_recommendation_explanation(
+    context: dict
+) -> str:
+    decision = context.get("decision", {})
+    inventory = context.get(
+        "inventory_analysis",
+        {}
+    )
+    logistics = context.get(
+        "logistics_analysis",
+        {}
+    )
+    risk = context.get("risk_analysis", {})
+
+    return (
+        f"{decision.get('selected_store')} is recommended because it "
+        f"can supply {format_number(decision.get('recommended_qty'))} "
+        f"units to {decision.get('target_store')} and fully support the "
+        f"required stock coverage while keeping the source showroom "
+        f"above its reorder level. After the transfer, the source retains "
+        f"a buffer of "
+        f"{format_number(inventory.get('remaining_buffer'))} units. "
+        f"The route is "
+        f"{format_number(logistics.get('distance_km'))} km with an "
+        f"estimated cost of "
+        f"{format_currency(logistics.get('estimated_transfer_cost'))}. "
+        f"{context.get('tradeoff_analysis')} "
+        f"The resulting inventory risk is "
+        f"{risk.get('risk_after_transfer')}."
+    )
+
+
+# ==========================================================
+# RECOMMENDATION EXPLANATION GENERATION
+# ==========================================================
+
+def generate_recommendation_explanation_text(
+    movement: dict
+) -> dict:
+    context = build_stock_movement_explanation_context(
+        movement
+    )
+
+    fallback = generate_local_recommendation_explanation(
+        context
+    )
+
+    prompt = build_compact_recommendation_prompt(
+        context
+    )
+
+    ai_result = call_explanation_model(prompt)
+
+    final_text = ai_result.get("text") or fallback
+    final_source = ai_result.get(
+        "source",
+        "LOCAL_FALLBACK"
+    )
+
+    return {
+        "text": final_text,
+        "context": context,
+        "source": final_source,
+        "model": ai_result.get("model"),
+        "error": ai_result.get("error")
+    }
+
+
+def generate_and_save_recommendation_explanation(
+    movement_id: str,
+    force_regenerate: bool = False
+):
+    """
+    Generate one explanation per movement/version.
+
+    Same movement:
+        Existing explanation is returned.
+
+    New movement/version:
+        New explanation is generated and saved.
+    """
+
+    movement = get_document_by_id(
+        STOCK_MOVEMENTS_COLLECTION,
+        movement_id
+    )
+
+    if movement is None:
+        return None
+
+    existing_text = movement.get(
+        "ai_explanation"
+    )
+
+    if existing_text and not force_regenerate:
+        return movement
+
+    result = generate_recommendation_explanation_text(
+        movement
+    )
+
+    generated_at = now()
+
+    update_document(
+        STOCK_MOVEMENTS_COLLECTION,
+        movement_id,
+        {
+            "ai_explanation": result["text"],
+            "ai_explanation_context": result[
+                "context"
+            ],
+
+            "ai_explanation_generated": True,
+            "ai_explanation_source": result[
+                "source"
+            ],
+            "ai_explanation_model": result[
+                "model"
+            ],
+            "ai_explanation_version": (
+                AI_EXPLANATION_VERSION
+            ),
+
+            "ai_explanation_generated_at": (
+                generated_at
+            ),
+            "ai_explanation_updated_at": (
+                generated_at
+            ),
+
+            "ai_explanation_error": simplify_ai_error(
+                result.get("error")
+            ),
+
+            "updated_at": generated_at
+        }
+    )
+
+    return get_document_by_id(
+        STOCK_MOVEMENTS_COLLECTION,
+        movement_id
+    )
+
+
+# ==========================================================
+# EXECUTION CONTEXT
+# ==========================================================
+
+def build_execution_context(
+    movement: dict
+) -> dict:
+    return {
+        "movement_id": movement.get(
+            "movement_id"
+        ),
+        "movement_status": movement.get(
+            "movement_status"
+        ),
+        "transaction_id": movement.get(
+            "transaction_id"
+        ),
+
+        "product_id": movement.get(
+            "product_id"
+        ),
+        "product_name": movement.get(
+            "product_name"
+        ),
+
+        "from_store": movement.get(
+            "from_store"
+        ),
+        "to_store": movement.get(
+            "to_store"
+        ),
+        "quantity": movement.get(
+            "recommended_qty"
+        ),
+
+        "source_stock_before": movement.get(
+            "actual_source_stock_before"
+        ),
+        "source_stock_after": movement.get(
+            "actual_source_stock_after"
+        ),
+
+        "target_stock_before": movement.get(
+            "actual_target_stock_before"
+        ),
+        "target_stock_after": movement.get(
+            "actual_target_stock_after"
+        ),
+
+        "executed_at": movement.get(
+            "executed_at"
+        )
+    }
+
+
+# ==========================================================
+# LOCAL EXECUTION FALLBACK
+# ==========================================================
+
+def generate_local_execution_summary(
+    context: dict
+) -> str:
+    if context.get("movement_status") != "EXECUTED":
+        return (
+            f"This movement has not been executed. "
+            f"Its current status is "
+            f"{context.get('movement_status')}."
+        )
+
+    return (
+        f"The transfer was executed successfully. "
+        f"{format_number(context.get('quantity'))} units of "
+        f"{context.get('product_name')} were moved from "
+        f"{context.get('from_store')} to "
+        f"{context.get('to_store')}. "
+        f"Source stock changed from "
+        f"{format_number(context.get('source_stock_before'))} to "
+        f"{format_number(context.get('source_stock_after'))}, while "
+        f"target stock increased from "
+        f"{format_number(context.get('target_stock_before'))} to "
+        f"{format_number(context.get('target_stock_after'))}. "
+        f"The transaction was recorded under "
+        f"{context.get('transaction_id')}."
+    )
+
+
+# ==========================================================
+# EXECUTION SUMMARY GENERATION
+# ==========================================================
+
+def generate_execution_summary_text(
+    movement: dict
+) -> dict:
+    context = build_execution_context(
+        movement
+    )
+
+    fallback = generate_local_execution_summary(
+        context
+    )
+
+    prompt = f"""
+You are a senior retail inventory operations analyst.
+
+Rewrite the completed stock transfer result as a concise,
+manager-friendly operational summary.
+
+STRICT RULES:
+- Use only the provided facts.
+- Do not invent business outcomes or quantities.
+- Do not alter any stock values.
+- Clearly explain what was completed.
+- Use no more than four sentences.
+- Use a professional retail operations tone.
+
+EXECUTION FACTS:
+Movement ID: {context.get('movement_id')}
+Status: {context.get('movement_status')}
+Product: {context.get('product_name')}
+Quantity: {context.get('quantity')} units
+From store: {context.get('from_store')}
+To store: {context.get('to_store')}
+Source stock: {context.get('source_stock_before')} to {context.get('source_stock_after')}
+Target stock: {context.get('target_stock_before')} to {context.get('target_stock_after')}
+Transaction ID: {context.get('transaction_id')}
+
+Write the final manager execution summary.
+""".strip()
+
+    ai_result = call_explanation_model(prompt)
+
+    final_text = ai_result.get("text") or fallback
+    final_source = ai_result.get(
+        "source",
+        "LOCAL_FALLBACK"
+    )
+
+    return {
+        "text": final_text,
+        "context": context,
+        "source": final_source,
+        "model": ai_result.get("model"),
+        "error": ai_result.get("error")
+    }
+
+
+def generate_and_save_execution_summary(
+    movement_id: str,
+    force_regenerate: bool = False
+):
+    """
+    Generate and cache an execution summary.
+
+    Only EXECUTED movements are eligible.
+    """
+
+    movement = get_document_by_id(
+        STOCK_MOVEMENTS_COLLECTION,
+        movement_id
+    )
+
+    if movement is None:
+        return None
+
+    current_status = movement.get(
+        "movement_status"
+    )
+
+    if current_status != "EXECUTED":
+        return {
+            "error": (
+                "Execution summary is available only "
+                "for executed movements"
+            ),
+            "current_status": current_status
+        }
+
+    existing_summary = movement.get(
+        "ai_execution_summary"
+    )
+
+    if existing_summary and not force_regenerate:
+        return movement
+
+    result = generate_execution_summary_text(
+        movement
+    )
+
+    generated_at = now()
+
+    update_document(
+        STOCK_MOVEMENTS_COLLECTION,
+        movement_id,
+        {
+            "ai_execution_summary": result[
+                "text"
+            ],
+            "ai_execution_context": result[
+                "context"
+            ],
+
+            "ai_execution_summary_generated": True,
+            "ai_execution_summary_source": result[
+                "source"
+            ],
+            "ai_execution_summary_model": result[
+                "model"
+            ],
+            "ai_execution_summary_version": (
+                AI_EXPLANATION_VERSION
+            ),
+
+            "ai_execution_summary_generated_at": (
+                generated_at
+            ),
+            "ai_execution_summary_updated_at": (
+                generated_at
+            ),
+
+            "ai_execution_summary_error": simplify_ai_error(
+                result.get("error")
+            ),
+
+            "updated_at": generated_at
+        }
+    )
+
+    return get_document_by_id(
+        STOCK_MOVEMENTS_COLLECTION,
+        movement_id
+    )
+
+
+# ==========================================================
+# BACKWARD-COMPATIBLE WRAPPERS FOR EXISTING ROUTES
+# ==========================================================
+
+def generate_intelligent_recommendation_explanation(
+    movement: dict
+) -> str:
+    result = generate_recommendation_explanation_text(
+        movement
+    )
+    return result["text"]
+
+
+def generate_stock_movement_explanation(
+    movement: dict
+) -> str:
+    return generate_intelligent_recommendation_explanation(
+        movement
+    )
+
+
+def generate_intelligent_execution_summary(
+    movement: dict
+) -> str:
+    result = generate_execution_summary_text(
+        movement
+    )
+    return result["text"]
+
+
+def generate_execution_summary(
+    movement: dict
+) -> str:
+    return generate_intelligent_execution_summary(
+        movement
+    )
