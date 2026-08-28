@@ -60,11 +60,12 @@ class MongoDocumentReference:
         return processed
 
 class MongoQuery:
-    def __init__(self, collection, query=None, limit_val=None, offset_val=None):
+    def __init__(self, collection, query=None, limit_val=None, offset_val=None, sorts=None):
         self.collection = collection
         self.query = query or {}
         self.limit_val = limit_val
         self.offset_val = offset_val
+        self.sorts = sorts or []
 
     def where(self, *args, **kwargs):
         if "filter" in kwargs:
@@ -97,16 +98,31 @@ class MongoQuery:
         else:
             raise NotImplementedError(f"Operator {op} not implemented in Mongo bridge.")
         
-        return MongoQuery(self.collection, new_query, self.limit_val, self.offset_val)
+        return MongoQuery(self.collection, new_query, self.limit_val, self.offset_val, self.sorts)
+
+
+    def order_by(self, field, direction="ASCENDING"):
+        from firebase_admin import firestore
+        # Fallback to string if direction is not firestore enum
+        if str(direction) == "DESCENDING" or direction == firestore.Query.DESCENDING:
+            pymongo_dir = pymongo.DESCENDING
+        else:
+            pymongo_dir = pymongo.ASCENDING
+            
+        new_sorts = self.sorts.copy()
+        new_sorts.append((field, pymongo_dir))
+        return MongoQuery(self.collection, self.query, self.limit_val, self.offset_val, new_sorts)
 
     def limit(self, limit):
-        return MongoQuery(self.collection, self.query, limit, self.offset_val)
+        return MongoQuery(self.collection, self.query, limit, self.offset_val, self.sorts)
 
     def offset(self, offset):
-        return MongoQuery(self.collection, self.query, self.limit_val, offset)
+        return MongoQuery(self.collection, self.query, self.limit_val, offset, self.sorts)
 
     def stream(self):
         cursor = self.collection.find(self.query)
+        if self.sorts:
+            cursor = cursor.sort(self.sorts)
         if self.offset_val is not None:
             cursor = cursor.skip(self.offset_val)
         if self.limit_val is not None:
