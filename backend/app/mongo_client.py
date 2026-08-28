@@ -20,7 +20,7 @@ class MongoDocumentSnapshot:
 
     @property
     def reference(self):
-        if self.collection and self.id:
+        if self.collection is not None and self.id is not None:
             return MongoDocumentReference(self.collection, self.id)
         return None
 

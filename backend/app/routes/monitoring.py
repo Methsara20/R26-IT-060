@@ -56,17 +56,19 @@ def _get_updated_history(session_data, now_dt):
             entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
         except ValueError:
             entry_time = now_dt
-    if entry_time.tzinfo is None:
+    if hasattr(entry_time, "tzinfo") and entry_time.tzinfo is None:
         entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+    elif not hasattr(entry_time, "tzinfo"):
+        entry_time = now_dt
 
     dwell_time = (now_dt - entry_time).total_seconds()
 
     history.append({
         "zone_id": stored_zone_id,
         "zone_name": stored_zone_name,
-        "entry_time": entry_time,
-        "exit_time": now_dt,
-        "dwell_time_seconds": int(dwell_time)
+        "entry_time": entry_time.isoformat() if hasattr(entry_time, "isoformat") else str(entry_time),
+        "exit_time": now_dt.isoformat(),
+        "dwell_time_seconds": max(0, int(dwell_time))
     })
     return history
 
@@ -75,7 +77,8 @@ def _get_updated_history(session_data, now_dt):
 def start_monitoring(data: MonitoringStartRequest):
     zone_id, zone_name = _resolve_zone(data.latitude, data.longitude, data.altitude)
     if not zone_id:
-        zone_id, zone_name = "in_transit", "In Transit"
+        # Do not start tracking if customer is not inside a created store zone
+        return {"message": "Customer not in any store zone. Tracking not started.", "zone_name": None}
 
     # Complete any existing active sessions for this customer to ensure 1 active session per customer
     active_sessions = (
@@ -101,7 +104,7 @@ def start_monitoring(data: MonitoringStartRequest):
         "latitude": data.latitude,
         "longitude": data.longitude,
         "altitude": data.altitude,
-        "intent": "Transiting" if zone_id == "in_transit" else "Browsing",
+        "intent": "Browsing",
         "zone_history": []
     }
 
@@ -119,11 +122,24 @@ def update_monitoring(data: MonitoringUpdateRequest):
     )
 
     current_zone_id, current_zone_name = _resolve_zone(data.latitude, data.longitude, data.altitude)
+    now = datetime.datetime.now(datetime.timezone.utc)
+
     if not current_zone_id:
-        current_zone_id, current_zone_name = "in_transit", "In Transit"
+        # Customer is not inside any created store zone — complete any active sessions and pause tracking
+        if active_sessions:
+            for session_doc in active_sessions:
+                session_data = session_doc.to_dict()
+                updated_history = _get_updated_history(session_data, now)
+                session_doc.reference.update({
+                    "status": "Completed",
+                    "last_updated": firestore.SERVER_TIMESTAMP,
+                    "zone_history": updated_history
+                })
+            _resolve_pending_requests(data.customer_id)
+        return {"message": "Customer outside store zones. Tracking inactive.", "zone_name": None}
 
     if not active_sessions:
-        # No session exists yet — auto-create one
+        # Customer entered a created zone for the first time — start tracking session
         new_session = {
             "customer_id": data.customer_id,
             "customer_name": data.customer_id,
@@ -135,11 +151,11 @@ def update_monitoring(data: MonitoringUpdateRequest):
             "latitude": data.latitude,
             "longitude": data.longitude,
             "altitude": data.altitude,
-            "intent": "Transiting" if current_zone_id == "in_transit" else "Browsing",
+            "intent": "Browsing",
             "zone_history": []
         }
         db.collection("customer_monitoring").add(new_session)
-        return {"message": "Session auto-created", "zone_name": current_zone_name}
+        return {"message": "Session started in zone", "zone_name": current_zone_name}
 
     # Deduplicate: use the first session, mark any extra duplicate active sessions as Completed
     session_doc = active_sessions[0]
@@ -151,9 +167,8 @@ def update_monitoring(data: MonitoringUpdateRequest):
     now = datetime.datetime.now(datetime.timezone.utc)
 
     if current_zone_id != stored_zone_id:
-        # Customer moved to a new zone or into transit — append to history, reset timer
+        # Customer moved to a new zone or into transit — append to history, reset entry_time timer
         updated_history = _get_updated_history(session_data, now)
-        intent = "Transiting" if current_zone_id == "in_transit" else "Browsing"
 
         session_doc.reference.update({
             "zone_id": current_zone_id,
@@ -163,7 +178,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
             "latitude": data.latitude,
             "longitude": data.longitude,
             "altitude": data.altitude,
-            "intent": intent,
+            "intent": "Browsing",
             "zone_history": updated_history
         })
         
@@ -205,7 +220,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
         msg = "Zone changed (Pacing Alert Triggered)" if pacing_alert_triggered else "Zone changed"
         return {"message": msg, "new_zone": current_zone_name}
     else:
-        # Same zone — update coordinates and check dwell time
+        # Same zone — update coordinates and calculate speed & intent
         prev_lat = session_data.get("latitude")
         prev_lon = session_data.get("longitude")
         last_updated = session_data.get("last_updated")
@@ -213,6 +228,7 @@ def update_monitoring(data: MonitoringUpdateRequest):
         distance = 0.0
         intent = "Browsing"
         current_speed = 0.0
+        elapsed_since_last = 1.0
 
         if prev_lat and prev_lon and last_updated:
             distance = calculate_distance(prev_lat, prev_lon, data.latitude, data.longitude)
@@ -222,59 +238,60 @@ def update_monitoring(data: MonitoringUpdateRequest):
                     last_updated = datetime.datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
                 except ValueError:
                     last_updated = now
-            if last_updated.tzinfo is None:
+            if getattr(last_updated, "tzinfo", None) is None:
                 last_updated = last_updated.replace(tzinfo=datetime.timezone.utc)
             
-            elapsed_since_last = (now - last_updated).total_seconds()
-            
-            entry_time = session_data.get("entry_time")
-            dwell_time = 0.0
-            if entry_time:
-                if isinstance(entry_time, str):
-                    try:
-                        entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
-                    except ValueError:
-                        entry_time = now
-                if entry_time.tzinfo is None:
-                    entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
-                dwell_time = (now - entry_time).total_seconds()
+            elapsed_since_last = max(0.1, (now - last_updated).total_seconds())
 
-            intent = classify_intent(distance, elapsed_since_last, zone_dwell_time_seconds=dwell_time)
-            if elapsed_since_last > 0:
+            # Filter stationary GPS jitter (< 1.2 meters movement is static noise while standing still)
+            if distance < 1.2:
+                distance = 0.0
+                current_speed = 0.0
+            else:
                 current_speed = distance / elapsed_since_last
 
-        if current_zone_id == "in_transit" or current_speed > 0.15:
-            intent = "Transiting"
-        else:
-            # Check zone entry time: keep Transiting for 10 seconds after entering a new zone
-            entry_time = session_data.get("entry_time")
-            if entry_time:
-                if isinstance(entry_time, str):
-                    try:
-                        entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
-                    except ValueError:
-                        entry_time = now
-                if entry_time.tzinfo is None:
-                    entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
-                if (now - entry_time).total_seconds() < 10:
-                    intent = "Transiting"
+        # Retrieve or compute dwell time in current zone
+        entry_time = session_data.get("entry_time")
+        if not entry_time:
+            entry_time = now
+        elif isinstance(entry_time, str):
+            try:
+                entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+            except ValueError:
+                entry_time = now
 
-        session_doc.reference.update({
+        if getattr(entry_time, "tzinfo", None) is None:
+            entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
+
+        dwell_time = max(0.0, (now - entry_time).total_seconds())
+
+        # Classify intent via ML Model
+        if current_speed > 0.8:
+            intent = "Transiting" # Fast walking (> 2.8 km/h)
+        else:
+            # Stationary or slow movement while browsing shelves
+            intent = classify_intent(distance, elapsed_since_last, zone_dwell_time_seconds=dwell_time)
+            if intent == "Unknown":
+                intent = "Browsing"
+
+        update_dict = {
             "last_updated": firestore.SERVER_TIMESTAMP,
             "latitude": data.latitude,
             "longitude": data.longitude,
             "altitude": data.altitude,
             "current_speed": current_speed,
             "intent": intent
-        })
+        }
+        
+        # Ensure entry_time exists in document
+        if not session_data.get("entry_time"):
+            update_dict["entry_time"] = firestore.SERVER_TIMESTAMP
 
-        entry_time = session_data.get("entry_time")
-        if not entry_time:
-            return {"message": "Heartbeat updated"}
+        session_doc.reference.update(update_dict)
 
-        elapsed_seconds = (now - entry_time).total_seconds()
+        elapsed_seconds = dwell_time
 
-        if elapsed_seconds >= 15 and intent == "Browsing":
+        if current_zone_id != "in_transit" and current_zone_name != "In Transit" and elapsed_seconds >= 15 and intent == "Browsing":
             pending_requests = list(
                 db.collection("assistance_requests")
                 .where(filter=firestore.FieldFilter("customer_id", "==", data.customer_id))
@@ -303,11 +320,18 @@ def update_monitoring(data: MonitoringUpdateRequest):
                     "sent_time": firestore.SERVER_TIMESTAMP,
                     "status": "Sent"
                 })
-                return {"message": "Assistance request triggered"}
+                return {"message": "Assistance request triggered", "zone": current_zone_name, "intent": intent}
             else:
                 req_doc = pending_requests[0]
                 req_data = req_doc.to_dict()
                 last_notify = req_data.get("last_notification_time", now)
+                if isinstance(last_notify, str):
+                    try:
+                        last_notify = datetime.datetime.fromisoformat(last_notify.replace('Z', '+00:00'))
+                    except ValueError:
+                        last_notify = now
+                if getattr(last_notify, "tzinfo", None) is None:
+                    last_notify = last_notify.replace(tzinfo=datetime.timezone.utc)
                 notify_elapsed = (now - last_notify).total_seconds()
 
                 if notify_elapsed >= 15:
@@ -325,9 +349,9 @@ def update_monitoring(data: MonitoringUpdateRequest):
                         "status": "Sent",
                         "is_reminder": True
                     })
-                    return {"message": "Assistance reminder triggered", "count": new_count}
+                    return {"message": "Assistance reminder triggered", "count": new_count, "zone": current_zone_name, "intent": intent}
 
-        return {"message": "Heartbeat updated", "zone": current_zone_name, "elapsed_seconds": int(elapsed_seconds)}
+        return {"message": "Heartbeat updated", "zone": current_zone_name, "intent": intent, "elapsed_seconds": int(elapsed_seconds)}
 
 
 @router.post("/stop")
@@ -412,6 +436,11 @@ def get_active_sessions():
 
         clean_data = {k: v for k, v in latest.items() if not k.startswith("_")}
         clean_data["monitoring_id"] = latest["_doc_id"]
+
+        # Only include customers who are inside a defined created zone (exclude In Transit)
+        if clean_data.get("zone_id") == "in_transit" or clean_data.get("zone_name") == "In Transit":
+            continue
+
         if "entry_time" in clean_data and clean_data["entry_time"]:
             clean_data["entry_time"] = clean_data["entry_time"].isoformat()
         if "last_updated" in clean_data and clean_data["last_updated"]:
@@ -432,6 +461,11 @@ def get_active_requests():
     for doc in requests:
         data = doc.to_dict()
         data["request_id"] = doc.id
+
+        # Only include assistance requests for created zones (exclude In Transit)
+        if data.get("zone_id") == "in_transit" or data.get("zone_name") == "In Transit":
+            continue
+
         if "request_time" in data and data["request_time"]:
             data["request_time"] = data["request_time"].isoformat()
         if "last_notification_time" in data and data["last_notification_time"]:
