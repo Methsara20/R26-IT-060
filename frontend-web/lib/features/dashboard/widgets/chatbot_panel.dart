@@ -61,7 +61,7 @@ class _ChatbotPanelState extends State<ChatbotPanel> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/chat"),
+        Uri.parse("http://127.0.0.1:10000/chat"),
 
         headers: {"Content-Type": "application/json"},
 
