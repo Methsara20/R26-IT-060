@@ -19,6 +19,7 @@ class ManagerAssistantScreen extends StatefulWidget {
     this.initialMovementId,
     super.key,
   });
+  
 
   final InventoryDecisionWorkflowController workflowController;
   final String? initialMovementId;

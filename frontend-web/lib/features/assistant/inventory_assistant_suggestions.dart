@@ -16,6 +16,7 @@ InventoryAssistantContext resolveInventoryAssistantContext({
   String? movementId,
   List<ManagerChatMessage> messages = const [],
 }) {
+  
   if (movementId?.isNotEmpty == true || workflow?.movement != null) {
     return InventoryAssistantContext.movement;
   }
