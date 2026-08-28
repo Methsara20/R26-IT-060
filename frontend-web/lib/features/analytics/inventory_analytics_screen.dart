@@ -21,6 +21,9 @@ class InventoryAnalyticsScreen extends StatefulWidget {
     super.key,
   });
 
+
+
+
   final InventoryDecisionWorkflowController workflowController;
   final VoidCallback? onOpenInventoryIntelligence;
 

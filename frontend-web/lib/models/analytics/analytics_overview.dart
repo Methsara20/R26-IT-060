@@ -22,6 +22,7 @@ class AnalyticsOverview {
   final List<AnalyticsAlertItem> highValueItems;
 }
 
+
 class AnalyticsBreakdown {
   const AnalyticsBreakdown({
     required this.id,

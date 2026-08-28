@@ -12,6 +12,7 @@ class DashboardCommandCenter {
     required this.overstockItems,
   });
 
+
   final DashboardSummary summary;
   final List<AnalyticsAlertItem> lowStockItems;
   final List<AnalyticsAlertItem> overstockItems;

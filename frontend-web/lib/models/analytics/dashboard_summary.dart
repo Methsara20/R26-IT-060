@@ -12,6 +12,7 @@ class DashboardSummary {
     required this.lastUpdated,
   });
 
+
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
     return DashboardSummary(
       totalProducts: _asInt(json, 'total_products'),
