@@ -33,9 +33,7 @@ def create_marketing_opportunity(data):
 
     payload = {
         "opportunity_id": opportunity_id,
-
         "workflow_id": data.workflow_id,
-
         "source_component": "SMART_INVENTORY",
 
         "product_id": data.product_id,
@@ -56,7 +54,6 @@ def create_marketing_opportunity(data):
         "selling_price": data.selling_price,
 
         "stock_health": data.stock_health,
-
         "recommended_action": recommended_action,
 
         "status": "PENDING_MARKETING",
@@ -65,6 +62,10 @@ def create_marketing_opportunity(data):
             timezone.utc
         ).isoformat(),
     }
+
+    # Add promotion_percent only when the frontend sends a value.
+    if data.promotion_percent is not None:
+        payload["promotion_percent"] = data.promotion_percent
 
     create_or_update_document(
         MARKETING_OPPORTUNITIES_COLLECTION,

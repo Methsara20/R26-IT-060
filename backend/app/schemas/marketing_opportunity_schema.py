@@ -25,6 +25,11 @@ class MarketingOpportunityRequest(BaseModel):
         default=None,
         ge=0,
     )
+    promotion_percent: Optional[float] = Field(
+        default=None,
+        ge=0,
+        le=100,
+    )
 
     stock_health: str = Field(..., min_length=1)
     recommended_action: str = Field(..., min_length=1)
