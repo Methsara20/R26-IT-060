@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query
 
 from app.services.product_service import (
-    get_all_products,
-    get_product_by_id,
-    get_products_by_category
+    get_products_paginated,
+    get_product_by_id
 )
 
 router = APIRouter(
@@ -14,18 +13,16 @@ router = APIRouter(
 
 @router.get("")
 def list_products(
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=50, ge=1, le=100),
     category: str | None = Query(default=None),
-    refresh: bool = Query(default=False),
 ):
-    if refresh:
-        products = get_all_products(force_refresh=True)
-    elif category:
-        products = get_products_by_category(category)
-    else:
-        products = get_all_products()
+    products = get_products_paginated(page=page, limit=limit, category=category)
 
     return {
         "count": len(products),
+        "page": page,
+        "limit": limit,
         "products": products,
     }
 

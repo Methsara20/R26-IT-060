@@ -22,11 +22,11 @@ class LLMManager:
         key = next(self.key_iterator)
         return genai.Client(api_key=key)
 
-    def generate_content_with_fallback(self, prompt: str, initial_model: str = "gemini-1.5-flash") -> str:
+    def generate_content_with_fallback(self, prompt: str, initial_model: str = "gemini-3.6-flash") -> str:
         if not self.api_keys:
             raise HTTPException(status_code=500, detail="GEMINI_API_KEYS not configured on the server.")
 
-        models_to_try = [initial_model, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+        models_to_try = [initial_model, "gemini-3.6-flash", "gemini-3.6-pro"]
         
         for model in models_to_try:
             max_attempts = min(3, len(self.api_keys) * 2)

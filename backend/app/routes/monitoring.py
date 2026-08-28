@@ -51,6 +51,11 @@ def _get_updated_history(session_data, now_dt):
     if not stored_zone_id or not entry_time:
         return history
 
+    if isinstance(entry_time, str):
+        try:
+            entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+        except ValueError:
+            entry_time = now_dt
     if entry_time.tzinfo is None:
         entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
 
@@ -212,6 +217,11 @@ def update_monitoring(data: MonitoringUpdateRequest):
         if prev_lat and prev_lon and last_updated:
             distance = calculate_distance(prev_lat, prev_lon, data.latitude, data.longitude)
             
+            if isinstance(last_updated, str):
+                try:
+                    last_updated = datetime.datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+                except ValueError:
+                    last_updated = now
             if last_updated.tzinfo is None:
                 last_updated = last_updated.replace(tzinfo=datetime.timezone.utc)
             
@@ -220,6 +230,11 @@ def update_monitoring(data: MonitoringUpdateRequest):
             entry_time = session_data.get("entry_time")
             dwell_time = 0.0
             if entry_time:
+                if isinstance(entry_time, str):
+                    try:
+                        entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+                    except ValueError:
+                        entry_time = now
                 if entry_time.tzinfo is None:
                     entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
                 dwell_time = (now - entry_time).total_seconds()
@@ -234,6 +249,11 @@ def update_monitoring(data: MonitoringUpdateRequest):
             # Check zone entry time: keep Transiting for 10 seconds after entering a new zone
             entry_time = session_data.get("entry_time")
             if entry_time:
+                if isinstance(entry_time, str):
+                    try:
+                        entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+                    except ValueError:
+                        entry_time = now
                 if entry_time.tzinfo is None:
                     entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
                 if (now - entry_time).total_seconds() < 10:
@@ -349,6 +369,11 @@ def get_active_sessions():
         
         last_updated = data.get("last_updated")
         if last_updated:
+            if isinstance(last_updated, str):
+                try:
+                    last_updated = datetime.datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+                except ValueError:
+                    last_updated = now
             if last_updated.tzinfo is None:
                 last_updated = last_updated.replace(tzinfo=datetime.timezone.utc)
             if last_updated < stale_limit:
@@ -529,6 +554,11 @@ def get_zone_analytics():
         curr_zname = data.get("zone_name")
         entry_time = data.get("entry_time")
         if curr_zid and curr_zid != "in_transit" and entry_time:
+            if isinstance(entry_time, str):
+                try:
+                    entry_time = datetime.datetime.fromisoformat(entry_time.replace('Z', '+00:00'))
+                except ValueError:
+                    entry_time = now
             if entry_time.tzinfo is None:
                 entry_time = entry_time.replace(tzinfo=datetime.timezone.utc)
             curr_dwell = int((now - entry_time).total_seconds())

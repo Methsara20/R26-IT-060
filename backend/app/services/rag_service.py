@@ -10,27 +10,54 @@ from app.services.llm_manager import llm_manager
 
 class GeminiEmbeddings:
     def _embed(self, text: str) -> list[float]:
+        from google import genai
         api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY", "")]
         for key in api_keys:
             if not key or key == "dummy_key":
                 continue
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={key}"
-                resp = requests.post(
-                    url, 
-                    json={"model": "models/text-embedding-004", "content": {"parts": [{"text": text}]}},
-                    timeout=10
+                client = genai.Client(api_key=key)
+                response = client.models.embed_content(
+                    model="gemini-embedding-2",
+                    contents=text
                 )
-                if resp.status_code == 200:
-                    return resp.json()["embedding"]["values"]
+                if response.embeddings and len(response.embeddings) > 0:
+                    return response.embeddings[0].values
             except Exception as e:
-                print(f"[GeminiEmbeddings] Embedding request failed with key: {e}")
+                print(f"[GeminiEmbeddings] Embedding request failed: {e}")
                 continue
 
         raise RuntimeError("Embedding service failed on all configured Gemini API keys.")
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return [self._embed(t) for t in texts]
+        # Use batch endpoint for efficiency (batches of 100)
+        api_keys = getattr(llm_manager, "api_keys", []) or [os.getenv("GEMINI_API_KEY", "")]
+        key = next((k for k in api_keys if k and k != "dummy_key"), None)
+        if not key:
+            raise RuntimeError("No valid Gemini API key for embeddings.")
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:batchEmbedContents?key={key}"
+        all_embeddings = []
+        
+        batch_size = 100
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            requests_payload = [{"model": "models/gemini-embedding-2", "content": {"parts": [{"text": t}]}} for t in batch]
+            
+            try:
+                resp = requests.post(url, json={"requests": requests_payload}, timeout=30)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    for emb in data.get("embeddings", []):
+                        all_embeddings.append(emb["values"])
+                else:
+                    print(f"Batch embed failed: {resp.status_code} - {resp.text}")
+                    all_embeddings.extend([self._embed(t) for t in batch])
+            except Exception as e:
+                print(f"Batch embed exception: {e}")
+                all_embeddings.extend([self._embed(t) for t in batch])
+                
+        return all_embeddings
 
     def embed_query(self, text: str) -> list[float]:
         return self._embed(text)

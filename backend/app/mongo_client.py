@@ -53,11 +53,27 @@ class MongoDocumentReference:
         return processed
 
 class MongoQuery:
-    def __init__(self, collection, query=None):
+    def __init__(self, collection, query=None, limit_val=None, offset_val=None):
         self.collection = collection
         self.query = query or {}
+        self.limit_val = limit_val
+        self.offset_val = offset_val
 
-    def where(self, field, op, value):
+    def where(self, *args, **kwargs):
+        if "filter" in kwargs:
+            filter_obj = kwargs["filter"]
+            field = filter_obj.field_path
+            op = filter_obj.op_string
+            value = filter_obj.value
+        elif len(args) == 3:
+            field, op, value = args
+        elif "field" in kwargs and "op" in kwargs and "value" in kwargs:
+            field = kwargs["field"]
+            op = kwargs["op"]
+            value = kwargs["value"]
+        else:
+            raise ValueError(f"Unsupported where arguments: args={args}, kwargs={kwargs}")
+
         new_query = self.query.copy()
         if op == "==":
             new_query[field] = value
@@ -74,10 +90,21 @@ class MongoQuery:
         else:
             raise NotImplementedError(f"Operator {op} not implemented in Mongo bridge.")
         
-        return MongoQuery(self.collection, new_query)
+        return MongoQuery(self.collection, new_query, self.limit_val, self.offset_val)
+
+    def limit(self, limit):
+        return MongoQuery(self.collection, self.query, limit, self.offset_val)
+
+    def offset(self, offset):
+        return MongoQuery(self.collection, self.query, self.limit_val, offset)
 
     def stream(self):
         cursor = self.collection.find(self.query)
+        if self.offset_val is not None:
+            cursor = cursor.skip(self.offset_val)
+        if self.limit_val is not None:
+            cursor = cursor.limit(self.limit_val)
+            
         for doc in cursor:
             yield MongoDocumentSnapshot(doc)
             

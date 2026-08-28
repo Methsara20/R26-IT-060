@@ -29,15 +29,42 @@ class _CatalogPageState extends State<CatalogPage> {
   String selectedCategory = "All";
   List<String> categories = ["All"];
 
+  final ScrollController _scrollController = ScrollController();
+  int _currentPage = 1;
+  final int _limit = 50;
+  bool _isFetchingMore = false;
+  bool _hasMore = true;
+
   @override
   void initState() {
     super.initState();
     _fetchProducts();
+    _scrollController.addListener(_onScroll);
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (!_isFetchingMore && _hasMore && !isLoading) {
+        _fetchMoreProducts();
+      }
+    }
   }
 
   Future<void> _fetchProducts() async {
+    setState(() {
+      _currentPage = 1;
+      _hasMore = true;
+      isLoading = true;
+    });
+    
     try {
-      final products = await ApiService.getProducts();
+      final products = await ApiService.getProducts(page: _currentPage, limit: _limit, category: selectedCategory);
       final Set<String> uniqueCats = {"All"};
       for (var p in products) {
         final cat = p["category"];
@@ -49,6 +76,7 @@ class _CatalogPageState extends State<CatalogPage> {
       if (mounted) {
         setState(() {
           allProducts = products;
+          if (products.length < _limit) _hasMore = false;
           categories = uniqueCats.toList();
           _applyFilters();
           isLoading = false;
@@ -59,6 +87,44 @@ class _CatalogPageState extends State<CatalogPage> {
         setState(() {
           errorMessage = e.toString();
           isLoading = false;
+        });
+      }
+    }
+  }
+  
+  Future<void> _fetchMoreProducts() async {
+    setState(() {
+      _isFetchingMore = true;
+    });
+    
+    try {
+      _currentPage++;
+      final products = await ApiService.getProducts(page: _currentPage, limit: _limit, category: selectedCategory);
+      
+      if (mounted) {
+        setState(() {
+          if (products.isEmpty || products.length < _limit) {
+            _hasMore = false;
+          }
+          
+          final Set<String> uniqueCats = Set.from(categories);
+          for (var p in products) {
+            final cat = p["category"];
+            if (cat != null && cat.toString().isNotEmpty) {
+              uniqueCats.add(cat.toString());
+            }
+          }
+          
+          allProducts.addAll(products);
+          categories = uniqueCats.toList();
+          _applyFilters();
+          _isFetchingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isFetchingMore = false;
         });
       }
     }
@@ -168,6 +234,7 @@ class _CatalogPageState extends State<CatalogPage> {
                       onRefresh: _fetchProducts,
                       color: AppTheme.accentBlue(isDark),
                       child: CustomScrollView(
+                        controller: _scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
                         slivers: [
                           // Glass Header
@@ -410,6 +477,15 @@ class _CatalogPageState extends State<CatalogPage> {
                                     ),
                                   ),
                                 ),
+                          if (_isFetchingMore)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                                child: Center(
+                                  child: CircularProgressIndicator(color: AppTheme.accentBlue(isDark)),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),

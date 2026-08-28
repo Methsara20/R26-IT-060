@@ -43,25 +43,7 @@ app.include_router(smart_inventory.router)
 app.include_router(stylist.router, prefix="/stylist", tags=["Stylist"])
 app.mount("/generated", StaticFiles(directory="generated"), name="generated")
 
-@app.get("/test-crash")
-def test_crash():
-    from app.services.auth_service import hash_password
-    try:
-        h = hash_password("test")
-        return {"status": "ok", "hash": h}
-    except Exception as e:
-        import traceback
-        return {"status": "error", "traceback": traceback.format_exc()}
 
-@app.get("/test-ml-crash")
-def test_ml_crash():
-    from app.services.body_measurement_service import predict_body_measurements
-    try:
-        res = predict_body_measurements(170.0, 56.0, "MALE")
-        return {"status": "ok", "result": res}
-    except Exception as e:
-        import traceback
-        return {"status": "error", "traceback": traceback.format_exc()}
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
