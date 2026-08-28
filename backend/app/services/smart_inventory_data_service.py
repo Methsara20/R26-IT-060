@@ -211,4 +211,3 @@ def get_product_store_info(store_id=None, product_id=None):
         "recent_sales": latest_sales,
         "trend": trend
     }
-
