@@ -4,7 +4,8 @@ import pymongo
 from bson import ObjectId
 
 class MongoDocumentSnapshot:
-    def __init__(self, doc):
+    def __init__(self, doc, collection=None):
+        self.collection = collection
         self.exists = doc is not None
         if doc:
             # We treat the string version of _id as the Firestore document id
@@ -17,6 +18,12 @@ class MongoDocumentSnapshot:
     def to_dict(self):
         return self._data
 
+    @property
+    def reference(self):
+        if self.collection and self.id:
+            return MongoDocumentReference(self.collection, self.id)
+        return None
+
 class MongoDocumentReference:
     def __init__(self, collection, doc_id):
         self.collection = collection
@@ -24,7 +31,7 @@ class MongoDocumentReference:
 
     def get(self):
         doc = self.collection.find_one({"_id": self.id})
-        return MongoDocumentSnapshot(doc)
+        return MongoDocumentSnapshot(doc, self.collection)
 
     def set(self, data, merge=False):
         data = self._process_data(data)
@@ -106,7 +113,7 @@ class MongoQuery:
             cursor = cursor.limit(self.limit_val)
             
         for doc in cursor:
-            yield MongoDocumentSnapshot(doc)
+            yield MongoDocumentSnapshot(doc, self.collection)
             
     def get(self):
         # some firestore queries use .get() instead of stream()
