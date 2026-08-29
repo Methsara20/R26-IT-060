@@ -81,7 +81,7 @@ class ForecastApiService {
   /// This method should only run when the catalog cache is empty
   /// or when a deliberate force refresh is requested.
   Future<ForecastCatalog> _loadCatalog() async {
-    final responses = await Future.wait([_get('/products'), _get('/stores/')]);
+    final responses = await Future.wait([_get('/products?all_products=true'), _get('/stores/')]);
 
     final productItems = responses[0]['products'];
     final storeItems = responses[1]['stores'];

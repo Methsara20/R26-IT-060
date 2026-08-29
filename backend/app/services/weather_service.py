@@ -630,7 +630,7 @@ def get_weather_for_date(
     weather_data = (
         get_forecast_weather(
             store_id=store_id,
-            days=days_ahead + 1
+            days=min(days_ahead + 3, MAX_FORECAST_DAYS)
         )
     )
 

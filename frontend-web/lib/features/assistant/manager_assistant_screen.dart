@@ -510,8 +510,8 @@ class _ChatPanel extends StatelessWidget {
               children: [
                 const Icon(Icons.error_outline, size: 18, color: Colors.red),
                 const SizedBox(width: 8),
-                const Expanded(
-                  child: Text('Inventory AI is temporarily unavailable.'),
+                Expanded(
+                  child: Text(error ?? 'Inventory AI is temporarily unavailable.'),
                 ),
                 TextButton(onPressed: onRetry, child: const Text('Retry')),
               ],

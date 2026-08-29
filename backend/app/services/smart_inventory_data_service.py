@@ -21,15 +21,10 @@ def get_sales_value(sales, current_stock):
 
 # MAIN PAYLOAD
 def build_payload(store_id, product_id, current_stock, price_lkr, promotion_percent):
-    inv = inventory_df[
-        (inventory_df["store_id"] == store_id) &
-        (inventory_df["product_id"] == product_id)
-    ]
-
-    if inv.empty:
+    from app.services.product_service import get_product_by_id
+    prod = get_product_by_id(product_id)
+    if not prod:
         raise ValueError("Product not found")
-
-    inv = inv.iloc[0]
 
     sales = sales_df[
         (sales_df["store_id"] == store_id) &
@@ -60,10 +55,10 @@ def build_payload(store_id, product_id, current_stock, price_lkr, promotion_perc
     #  BASE
     payload["store_id"] = store_id
     payload["product_id"] = product_id
-    payload["category"] = inv["category"]
-    payload["brand"] = inv["brand"]
-    payload["gender"] = inv["gender"]
-    payload["subcategory"] = inv["subcategory"]
+    payload["category"] = prod.get("category", "")
+    payload["brand"] = prod.get("brand", "")
+    payload["gender"] = prod.get("gender", "")
+    payload["subcategory"] = prod.get("subcategory", "")
 
     #  USER INPUT
     payload["price_lkr"] = float(price_lkr)
@@ -142,31 +137,44 @@ def enrich_with_forecast(prediction, payload):
 
 
 def get_product_store_info(store_id=None, product_id=None):
+    from app.services.product_service import get_all_products, get_product_by_id
+    from app.services.store_service import get_all_stores, get_store_by_id
+
     # DROPDOWN DATA MODE
     if store_id is None and product_id is None:
-        products = inventory_df[
-            ["product_id", "product_name", "brand", "gender", "subcategory" ]
-        ].drop_duplicates().sort_values("product_id")
-
-        stores = inventory_df[
-            ["store_id", "store_name"]
-        ].drop_duplicates().sort_values("store_id")
+        products = get_all_products()
+        stores = get_all_stores()
+        
+        dropdown_products = []
+        for p in products:
+            dropdown_products.append({
+                "product_id": p.get("product_id") or p.get("id"),
+                "product_name": p.get("product_name") or p.get("name"),
+                "brand": p.get("brand"),
+                "gender": p.get("gender"),
+                "subcategory": p.get("subcategory")
+            })
+            
+        dropdown_stores = []
+        for s in stores:
+            dropdown_stores.append({
+                "store_id": s.get("store_id") or s.get("id"),
+                "store_name": s.get("store_name") or s.get("name")
+            })
 
         return {
-            "products": products.to_dict(orient="records"),
-            "stores": stores.to_dict(orient="records")
+            "products": dropdown_products,
+            "stores": dropdown_stores
         }
 
     #  PRODUCT DETAILS MODE
-    inv = inventory_df[
-        (inventory_df["store_id"] == store_id) &
-        (inventory_df["product_id"] == product_id)
-    ]
-
-    if inv.empty:
+    prod = get_product_by_id(product_id)
+    if not prod:
         raise ValueError("Product not found")
 
-    inv = inv.iloc[0]
+    store = get_store_by_id(store_id)
+    if not store:
+        raise ValueError("Store not found")
 
     sales = sales_df[
         (sales_df["store_id"] == store_id) &
@@ -194,19 +202,19 @@ def get_product_store_info(store_id=None, product_id=None):
 
     else:
         latest_sales = 0
-        latest_price = 0
+        latest_price = float(prod.get("selling_price") or prod.get("price_lkr") or 0.0)
         trend = "STABLE"
 
     return {
         "product_id": product_id,
-        "product_name": inv["product_name"],
-        "brand": inv["brand"],
-        "gender": inv["gender"],
-        "subcategory": inv["subcategory"],
+        "product_name": prod.get("product_name") or prod.get("name"),
+        "brand": prod.get("brand"),
+        "gender": prod.get("gender"),
+        "subcategory": prod.get("subcategory"),
         "store_id": store_id,
-        "store_name": inv["store_name"],
-        "category": inv["category"],
-        "current_stock": int(inv["current_stock"]),
+        "store_name": store.get("store_name") or store.get("name"),
+        "category": prod.get("category"),
+        "current_stock": int(prod.get("current_stock") or 0),
         "price_lkr": latest_price,
         "recent_sales": latest_sales,
         "trend": trend

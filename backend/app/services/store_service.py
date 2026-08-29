@@ -30,7 +30,8 @@ def get_all_stores(force_refresh: bool = False):
 
     if _stores_cache is None or force_refresh:
         print("Loading stores from Firestore...")
-        _stores_cache = get_all_documents(STORES_COLLECTION)
+        stores = get_all_documents(STORES_COLLECTION)
+        _stores_cache = sorted(stores, key=lambda x: x.get("store_id", x.get("id", "")))
 
     return _stores_cache
 
