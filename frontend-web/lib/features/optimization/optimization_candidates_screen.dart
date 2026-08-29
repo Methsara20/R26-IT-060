@@ -41,7 +41,11 @@ class _OptimizationCandidatesScreenState
     _overviewFuture = _service.getOverview();
   }
 
-  void _reload() => setState(() => _overviewFuture = _service.getOverview());
+  void _reload() {
+    setState(() {
+      _overviewFuture = _service.getOverview();
+    });
+  }
 
   Future<void> _analyze(OptimizationCandidate candidate) async {
     final confirmed = await showDialog<bool>(
