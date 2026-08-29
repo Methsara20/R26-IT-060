@@ -130,13 +130,17 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  static Future<List<dynamic>> getProducts({int page = 1, int limit = 50, String? category}) async {
+  static Future<List<dynamic>> getProducts({
+    int page = 1,
+    int limit = 50,
+    String? category,
+  }) async {
     try {
       String url = "$baseUrl/products?page=$page&limit=$limit";
       if (category != null && category.isNotEmpty && category != "All") {
         url += "&category=$category";
       }
-      
+
       final response = await http
           .get(Uri.parse(url))
           .timeout(const Duration(seconds: 15));
