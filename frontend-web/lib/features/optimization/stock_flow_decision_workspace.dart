@@ -34,6 +34,9 @@ class _StockFlowDecisionWorkspaceState
   String _action = 'ALL';
   String _showroom = 'ALL';
 
+  int _currentPage = 0;
+  static const int _pageSize = 5;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -80,6 +83,18 @@ class _StockFlowDecisionWorkspaceState
         .where((item) => item.hasActionableTransfer)
         .length;
     final filtered = _filtered;
+    final int totalPages = (filtered.length / _pageSize).ceil();
+    if (_currentPage >= totalPages && totalPages > 0) {
+      _currentPage = totalPages - 1;
+    }
+    final int startIndex = _currentPage * _pageSize;
+    final int endIndex = (startIndex + _pageSize > filtered.length)
+        ? filtered.length
+        : startIndex + _pageSize;
+    final paginated = filtered.isEmpty
+        ? <OptimizationCandidate>[]
+        : filtered.sublist(startIndex, endIndex);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -104,10 +119,19 @@ class _StockFlowDecisionWorkspaceState
           showroom: _showroom,
           actions: _actions,
           showrooms: _showrooms,
-          onSearchChanged: (_) => setState(() {}),
-          onPriorityChanged: (value) => setState(() => _priority = value),
-          onActionChanged: (value) => setState(() => _action = value),
-          onShowroomChanged: (value) => setState(() => _showroom = value),
+          onSearchChanged: (_) => setState(() => _currentPage = 0),
+          onPriorityChanged: (value) => setState(() {
+            _priority = value;
+            _currentPage = 0;
+          }),
+          onActionChanged: (value) => setState(() {
+            _action = value;
+            _currentPage = 0;
+          }),
+          onShowroomChanged: (value) => setState(() {
+            _showroom = value;
+            _currentPage = 0;
+          }),
         ),
         const SizedBox(height: 20),
         Text('Priority queue', style: Theme.of(context).textTheme.titleLarge),
@@ -119,8 +143,8 @@ class _StockFlowDecisionWorkspaceState
         const SizedBox(height: 12),
         if (filtered.isEmpty)
           const _QueueEmpty()
-        else
-          for (final candidate in filtered) ...[
+        else ...[
+          for (final candidate in paginated) ...[
             OptimizationRecommendationCard(
               candidate: candidate,
               analyzing: widget.analyzingId == candidate.id,
@@ -129,6 +153,34 @@ class _StockFlowDecisionWorkspaceState
             ),
             const SizedBox(height: 12),
           ],
+          if (totalPages > 1)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton.filledTonal(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 0
+                        ? () => setState(() => _currentPage--)
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Page ${_currentPage + 1} of $totalPages',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 16),
+                  IconButton.filledTonal(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _currentPage < totalPages - 1
+                        ? () => setState(() => _currentPage++)
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+        ],
       ],
     );
   }
