@@ -1,10 +1,12 @@
 import pandas as pd
-
-INVENTORY_PATH = "app/data/inventory_2026.csv"
-
+from app.firebase_config import db
 
 def load_inventory():
-    return pd.read_csv(INVENTORY_PATH)
+    docs = db.collection('inventory_current').stream()
+    data = [doc.to_dict() for doc in docs]
+    if not data:
+        return pd.DataFrame(columns=["store_id", "product_id", "current_stock", "reorder_level", "max_stock"])
+    return pd.DataFrame(data)
 
 
 def get_product_stock(inventory, store_id, product_id):
