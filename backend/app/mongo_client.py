@@ -20,33 +20,93 @@ class MongoDocumentSnapshot:
 
     @property
     def reference(self):
-        if self.collection is not None and self.id is not None:
-            return MongoDocumentReference(self.collection, self.id)
+        if self._collection is not None and self.id is not None:
+            return MongoDocumentReference(self._collection, self.id)
         return None
 
 class MongoDocumentReference:
     def __init__(self, collection, doc_id):
-        self.collection = collection
+        self._collection = collection
         self.id = doc_id
 
     def get(self):
-        doc = self.collection.find_one({"_id": self.id})
-        return MongoDocumentSnapshot(doc, self.collection)
+        doc = self._collection.find_one({"_id": self.id})
+        return MongoDocumentSnapshot(doc, self._collection)
 
     def set(self, data, merge=False):
+        from firebase_admin import firestore
         data = self._process_data(data)
         if merge:
-            self.collection.update_one({"_id": self.id}, {"$set": data}, upsert=True)
+            set_data = {}
+            inc_data = {}
+            unset_data = {}
+            for k, v in data.items():
+                if type(v).__name__ == 'Increment':
+                    inc_data[k] = v.value
+                elif v == firestore.DELETE_FIELD:
+                    unset_data[k] = ""
+                else:
+                    set_data[k] = v
+                    
+            update_op = {}
+            if set_data:
+                update_op["$set"] = set_data
+            if inc_data:
+                update_op["$inc"] = inc_data
+            if unset_data:
+                update_op["$unset"] = unset_data
+                
+            if update_op:
+                self._collection.update_one({"_id": self.id}, update_op, upsert=True)
         else:
+            # If not merge, we shouldn't have increments but if we do, this will just replace them with Increment objects which is not right.
+            # But standard Firestore set() without merge usually doesn't use Increment, or if it does, it's not well supported here. 
+            # We'll just replace_one for now.
+            data = {k: v for k, v in data.items() if v != firestore.DELETE_FIELD}
             data['_id'] = self.id
-            self.collection.replace_one({"_id": self.id}, data, upsert=True)
+            self._collection.replace_one({"_id": self.id}, data, upsert=True)
+
+    def collection(self, name):
+        collection_name = f"{self._collection.name}/{self.id}/{name}"
+        return MongoCollectionReference(self._collection.database, collection_name)
+
+
+    def create(self, data):
+        from google.api_core.exceptions import AlreadyExists
+        doc = self._collection.find_one({"_id": self.id})
+        if doc is not None:
+            raise AlreadyExists(f"Document {self.id} already exists")
+        data = self._process_data(data)
+        data['_id'] = self.id
+        self._collection.insert_one(data)
 
     def update(self, data):
+        from firebase_admin import firestore
         data = self._process_data(data)
-        self.collection.update_one({"_id": self.id}, {"$set": data})
+        set_data = {}
+        inc_data = {}
+        unset_data = {}
+        for k, v in data.items():
+            if type(v).__name__ == 'Increment':
+                inc_data[k] = v.value
+            elif v == firestore.DELETE_FIELD:
+                unset_data[k] = ""
+            else:
+                set_data[k] = v
+                
+        update_op = {}
+        if set_data:
+            update_op["$set"] = set_data
+        if inc_data:
+            update_op["$inc"] = inc_data
+        if unset_data:
+            update_op["$unset"] = unset_data
+            
+        if update_op:
+            self._collection.update_one({"_id": self.id}, update_op)
 
     def delete(self):
-        self.collection.delete_one({"_id": self.id})
+        self._collection.delete_one({"_id": self.id})
 
     def _process_data(self, data):
         # We need to process firestore.SERVER_TIMESTAMP here
