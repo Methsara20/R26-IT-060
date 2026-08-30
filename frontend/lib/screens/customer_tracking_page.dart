@@ -38,8 +38,10 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
       setState(() => _isLoading = true);
     }
     try {
-      final List<dynamic> rawSessions = await MonitoringApiService.getActiveSessions();
-      final List<dynamic> requests = await MonitoringApiService.getActiveRequests();
+      final List<dynamic> rawSessions =
+          await MonitoringApiService.getActiveSessions();
+      final List<dynamic> requests =
+          await MonitoringApiService.getActiveRequests();
 
       // Detect new incoming assistance alerts
       dynamic newAlert;
@@ -56,7 +58,8 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
         SystemSound.play(SystemSoundType.alert);
         HapticFeedback.heavyImpact();
 
-        final custName = newAlert["customer_name"] ?? newAlert["customer_id"] ?? "Customer";
+        final custName =
+            newAlert["customer_name"] ?? newAlert["customer_id"] ?? "Customer";
         final zoneName = newAlert["zone_name"] ?? "Store Area";
 
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -64,7 +67,11 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 28),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -73,11 +80,18 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                     children: [
                       const Text(
                         "🚨 STAFF ASSISTANCE NEEDED!",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
                       ),
                       Text(
                         "$custName in $zoneName needs help!",
-                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
                       ),
                     ],
                   ),
@@ -87,7 +101,9 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
             backgroundColor: const Color(0xFFDC2626), // Urgent Red Banner
             duration: const Duration(seconds: 5),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         );
       }
@@ -135,23 +151,28 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
       _fetchTrackingData();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(
-        content: Text("Failed to resolve: $e"),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to resolve: $e"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
   String _formatTime(String? isoString) {
-    if (isoString == null || isoString.isEmpty) return "Unknown";
+    if (isoString == null) return "";
     try {
+      if (!isoString.endsWith('Z') &&
+          !isoString.contains('+') &&
+          !isoString.contains(RegExp(r'-[0-9]{2}:[0-9]{2}'))) {
+        isoString += 'Z';
+      }
       final dt = DateTime.parse(isoString).toLocal();
       return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
     } catch (_) {
-      return isoString;
+      return isoString ?? "";
     }
   }
 
@@ -164,7 +185,10 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
         appBar: AppBar(
           title: const Text(
             "Customer Tracking & Alerts",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           backgroundColor: Colors.white,
           elevation: 0,
@@ -192,7 +216,9 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
           ),
         ),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+              )
             : TabBarView(
                 children: [
                   _buildLiveTrackingTab(),
@@ -209,11 +235,19 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.person_off_outlined, size: 64, color: Colors.grey.shade400),
+            Icon(
+              Icons.person_off_outlined,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
             const SizedBox(height: 16),
             const Text(
               "No Active Customers",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black54,
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -240,7 +274,9 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
         final entry = _formatTime(session["entry_time"]);
         final lastUpd = _formatTime(session["last_updated"]);
 
-        final hasPendingAlert = _pendingRequests.any((r) => r["customer_id"] == email);
+        final hasPendingAlert = _pendingRequests.any(
+          (r) => r["customer_id"] == email,
+        );
 
         return Container(
           margin: const EdgeInsets.only(bottom: 20),
@@ -248,7 +284,9 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
             color: hasPendingAlert ? const Color(0xFFFEF2F2) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: hasPendingAlert ? const Color(0xFFDC2626) : Colors.transparent,
+              color: hasPendingAlert
+                  ? const Color(0xFFDC2626)
+                  : Colors.transparent,
               width: hasPendingAlert ? 2.5 : 0,
             ),
             boxShadow: [
@@ -269,7 +307,10 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                 if (hasPendingAlert)
                   Container(
                     margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(10),
@@ -277,11 +318,19 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.white, size: 16),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                         SizedBox(width: 6),
                         Text(
                           "🚨 STAFF ASSISTANCE NEEDED",
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
@@ -297,7 +346,10 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                             color: Color(0xFFEFF6FF),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.person, color: Color(0xFF2563EB)),
+                          child: const Icon(
+                            Icons.person,
+                            color: Color(0xFF2563EB),
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Column(
@@ -326,34 +378,43 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                       children: [
                         if (intent != "Unknown")
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: intent == "Browsing" 
-                                  ? const Color(0xFFFEF08A) 
-                                  : (intent == "Transiting" || intent == "Passing Through"
-                                      ? const Color(0xFFDBEAFE) 
-                                      : const Color(0xFFF1F5F9)),
+                              color: intent == "Browsing"
+                                  ? const Color(0xFFFEF08A)
+                                  : (intent == "Transiting" ||
+                                            intent == "Passing Through"
+                                        ? const Color(0xFFDBEAFE)
+                                        : const Color(0xFFF1F5F9)),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               children: [
                                 Icon(
-                                  intent == "Browsing" 
-                                      ? Icons.search 
-                                      : (intent == "Transiting" || intent == "Passing Through"
-                                          ? Icons.directions_walk 
-                                          : Icons.location_on), 
-                                  size: 14, 
-                                  color: intent == "Transiting" || intent == "Passing Through"
+                                  intent == "Browsing"
+                                      ? Icons.search
+                                      : (intent == "Transiting" ||
+                                                intent == "Passing Through"
+                                            ? Icons.directions_walk
+                                            : Icons.location_on),
+                                  size: 14,
+                                  color:
+                                      intent == "Transiting" ||
+                                          intent == "Passing Through"
                                       ? const Color(0xFF1E40AF)
-                                      : Colors.black87
+                                      : Colors.black87,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "AI: $intent",
                                   style: TextStyle(
-                                    color: intent == "Transiting" || intent == "Passing Through"
+                                    color:
+                                        intent == "Transiting" ||
+                                            intent == "Passing Through"
                                         ? const Color(0xFF1E40AF)
                                         : Colors.black87,
                                     fontWeight: FontWeight.bold,
@@ -374,7 +435,11 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                           ),
                           child: const Row(
                             children: [
-                              Icon(Icons.circle, size: 8, color: Color(0xFF16A34A)),
+                              Icon(
+                                Icons.circle,
+                                size: 8,
+                                color: Color(0xFF16A34A),
+                              ),
                               SizedBox(width: 6),
                               Text(
                                 "Active",
@@ -411,7 +476,10 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                           const SizedBox(width: 8),
                           const Text(
                             "Current Zone: ",
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
+                            ),
                           ),
                           Expanded(
                             child: Text(
@@ -428,7 +496,11 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.gps_fixed, color: Colors.black38, size: 20),
+                          const Icon(
+                            Icons.gps_fixed,
+                            color: Colors.black38,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -485,12 +557,20 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                 color: Color(0xFFDCFCE7),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle_outline, size: 64, color: Color(0xFF16A34A)),
+              child: const Icon(
+                Icons.check_circle_outline,
+                size: 64,
+                color: Color(0xFF16A34A),
+              ),
             ),
             const SizedBox(height: 24),
             const Text(
               "All Clear",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -544,7 +624,10 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                             color: Color(0xFFFEE2E2),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444)),
+                          child: const Icon(
+                            Icons.warning_amber_rounded,
+                            color: Color(0xFFEF4444),
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Column(
@@ -634,7 +717,10 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                 const SizedBox(height: 16),
                 Text(
                   "First Triggered At: $time",
-                  style: const TextStyle(color: Color(0xFF991B1B), fontSize: 13),
+                  style: const TextStyle(
+                    color: Color(0xFF991B1B),
+                    fontSize: 13,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -651,7 +737,13 @@ class _CustomerTrackingPageState extends State<CustomerTrackingPage> {
                       ),
                     ),
                     icon: const Icon(Icons.check_circle_outline),
-                    label: const Text("Mark as Resolved", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    label: const Text(
+                      "Mark as Resolved",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ),
               ],

@@ -598,22 +598,7 @@ class _CandidateCard extends StatelessWidget {
                   ),
               ],
             ],
-            if (canAnalyze) ...[
-              const SizedBox(height: 18),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  onPressed: analysisDisabled ? null : onAnalyze,
-                  icon: analyzing
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.psychology_outlined),
-                  label: Text(analyzing ? 'Analyzing…' : 'Analyze candidate'),
-                ),
-              ),
-            ],
+
           ],
         ),
       ),
