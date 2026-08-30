@@ -519,17 +519,6 @@ class OptimizationRecommendationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (canAnalyze)
-                FilledButton.icon(
-                  onPressed: analysisDisabled ? null : onAnalyze,
-                  icon: analyzing
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.psychology_outlined),
-                  label: Text(analyzing ? 'Analyzing...' : 'Analyze'),
-                ),
             ],
           ),
           const SizedBox(height: 16),
