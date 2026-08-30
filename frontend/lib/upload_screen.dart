@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
-import 'main.dart' show backendUrl;
+import 'core/constants/api_constants.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});

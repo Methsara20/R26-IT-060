@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'main.dart' show backendUrl;
+import 'core/constants/api_constants.dart';
 
 class CustomerIntelligenceScreen extends StatefulWidget {
   const CustomerIntelligenceScreen({super.key});
@@ -212,7 +212,7 @@ class _CustomerIntelligenceScreenState extends State<CustomerIntelligenceScreen>
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFEDE5D0)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +293,7 @@ class _CustomerIntelligenceScreenState extends State<CustomerIntelligenceScreen>
               DataCell(Text('${c['loyalty_tier'] ?? '-'}', style: const TextStyle(fontSize: 12))),
               DataCell(Text('${c['age_group'] ?? '-'}', style: const TextStyle(fontSize: 12))),
               if (showIntent) DataCell(Text('${c['intent_score'] ?? '-'} (${c['intent_bucket'] ?? ''})', style: const TextStyle(fontSize: 12))),
-              if (showSpend) DataCell(Text('${(c['total_spend_lkr'] as num?)?.toStringAsFixed(0) ?? '-'}', style: const TextStyle(fontSize: 12))),
+              if (showSpend) DataCell(Text((c['total_spend_lkr'] as num?)?.toStringAsFixed(0) ?? '-', style: const TextStyle(fontSize: 12))),
             ]);
           }).toList(),
         ),

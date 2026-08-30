@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'main.dart' show backendUrl;
+import 'core/constants/api_constants.dart';
 
 // ── Promotion Calendar Screen ─────────────────────────────────
 class PromotionCalendarScreen extends StatefulWidget {
@@ -156,7 +156,9 @@ class _PromotionCalendarScreenState extends State<PromotionCalendarScreen> {
     try {
       await http.delete(Uri.parse('$backendUrl/calendar/notes/$noteId'));
       await fetchMonthData();
-    } catch (e) {}
+    } catch (e) {
+      // Silently fail because calendar notes are non-critical.
+    }
   }
 
   void openDayDialog(int day) {
@@ -201,6 +203,7 @@ class _PromotionCalendarScreenState extends State<PromotionCalendarScreen> {
                         icon: const Icon(Icons.delete_outline, size: 18),
                         onPressed: () async {
                           await deleteNote(n['id']);
+                          if (!context.mounted) return;
                           setDialogState(() {});
                           Navigator.pop(context);
                         },
@@ -219,6 +222,7 @@ class _PromotionCalendarScreenState extends State<PromotionCalendarScreen> {
             ElevatedButton(
               onPressed: () async {
                 await addNote(day);
+                if (!context.mounted) return;
                 Navigator.pop(context);
               },
               child: const Text('Add Note'),
@@ -288,8 +292,11 @@ class _PromotionCalendarScreenState extends State<PromotionCalendarScreen> {
                 final campCount = campaignCounts[day];
 
                 Color bg = Colors.white;
-                if (isHoliday) bg = const Color(0xFFE8D5A8);
-                else if (isSeasonal) bg = const Color(0xFFD4A853).withOpacity(0.15);
+                if (isHoliday) {
+                  bg = const Color(0xFFE8D5A8);
+                } else if (isSeasonal) {
+                  bg = const Color(0xFFD4A853).withValues(alpha: 0.15);
+                }
 
                 return GestureDetector(
                   onTap: () => openDayDialog(day),

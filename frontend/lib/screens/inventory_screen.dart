@@ -5,7 +5,9 @@ import '../services/inventory_service.dart';
 
 // ── Inventory Insights Screen (read-only view into teammate's overstock data) ──
 class InventoryInsightsScreen extends StatefulWidget {
-  const InventoryInsightsScreen({super.key});
+  final ValueChanged<Map<String, dynamic>>? onCreatePoster;
+
+  const InventoryInsightsScreen({super.key, this.onCreatePoster});
 
   @override
   State<InventoryInsightsScreen> createState() => _InventoryInsightsScreenState();
@@ -33,7 +35,7 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
     });
 
     try {
-      final response = await InventoryService.fetchOverstockSuggestions(
+      final response = await InventoryService.fetchMarketingOpportunities(
         category: selectedCategory == 'All' ? null : selectedCategory,
       );
 
@@ -46,8 +48,8 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
           });
         } else {
           setState(() {
-            suggestions = data['suggestions'];
-            lastUpdated = data['last_updated'];
+            suggestions = data['opportunities'];
+            lastUpdated = suggestions!.isEmpty ? null : suggestions!.first['created_at'];
             loading = false;
           });
         }
@@ -88,7 +90,7 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Live overstock data from the Inventory component — read-only. Consider featuring these in your next promotion.',
+                      'Live marketing opportunities from the Inventory component — read-only. Consider featuring these in your next promotion.',
                       style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                     ),
                   ),
@@ -129,7 +131,7 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
             ] else if (!loading)
               const Padding(
                 padding: EdgeInsets.all(24),
-                child: Text('No overstocked items found for this category.', style: TextStyle(color: AppColors.textMuted)),
+                child: Text('No marketing opportunities found for this category.', style: TextStyle(color: AppColors.textMuted)),
               ),
           ],
         ),
@@ -151,7 +153,7 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(color: AppColors.goldAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-            child: Text('+${item['excess_units']}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            child: Text('+${item['excess_quantity']}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -168,7 +170,15 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text('${item['current_stock']} in stock', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              Text('reorder at ${item['reorder_level']}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+              Text('LKR ${item['selling_price']}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+              const SizedBox(height: 6),
+              OutlinedButton.icon(
+                onPressed: widget.onCreatePoster == null
+                    ? null
+                    : () => widget.onCreatePoster!(Map<String, dynamic>.from(item as Map)),
+                icon: const Icon(Icons.campaign_outlined, size: 16),
+                label: const Text('Create Poster'),
+              ),
             ],
           ),
         ],

@@ -12,7 +12,9 @@ import '../widgets/poster/poster_scheduled_tab.dart';
 
 // ── Poster Generator Screen ───────────────────────────────────
 class PosterScreen extends StatefulWidget {
-  const PosterScreen({super.key});
+  final Map<String, dynamic>? inventoryOpportunity;
+
+  const PosterScreen({super.key, this.inventoryOpportunity});
 
   @override
   State<PosterScreen> createState() => _PosterScreenState();
@@ -64,6 +66,37 @@ class _PosterScreenState extends State<PosterScreen> {
   bool scheduling = false;
   String? scheduleStatusMessage;
   bool? scheduleSuccess;
+
+  @override
+  void initState() {
+    super.initState();
+    final opportunity = widget.inventoryOpportunity;
+    if (opportunity == null) return;
+
+    final productName = (opportunity['product_name'] ?? '').toString();
+    final category = (opportunity['category'] ?? '').toString();
+    final subcategory = (opportunity['subcategory'] ?? '').toString();
+    final searchableProduct = '$productName $category $subcategory'.toLowerCase();
+    final matchingItem = allItems.cast<String?>().firstWhere(
+          (item) => searchableProduct.contains(item!.toLowerCase()),
+          orElse: () {
+            if (searchableProduct.contains('kid')) return 'Kids Clothes';
+            if (searchableProduct.contains('shoe') || searchableProduct.contains('footwear')) return 'Shoes';
+            if (searchableProduct.contains('shirt') || searchableProduct.contains('top')) return 'Tops & Blouses';
+            if (searchableProduct.contains('trouser') || searchableProduct.contains('pant')) return 'Trousers';
+            if (searchableProduct.contains('accessor')) return 'Accessories';
+            return null;
+          },
+        );
+    if (matchingItem != null) selectedItems = {matchingItem};
+
+    final brand = (opportunity['brand'] ?? '').toString().trim();
+    if (brand.isNotEmpty) brandController.text = brand;
+    inspirationController.text = [
+      productName,
+      if (opportunity['recommended_action'] != null) opportunity['recommended_action'].toString(),
+    ].where((value) => value.trim().isNotEmpty).join('. ');
+  }
 
   Future<void> generatePoster() async {
     if (selectedItems.isEmpty) {

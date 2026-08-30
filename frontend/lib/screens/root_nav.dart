@@ -17,19 +17,30 @@ class RootNav extends StatefulWidget {
 
 class _RootNavState extends State<RootNav> {
   int currentIndex = 0;
+  Map<String, dynamic>? selectedInventoryOpportunity;
 
-  final screens = const [
-    HubScreen(),
-    UploadScreen(),
-    RecommenderScreen(),
-    PosterScreen(),
-    InventoryInsightsScreen(),
-    PromotionCalendarScreen(),
-    CustomerIntelligenceScreen(),
-  ];
+  void createPosterFromInventory(Map<String, dynamic> opportunity) {
+    setState(() {
+      selectedInventoryOpportunity = opportunity;
+      currentIndex = 3;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      const HubScreen(),
+      const UploadScreen(),
+      const RecommenderScreen(),
+      PosterScreen(
+        key: ValueKey(selectedInventoryOpportunity?['opportunity_id']),
+        inventoryOpportunity: selectedInventoryOpportunity,
+      ),
+      InventoryInsightsScreen(onCreatePoster: createPosterFromInventory),
+      const PromotionCalendarScreen(),
+      const CustomerIntelligenceScreen(),
+    ];
+
     return Scaffold(
       body: screens[currentIndex],
       bottomNavigationBar: NavigationBar(

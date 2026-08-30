@@ -23,6 +23,28 @@ def _get_client():
     return _client
 
 
+def build_event_detail_lines(
+    event_date: str = "",
+    event_time: str = "",
+    event_location: str = "",
+    valid_until: str = "",
+    hosting_branch: str = "",
+) -> list[str]:
+    """Build the event-detail lines that are overlaid after image generation."""
+    lines = []
+    if event_date.strip():
+        lines.append(f"Date: {event_date.strip()}")
+    if event_time.strip():
+        lines.append(f"Time: {event_time.strip()}")
+    if event_location.strip():
+        lines.append(f"Location: {event_location.strip()}")
+    if valid_until.strip():
+        lines.append(f"Valid until: {valid_until.strip()}")
+    if hosting_branch.strip():
+        lines.append(f"Venue: {hosting_branch.strip()}")
+    return lines
+
+
 def build_prompt_payload(
     gender: str,
     age_group: str,
@@ -82,27 +104,17 @@ def build_prompt_payload(
         prompt += f" Also include this promotional tagline prominently on the poster: '{tagline.strip()}'."
 
     # ── Event details (for in-store events/pop-ups) ──────────
-    event_lines = []
-    if event_date.strip():
-        event_lines.append(f"Date: {event_date.strip()}")
-    if event_time.strip():
-        event_lines.append(f"Time: {event_time.strip()}")
-    if event_location.strip():
-        event_lines.append(f"Location: {event_location.strip()}")
-    if valid_until.strip():
-        event_lines.append(f"Valid until: {valid_until.strip()}")
-    if hosting_branch.strip():
-        event_lines.append(f"Hosted at: {hosting_branch.strip()}")
+    event_lines = build_event_detail_lines(event_date, event_time, event_location, valid_until, hosting_branch)
 
     if event_lines:
-        details_str = "; ".join(event_lines)
         prompt += (
-            f" Include the following event details clearly and legibly on the poster, "
-            f"in a readable font (e.g. as a small info block): {details_str}."
+            f" Leave a clean, uncluttered horizontal strip near the bottom of the poster "
+            f"(just above the footer band), with no text or graphics in it -- this space "
+            f"is reserved for event details to be added separately."
         )
 
     if include_terms:
-        prompt += " Include the small text 'Terms and Conditions Applied' near the bottom of the poster, above the footer band."
+        prompt += " Leave a small clear area near the bottom for a short disclaimer text to be added separately."
     return prompt
 
 
@@ -117,6 +129,61 @@ def check_gemini_health() -> tuple[bool, str]:
         return True, "Gemini API key is configured."
     except Exception as e:
         return False, f"Gemini connection failed: {str(e)}"
+
+
+def _add_event_details_overlay(image_bytes: bytes, lines: list[str]) -> bytes:
+    """Draw event details onto a dedicated band above the logo footer."""
+    if not lines:
+        return image_bytes
+
+    try:
+        from PIL import ImageDraw, ImageFont
+
+        poster = Image.open(BytesIO(image_bytes)).convert("RGBA")
+        width, height = poster.width, poster.height
+        band_height = int(height * 0.10)
+        band_top = height - int(height * 0.12) - band_height
+
+        overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
+        draw.rectangle([(0, band_top), (width, band_top + band_height)], fill=(13, 23, 38, 235))
+
+        font_size = max(14, int(height * 0.022))
+
+        def load_font(size: int):
+            try:
+                return ImageFont.truetype("arialbd.ttf", size)
+            except Exception:
+                try:
+                    return ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", size)
+                except Exception:
+                    return ImageFont.load_default()
+
+        font = load_font(font_size)
+        text = "   |   ".join(lines)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        while text_width > width * 0.94 and font_size > 10:
+            font_size -= 1
+            font = load_font(font_size)
+            bbox = draw.textbbox((0, 0), text, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+
+        draw.text(
+            ((width - text_width) // 2, band_top + (band_height - text_height) // 2),
+            text,
+            font=font,
+            fill=(255, 255, 255, 255),
+        )
+        output = BytesIO()
+        Image.alpha_composite(poster, overlay).convert("RGB").save(output, format="PNG")
+        return output.getvalue()
+    except Exception as e:
+        print(f"Event details overlay failed, returning image without it: {e}")
+        return image_bytes
 
 
 def _add_logo_watermark(image_bytes: bytes) -> bytes:
@@ -153,10 +220,14 @@ def _add_logo_watermark(image_bytes: bytes) -> bytes:
         return image_bytes
 
 
-def generate_poster_image(prompt: str) -> tuple[str | None, str | None]:
+def generate_poster_image(
+    prompt: str,
+    event_details: list[str] = None,
+    include_terms: bool = False,
+) -> tuple[str | None, str | None]:
     """
     Calls Gemini 2.5 Flash Image to generate a poster image from the prompt,
-    then overlays the brand logo at the bottom before returning it.
+    then overlays event details and the brand logo before returning it.
     Returns (image_b64, error) - one of which will be None.
     """
     try:
@@ -172,6 +243,11 @@ def generate_poster_image(prompt: str) -> tuple[str | None, str | None]:
         for part in response.candidates[0].content.parts:
             if part.inline_data is not None:
                 image_bytes = part.inline_data.data
+                overlay_lines = list(event_details) if event_details else []
+                if include_terms:
+                    overlay_lines.append("Terms and Conditions Applied")
+                if overlay_lines:
+                    image_bytes = _add_event_details_overlay(image_bytes, overlay_lines)
                 image_bytes = _add_logo_watermark(image_bytes)
                 image_b64 = base64.b64encode(image_bytes).decode("utf-8")
                 return image_b64, None
