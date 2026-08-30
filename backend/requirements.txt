@@ -6,3 +6,12 @@ xgboost
 scikit-learn
 firebase-admin
 pydantic
+requests
+python-multipart
+google-genai
+Pillow
+python-multipart
+matplotlib
+grpcio>=1.83.0
+reportlab
+python-dotenv
