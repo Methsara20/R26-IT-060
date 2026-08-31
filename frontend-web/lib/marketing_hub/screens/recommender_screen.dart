@@ -455,6 +455,7 @@ class _RecommenderScreenState extends State<RecommenderScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: DropdownButtonFormField<String>(
         initialValue: value,
+        dropdownColor: AppColors.scaffoldBackground,
         decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
         items: options.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
         onChanged: onChanged,
