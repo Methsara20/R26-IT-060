@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../services/calendar_service.dart';
+import '../core/widgets/glass_card.dart';
 
 // ── Promotion Calendar Screen ─────────────────────────────────
 class PromotionCalendarScreen extends StatefulWidget {
@@ -108,12 +109,14 @@ class _PromotionCalendarScreenState extends State<PromotionCalendarScreen> {
         loadedNotes = json.decode(notesResp.body);
       }
 
+      if (!mounted) return;
       setState(() {
         campaignCounts = counts;
         notes = loadedNotes;
         loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => loading = false);
     }
   }
@@ -134,12 +137,14 @@ class _PromotionCalendarScreenState extends State<PromotionCalendarScreen> {
         loadedNotes = json.decode(notesResp.body);
       }
 
+      if (!mounted) return;
       setState(() {
         yearCampaignCounts = counts;
         yearNotes = loadedNotes;
         loadingYear = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => loadingYear = false);
     }
   }
@@ -324,6 +329,7 @@ class _PromotionCalendarScreenState extends State<PromotionCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: AppColors.cardBackground,
         foregroundColor: AppColors.textPrimary,
@@ -393,25 +399,46 @@ class _PromotionCalendarScreenState extends State<PromotionCalendarScreen> {
               final campCount = campaignCounts[day];
               final noteColor = _dominantNoteColor(day);
 
-              Color bg = AppColors.cardBackground;
+              Color topColor = const Color(0x1AFFFFFF); // 10% white
+              Color bottomColor = const Color(0x05FFFFFF); // 2% white
+              
               if (isHoliday) {
-                bg = AppColors.holidayHighlight;
+                topColor = AppColors.holidayHighlight.withValues(alpha: 0.25);
+                bottomColor = AppColors.holidayHighlight.withValues(alpha: 0.05);
               } else if (isSeasonal) {
-                bg = AppColors.goldAccent.withValues(alpha: 0.15);
+                topColor = AppColors.goldAccent.withValues(alpha: 0.2);
+                bottomColor = AppColors.goldAccent.withValues(alpha: 0.05);
               }
-              if (noteColor != null) bg = noteColor.withValues(alpha: 0.10);
+              if (noteColor != null) {
+                topColor = noteColor.withValues(alpha: 0.2);
+                bottomColor = noteColor.withValues(alpha: 0.05);
+              }
 
               final visibleNotes = dayNotes;
 
               return GestureDetector(
                 onTap: () => openDayDialog(day),
                 child: Container(
-                  margin: const EdgeInsets.all(2),
-                  padding: const EdgeInsets.all(4),
+                  margin: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: bg,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: noteColor ?? AppColors.divider, width: noteColor != null ? 2 : 1),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [topColor, bottomColor],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: noteColor != null ? noteColor.withValues(alpha: 0.6) : AppColors.divider.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: SingleChildScrollView(
                     child: Column(
