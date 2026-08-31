@@ -112,11 +112,11 @@ class _RecommenderScreenState extends State<RecommenderScreen> {
   Future<void> fetchInventoryMatches() async {
     setState(() => loadingInventory = true);
     try {
-      final response = await InventoryService.fetchOverstockSuggestions(category: inventorySegment, limit: '5');
+      final response = await InventoryService.fetchMarketingOpportunities(category: inventorySegment, limit: '5');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          inventoryMatches = data['error'] == null ? data['suggestions'] : null;
+          inventoryMatches = data['error'] == null ? data['opportunities'] : null;
           loadingInventory = false;
         });
       } else {
@@ -272,8 +272,8 @@ class _RecommenderScreenState extends State<RecommenderScreen> {
           ...inventoryMatches!.take(5).map((item) => Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '• ${item['product_name'] ?? '-'} (${item['brand'] ?? '-'}) — +${item['excess_units'] ?? '-'} excess, Store ${item['store_id'] ?? '-'}',
-                  style: TextStyle(fontSize: 12),
+                  '• ${item['product_name'] ?? '-'} (${item['brand'] ?? '-'}) — +${item['excess_quantity'] ?? '-'} excess, Store ${item['store_id'] ?? '-'}',
+                  style: const TextStyle(fontSize: 12),
                 ),
               )),
         ],
