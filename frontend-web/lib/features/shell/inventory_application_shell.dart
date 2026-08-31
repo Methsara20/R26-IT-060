@@ -363,6 +363,19 @@ class _FullNavigation extends StatelessWidget {
               },
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Log out'),
+              textColor: const Color(0xFFCAD4E5),
+              iconColor: const Color(0xFF9FACC2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              onTap: () => Navigator.pushReplacementNamed(context, '/login'),
+            ),
+          ),
           SidebarSupportPanel(
             themeMode: themeMode,
             onThemeModeChanged: onThemeModeChanged,
@@ -408,19 +421,32 @@ class _CompactNavigation extends StatelessWidget {
       ),
       trailing: Padding(
         padding: const EdgeInsets.only(top: 12),
-        child: IconButton(
-          tooltip: themeMode == ThemeMode.dark
-              ? 'Use light mode'
-              : 'Use dark mode',
-          onPressed: () => onThemeModeChanged(
-            themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
-          ),
-          icon: Icon(
-            themeMode == ThemeMode.dark
-                ? Icons.light_mode_outlined
-                : Icons.dark_mode_outlined,
-            color: const Color(0xFFCAD4E5),
-          ),
+        child: Column(
+          children: [
+            IconButton(
+              tooltip: 'Log out',
+              onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+              icon: const Icon(
+                Icons.logout,
+                color: Color(0xFFCAD4E5),
+              ),
+            ),
+            const SizedBox(height: 12),
+            IconButton(
+              tooltip: themeMode == ThemeMode.dark
+                  ? 'Use light mode'
+                  : 'Use dark mode',
+              onPressed: () => onThemeModeChanged(
+                themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
+              ),
+              icon: Icon(
+                themeMode == ThemeMode.dark
+                    ? Icons.light_mode_outlined
+                    : Icons.dark_mode_outlined,
+                color: const Color(0xFFCAD4E5),
+              ),
+            ),
+          ],
         ),
       ),
       destinations: [

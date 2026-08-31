@@ -407,8 +407,6 @@ class ResultSection extends StatelessWidget {
 
                           lineTouchData: LineTouchData(
                             touchTooltipData: LineTouchTooltipData(
-                              tooltipRoundedRadius: 10,
-
                               fitInsideHorizontally: true,
 
                               fitInsideVertically: true,
