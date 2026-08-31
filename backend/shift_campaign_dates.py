@@ -5,8 +5,13 @@ import uuid
 import pymongo
 import certifi
 from datetime import datetime
+from dotenv import load_dotenv
 
-mongo_uri = os.environ.get("MONGODB_URI", "mongodb+srv://finalyear693_db_user:pHUqXaI43L1lgyNv@cluster0.es2z4ma.mongodb.net/")
+load_dotenv()
+mongo_uri = os.environ.get("MONGODB_URI")
+if not mongo_uri:
+    raise ValueError("MONGODB_URI not found in .env")
+
 client = pymongo.MongoClient(mongo_uri, tlsCAFile=certifi.where())
 db = client.get_database("smart_retail_db")
 
