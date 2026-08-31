@@ -242,7 +242,14 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item['product_name'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(child: Text(item['product_name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis)),
+                      const SizedBox(width: 8),
+                      if (item['product_id'] != null) Text('#${item['product_id']}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted, fontFamily: 'monospace')),
+                    ],
+                  ),
                   const SizedBox(height: 3),
                   Row(
                     children: [
