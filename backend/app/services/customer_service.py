@@ -54,6 +54,13 @@ def get_customer_intelligence(at_risk_days: int = 60, top_n: int = 10):
         result["new_vs_returning"] = status.value_counts().to_dict()
 
     # ── Purchase Intent Score (RFM) ────────────────────────────
+    if "days_since_last_purchase" not in cu.columns and "last_purchase_date" in cu.columns:
+        cu_temp = cu.copy()
+        cu_temp["last_purchase_date"] = pd.to_datetime(cu_temp["last_purchase_date"], errors="coerce")
+        reference_date = cu_temp["last_purchase_date"].max()
+        if pd.notna(reference_date):
+            cu["days_since_last_purchase"] = (reference_date - cu_temp["last_purchase_date"]).dt.days
+
     intent_inputs = ["days_since_last_purchase", "visit_frequency", "total_spend_lkr"]
     if all(c in cu.columns for c in intent_inputs):
         ci = cu.copy()
