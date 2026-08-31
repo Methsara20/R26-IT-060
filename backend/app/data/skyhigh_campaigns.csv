@@ -1,0 +1,1001 @@
+campaign_id,customer_id,offer_type,discount_pct,channel,sent_date,clicked,redeemed,treatment,revenue_after_lkr
+CAMP_0001,CUST_306,BOGO,0,In-App Push,2025-02-17,0,0,Treatment,0.0
+CAMP_0002,CUST_304,Loyalty Reward,0,Email,2025-01-28,0,0,Treatment,0.0
+CAMP_0003,CUST_103,Discount,20,SMS,2025-02-01,0,0,Treatment,0.0
+CAMP_0004,CUST_435,Flash Sale,20,In-App Push,2025-04-21,0,0,Treatment,0.0
+CAMP_0005,CUST_415,Flash Sale,20,In-App Push,2025-03-02,0,0,Treatment,0.0
+CAMP_0006,CUST_431,Flash Sale,30,SMS,2025-04-26,0,0,Control,0.0
+CAMP_0007,CUST_023,New Arrival,30,Email,2025-03-19,0,0,Treatment,0.0
+CAMP_0008,CUST_404,Loyalty Reward,20,In-App Push,2025-02-12,0,0,Treatment,0.0
+CAMP_0009,CUST_233,Flash Sale,0,Email,2025-03-05,0,0,Treatment,0.0
+CAMP_0010,CUST_116,Flash Sale,0,In-App Push,2025-04-18,0,0,Treatment,0.0
+CAMP_0011,CUST_295,Loyalty Reward,10,Email,2025-03-25,0,0,Control,0.0
+CAMP_0012,CUST_019,Loyalty Reward,10,SMS,2025-02-08,0,0,Treatment,0.0
+CAMP_0013,CUST_047,Discount,10,SMS,2025-02-06,0,0,Treatment,0.0
+CAMP_0014,CUST_249,Flash Sale,50,SMS,2025-04-28,0,0,Treatment,0.0
+CAMP_0015,CUST_485,Discount,50,In-App Push,2025-03-13,0,0,Control,0.0
+CAMP_0016,CUST_153,Discount,30,SMS,2025-01-03,0,0,Treatment,0.0
+CAMP_0017,CUST_261,Loyalty Reward,50,In-App Push,2025-01-25,0,0,Treatment,0.0
+CAMP_0018,CUST_037,Flash Sale,10,In-App Push,2025-04-21,0,0,Control,0.0
+CAMP_0019,CUST_247,Flash Sale,10,SMS,2025-03-03,0,0,Treatment,0.0
+CAMP_0020,CUST_118,Loyalty Reward,0,SMS,2025-04-08,0,0,Treatment,0.0
+CAMP_0021,CUST_092,Loyalty Reward,20,In-App Push,2025-01-12,0,0,Treatment,0.0
+CAMP_0022,CUST_406,Discount,30,SMS,2025-03-11,0,0,Treatment,0.0
+CAMP_0023,CUST_376,Loyalty Reward,20,SMS,2025-03-31,0,0,Treatment,0.0
+CAMP_0024,CUST_089,Loyalty Reward,0,SMS,2025-04-23,0,0,Treatment,0.0
+CAMP_0025,CUST_454,Flash Sale,0,In-App Push,2025-02-04,1,0,Treatment,0.0
+CAMP_0026,CUST_258,Flash Sale,0,Email,2025-04-06,0,0,Treatment,0.0
+CAMP_0027,CUST_285,Discount,50,In-App Push,2025-04-15,0,0,Treatment,0.0
+CAMP_0028,CUST_074,Flash Sale,0,In-App Push,2025-03-09,1,0,Treatment,0.0
+CAMP_0029,CUST_043,Discount,20,In-App Push,2025-03-22,0,0,Treatment,0.0
+CAMP_0030,CUST_443,Loyalty Reward,20,In-App Push,2025-03-29,0,0,Treatment,0.0
+CAMP_0031,CUST_179,Discount,30,In-App Push,2025-01-25,0,0,Treatment,0.0
+CAMP_0032,CUST_320,Flash Sale,50,In-App Push,2025-01-05,1,0,Treatment,0.0
+CAMP_0033,CUST_198,Discount,20,SMS,2025-04-21,1,1,Treatment,6144.38
+CAMP_0034,CUST_061,Loyalty Reward,10,SMS,2025-01-15,0,0,Treatment,0.0
+CAMP_0035,CUST_200,Discount,20,Email,2025-03-03,0,0,Treatment,0.0
+CAMP_0036,CUST_472,Loyalty Reward,0,Email,2025-02-14,0,0,Treatment,0.0
+CAMP_0037,CUST_447,Flash Sale,30,Email,2025-02-17,0,0,Control,0.0
+CAMP_0038,CUST_057,Discount,10,Email,2025-02-17,0,0,Treatment,0.0
+CAMP_0039,CUST_132,Loyalty Reward,0,SMS,2025-01-30,0,0,Control,0.0
+CAMP_0040,CUST_124,Flash Sale,10,Email,2025-04-04,1,0,Treatment,0.0
+CAMP_0041,CUST_498,Loyalty Reward,50,In-App Push,2025-01-12,0,0,Treatment,0.0
+CAMP_0042,CUST_027,Discount,10,SMS,2025-04-06,1,0,Treatment,0.0
+CAMP_0043,CUST_040,Discount,0,Email,2025-04-10,0,0,Treatment,0.0
+CAMP_0044,CUST_155,Flash Sale,30,In-App Push,2025-02-20,1,0,Treatment,0.0
+CAMP_0045,CUST_026,Loyalty Reward,50,In-App Push,2025-02-28,0,0,Treatment,0.0
+CAMP_0046,CUST_292,Loyalty Reward,0,In-App Push,2025-02-14,0,0,Treatment,0.0
+CAMP_0047,CUST_230,Flash Sale,30,SMS,2025-02-07,0,0,Treatment,0.0
+CAMP_0048,CUST_183,Discount,20,In-App Push,2025-04-22,0,0,Treatment,0.0
+CAMP_0049,CUST_484,Loyalty Reward,50,SMS,2025-04-07,0,0,Treatment,0.0
+CAMP_0050,CUST_150,Flash Sale,50,In-App Push,2025-04-14,0,0,Treatment,0.0
+CAMP_0051,CUST_223,Discount,20,In-App Push,2025-04-15,0,0,Treatment,0.0
+CAMP_0052,CUST_067,Flash Sale,20,In-App Push,2025-04-28,0,0,Treatment,0.0
+CAMP_0053,CUST_328,Flash Sale,50,Email,2025-02-26,0,0,Treatment,0.0
+CAMP_0054,CUST_364,Discount,0,Email,2025-02-05,0,0,Treatment,0.0
+CAMP_0055,CUST_302,Flash Sale,30,SMS,2025-02-25,0,0,Treatment,0.0
+CAMP_0056,CUST_435,Flash Sale,0,In-App Push,2025-01-24,1,0,Treatment,0.0
+CAMP_0057,CUST_284,Seasonal Sale,20,SMS,2025-04-30,1,0,Treatment,0.0
+CAMP_0058,CUST_482,Discount,50,SMS,2025-01-05,0,0,Control,0.0
+CAMP_0059,CUST_244,Loyalty Reward,50,SMS,2025-04-07,0,0,Treatment,0.0
+CAMP_0060,CUST_197,Loyalty Reward,20,Email,2025-03-13,0,0,Treatment,0.0
+CAMP_0061,CUST_158,Loyalty Reward,20,In-App Push,2025-01-10,0,0,Treatment,0.0
+CAMP_0062,CUST_022,New Arrival,30,SMS,2025-02-07,0,0,Treatment,0.0
+CAMP_0063,CUST_248,Flash Sale,0,Email,2025-02-04,0,0,Treatment,0.0
+CAMP_0064,CUST_144,Loyalty Reward,20,Email,2025-04-10,0,0,Treatment,0.0
+CAMP_0065,CUST_071,Flash Sale,50,Email,2025-02-28,1,1,Treatment,11382.82
+CAMP_0066,CUST_141,Loyalty Reward,10,In-App Push,2025-04-10,0,0,Control,0.0
+CAMP_0067,CUST_431,New Arrival,10,SMS,2025-02-22,0,0,Treatment,0.0
+CAMP_0068,CUST_211,Flash Sale,50,SMS,2025-04-07,0,0,Treatment,0.0
+CAMP_0069,CUST_442,Loyalty Reward,20,Email,2025-04-14,0,0,Treatment,0.0
+CAMP_0070,CUST_251,Loyalty Reward,20,In-App Push,2025-01-30,0,0,Control,0.0
+CAMP_0071,CUST_177,Loyalty Reward,20,In-App Push,2025-03-21,1,0,Treatment,0.0
+CAMP_0072,CUST_477,BOGO,0,In-App Push,2025-02-24,0,0,Treatment,0.0
+CAMP_0073,CUST_419,Flash Sale,20,In-App Push,2025-01-03,0,0,Treatment,0.0
+CAMP_0074,CUST_482,Discount,50,Email,2025-01-28,0,0,Treatment,0.0
+CAMP_0075,CUST_215,Flash Sale,30,In-App Push,2025-02-04,0,0,Treatment,0.0
+CAMP_0076,CUST_267,Flash Sale,30,In-App Push,2025-03-24,1,0,Treatment,0.0
+CAMP_0077,CUST_288,Flash Sale,20,Email,2025-01-22,0,0,Treatment,0.0
+CAMP_0078,CUST_172,Loyalty Reward,30,Email,2025-02-16,1,1,Control,3413.25
+CAMP_0079,CUST_059,Loyalty Reward,10,SMS,2025-02-13,0,0,Control,0.0
+CAMP_0080,CUST_033,Loyalty Reward,20,Email,2025-04-16,0,0,Treatment,0.0
+CAMP_0081,CUST_099,BOGO,0,SMS,2025-04-28,0,0,Treatment,0.0
+CAMP_0082,CUST_061,Loyalty Reward,10,SMS,2025-02-20,0,0,Treatment,0.0
+CAMP_0083,CUST_062,Seasonal Sale,10,SMS,2025-04-18,1,0,Treatment,0.0
+CAMP_0084,CUST_340,BOGO,0,SMS,2025-01-21,0,0,Treatment,0.0
+CAMP_0085,CUST_500,Discount,50,Email,2025-03-07,0,0,Control,0.0
+CAMP_0086,CUST_016,Flash Sale,30,Email,2025-01-31,0,0,Treatment,0.0
+CAMP_0087,CUST_074,Flash Sale,0,In-App Push,2025-01-09,0,0,Treatment,0.0
+CAMP_0088,CUST_035,Flash Sale,50,Email,2025-02-21,1,1,Treatment,3372.71
+CAMP_0089,CUST_269,Discount,50,Email,2025-02-07,0,0,Treatment,0.0
+CAMP_0090,CUST_142,Seasonal Sale,30,Email,2025-01-30,0,0,Treatment,0.0
+CAMP_0091,CUST_260,Discount,10,In-App Push,2025-02-12,0,0,Treatment,0.0
+CAMP_0092,CUST_038,Loyalty Reward,30,SMS,2025-03-26,0,0,Control,0.0
+CAMP_0093,CUST_007,New Arrival,0,Email,2025-02-03,1,0,Treatment,0.0
+CAMP_0094,CUST_290,Loyalty Reward,0,Email,2025-04-05,0,0,Treatment,0.0
+CAMP_0095,CUST_163,Discount,20,Email,2025-02-07,0,0,Treatment,0.0
+CAMP_0096,CUST_443,Loyalty Reward,0,SMS,2025-01-17,1,1,Treatment,2396.54
+CAMP_0097,CUST_497,Flash Sale,20,SMS,2025-01-02,1,1,Control,4261.57
+CAMP_0098,CUST_436,BOGO,0,Email,2025-01-20,0,0,Control,0.0
+CAMP_0099,CUST_481,Flash Sale,20,In-App Push,2025-04-03,1,0,Treatment,0.0
+CAMP_0100,CUST_357,Loyalty Reward,10,Email,2025-03-06,0,0,Control,0.0
+CAMP_0101,CUST_410,Flash Sale,50,In-App Push,2025-02-08,0,0,Treatment,0.0
+CAMP_0102,CUST_162,Discount,20,SMS,2025-01-22,0,0,Treatment,0.0
+CAMP_0103,CUST_133,Loyalty Reward,20,SMS,2025-04-10,0,0,Treatment,0.0
+CAMP_0104,CUST_263,Seasonal Sale,0,SMS,2025-01-24,0,0,Control,0.0
+CAMP_0105,CUST_026,Loyalty Reward,20,Email,2025-03-24,0,0,Treatment,0.0
+CAMP_0106,CUST_148,Discount,50,Email,2025-03-30,0,0,Treatment,0.0
+CAMP_0107,CUST_050,Loyalty Reward,0,Email,2025-02-16,0,0,Treatment,0.0
+CAMP_0108,CUST_311,Seasonal Sale,20,SMS,2025-04-24,0,0,Control,0.0
+CAMP_0109,CUST_268,Flash Sale,30,In-App Push,2025-03-31,0,0,Treatment,0.0
+CAMP_0110,CUST_031,Seasonal Sale,10,Email,2025-03-12,0,0,Treatment,0.0
+CAMP_0111,CUST_271,Loyalty Reward,0,Email,2025-04-23,0,0,Treatment,0.0
+CAMP_0112,CUST_495,Loyalty Reward,20,Email,2025-03-28,1,1,Treatment,2681.91
+CAMP_0113,CUST_125,Discount,30,Email,2025-03-12,0,0,Treatment,0.0
+CAMP_0114,CUST_075,Loyalty Reward,10,SMS,2025-01-08,1,0,Treatment,0.0
+CAMP_0115,CUST_135,Loyalty Reward,30,SMS,2025-01-28,0,0,Treatment,0.0
+CAMP_0116,CUST_076,Flash Sale,0,SMS,2025-02-22,1,0,Treatment,0.0
+CAMP_0117,CUST_410,Flash Sale,20,SMS,2025-03-11,1,0,Treatment,0.0
+CAMP_0118,CUST_404,Loyalty Reward,0,SMS,2025-02-22,0,0,Treatment,0.0
+CAMP_0119,CUST_050,Loyalty Reward,20,SMS,2025-02-24,0,0,Treatment,0.0
+CAMP_0120,CUST_204,Loyalty Reward,50,In-App Push,2025-01-06,0,0,Treatment,0.0
+CAMP_0121,CUST_346,Seasonal Sale,10,In-App Push,2025-02-16,0,0,Treatment,0.0
+CAMP_0122,CUST_442,Loyalty Reward,0,SMS,2025-02-21,1,0,Treatment,0.0
+CAMP_0123,CUST_111,Loyalty Reward,30,In-App Push,2025-04-29,0,0,Treatment,0.0
+CAMP_0124,CUST_260,Flash Sale,0,In-App Push,2025-03-02,0,0,Treatment,0.0
+CAMP_0125,CUST_024,BOGO,0,In-App Push,2025-04-06,0,0,Control,0.0
+CAMP_0126,CUST_201,Loyalty Reward,0,SMS,2025-03-15,0,0,Treatment,0.0
+CAMP_0127,CUST_258,BOGO,0,In-App Push,2025-01-03,0,0,Treatment,0.0
+CAMP_0128,CUST_187,Flash Sale,30,SMS,2025-03-17,0,0,Treatment,0.0
+CAMP_0129,CUST_450,Discount,20,SMS,2025-02-23,0,0,Treatment,0.0
+CAMP_0130,CUST_430,Seasonal Sale,20,SMS,2025-02-24,0,0,Treatment,0.0
+CAMP_0131,CUST_045,Discount,20,Email,2025-02-23,1,0,Control,0.0
+CAMP_0132,CUST_376,Loyalty Reward,50,In-App Push,2025-04-21,1,1,Treatment,6381.73
+CAMP_0133,CUST_141,Loyalty Reward,0,SMS,2025-02-18,0,0,Treatment,0.0
+CAMP_0134,CUST_126,Flash Sale,10,In-App Push,2025-02-14,0,0,Treatment,0.0
+CAMP_0135,CUST_094,Loyalty Reward,0,Email,2025-02-23,1,1,Control,6177.47
+CAMP_0136,CUST_197,Loyalty Reward,20,In-App Push,2025-01-30,0,0,Treatment,0.0
+CAMP_0137,CUST_097,Loyalty Reward,30,SMS,2025-04-02,0,0,Treatment,0.0
+CAMP_0138,CUST_229,New Arrival,30,Email,2025-02-17,0,0,Treatment,0.0
+CAMP_0139,CUST_396,Discount,50,SMS,2025-04-08,1,0,Treatment,0.0
+CAMP_0140,CUST_316,BOGO,0,SMS,2025-01-24,0,0,Treatment,0.0
+CAMP_0141,CUST_396,Discount,0,In-App Push,2025-01-02,0,0,Treatment,0.0
+CAMP_0142,CUST_093,BOGO,0,Email,2025-01-05,0,0,Treatment,0.0
+CAMP_0143,CUST_358,Loyalty Reward,20,SMS,2025-04-23,0,0,Control,0.0
+CAMP_0144,CUST_314,Loyalty Reward,10,SMS,2025-04-10,0,0,Treatment,0.0
+CAMP_0145,CUST_310,Flash Sale,30,SMS,2025-02-16,1,0,Treatment,0.0
+CAMP_0146,CUST_395,Flash Sale,30,Email,2025-04-02,0,0,Control,0.0
+CAMP_0147,CUST_305,Loyalty Reward,30,In-App Push,2025-03-24,0,0,Treatment,0.0
+CAMP_0148,CUST_355,Discount,30,SMS,2025-02-11,0,0,Treatment,0.0
+CAMP_0149,CUST_339,Loyalty Reward,0,SMS,2025-02-14,0,0,Treatment,0.0
+CAMP_0150,CUST_360,Discount,10,Email,2025-01-22,0,0,Control,0.0
+CAMP_0151,CUST_396,Discount,30,In-App Push,2025-03-13,0,0,Treatment,0.0
+CAMP_0152,CUST_062,New Arrival,0,Email,2025-02-06,0,0,Treatment,0.0
+CAMP_0153,CUST_354,Flash Sale,30,Email,2025-01-03,1,0,Treatment,0.0
+CAMP_0154,CUST_370,Discount,20,Email,2025-03-03,0,0,Treatment,0.0
+CAMP_0155,CUST_486,Loyalty Reward,10,SMS,2025-04-12,0,0,Treatment,0.0
+CAMP_0156,CUST_352,Loyalty Reward,0,SMS,2025-03-15,0,0,Treatment,0.0
+CAMP_0157,CUST_245,Loyalty Reward,20,SMS,2025-02-23,0,0,Treatment,0.0
+CAMP_0158,CUST_099,Loyalty Reward,10,Email,2025-04-26,0,0,Treatment,0.0
+CAMP_0159,CUST_261,Loyalty Reward,0,SMS,2025-03-15,0,0,Control,0.0
+CAMP_0160,CUST_054,Discount,30,Email,2025-04-08,0,0,Treatment,0.0
+CAMP_0161,CUST_205,Discount,50,Email,2025-02-23,1,0,Treatment,0.0
+CAMP_0162,CUST_152,Loyalty Reward,0,In-App Push,2025-04-16,0,0,Control,0.0
+CAMP_0163,CUST_435,Flash Sale,50,In-App Push,2025-03-21,0,0,Control,0.0
+CAMP_0164,CUST_285,Discount,30,In-App Push,2025-01-29,0,0,Treatment,0.0
+CAMP_0165,CUST_016,Loyalty Reward,50,In-App Push,2025-02-07,0,0,Treatment,0.0
+CAMP_0166,CUST_028,Loyalty Reward,0,Email,2025-03-10,0,0,Treatment,0.0
+CAMP_0167,CUST_379,Discount,10,SMS,2025-02-21,0,0,Treatment,0.0
+CAMP_0168,CUST_226,Flash Sale,20,SMS,2025-01-19,0,0,Control,0.0
+CAMP_0169,CUST_120,Loyalty Reward,10,In-App Push,2025-04-24,0,0,Treatment,0.0
+CAMP_0170,CUST_066,Discount,20,SMS,2025-03-21,0,0,Treatment,0.0
+CAMP_0171,CUST_437,Loyalty Reward,30,Email,2025-01-15,0,0,Treatment,0.0
+CAMP_0172,CUST_334,Loyalty Reward,10,SMS,2025-04-01,0,0,Treatment,0.0
+CAMP_0173,CUST_242,Seasonal Sale,10,Email,2025-01-22,0,0,Treatment,0.0
+CAMP_0174,CUST_391,Loyalty Reward,20,Email,2025-01-28,0,0,Treatment,0.0
+CAMP_0175,CUST_078,Discount,10,In-App Push,2025-01-27,0,0,Treatment,0.0
+CAMP_0176,CUST_437,Seasonal Sale,0,In-App Push,2025-03-09,0,0,Control,0.0
+CAMP_0177,CUST_034,Loyalty Reward,20,SMS,2025-01-08,0,0,Treatment,0.0
+CAMP_0178,CUST_464,Discount,0,In-App Push,2025-01-07,0,0,Treatment,0.0
+CAMP_0179,CUST_227,Flash Sale,10,Email,2025-01-15,1,0,Treatment,0.0
+CAMP_0180,CUST_099,Discount,0,SMS,2025-01-06,0,0,Treatment,0.0
+CAMP_0181,CUST_486,Loyalty Reward,10,Email,2025-01-30,0,0,Treatment,0.0
+CAMP_0182,CUST_327,Loyalty Reward,50,SMS,2025-03-19,0,0,Treatment,0.0
+CAMP_0183,CUST_332,Discount,10,SMS,2025-02-13,0,0,Treatment,0.0
+CAMP_0184,CUST_358,BOGO,0,In-App Push,2025-03-24,0,0,Treatment,0.0
+CAMP_0185,CUST_248,Discount,10,In-App Push,2025-04-03,0,0,Control,0.0
+CAMP_0186,CUST_100,Flash Sale,10,In-App Push,2025-02-20,1,0,Treatment,0.0
+CAMP_0187,CUST_126,Flash Sale,10,In-App Push,2025-01-11,0,0,Control,0.0
+CAMP_0188,CUST_315,Loyalty Reward,20,SMS,2025-04-16,0,0,Treatment,0.0
+CAMP_0189,CUST_039,Discount,50,In-App Push,2025-03-21,1,1,Treatment,7427.71
+CAMP_0190,CUST_109,Discount,20,In-App Push,2025-03-29,0,0,Treatment,0.0
+CAMP_0191,CUST_387,Discount,30,SMS,2025-02-22,0,0,Treatment,0.0
+CAMP_0192,CUST_123,Loyalty Reward,0,In-App Push,2025-04-26,0,0,Control,0.0
+CAMP_0193,CUST_338,Loyalty Reward,0,Email,2025-03-27,0,0,Treatment,0.0
+CAMP_0194,CUST_349,Discount,10,In-App Push,2025-04-03,1,0,Treatment,0.0
+CAMP_0195,CUST_204,Loyalty Reward,50,In-App Push,2025-02-24,0,0,Treatment,0.0
+CAMP_0196,CUST_223,Discount,30,In-App Push,2025-01-24,0,0,Treatment,0.0
+CAMP_0197,CUST_226,Discount,30,In-App Push,2025-03-03,0,0,Control,0.0
+CAMP_0198,CUST_197,Loyalty Reward,20,In-App Push,2025-02-01,0,0,Treatment,0.0
+CAMP_0199,CUST_473,Loyalty Reward,20,In-App Push,2025-01-06,0,0,Treatment,0.0
+CAMP_0200,CUST_261,Loyalty Reward,20,In-App Push,2025-04-14,0,0,Treatment,0.0
+CAMP_0201,CUST_038,New Arrival,50,In-App Push,2025-04-09,0,0,Control,0.0
+CAMP_0202,CUST_464,Flash Sale,50,SMS,2025-04-22,0,0,Treatment,0.0
+CAMP_0203,CUST_254,Flash Sale,20,SMS,2025-04-05,0,0,Treatment,0.0
+CAMP_0204,CUST_302,Flash Sale,10,In-App Push,2025-04-24,0,0,Treatment,0.0
+CAMP_0205,CUST_184,Loyalty Reward,50,Email,2025-02-05,0,0,Treatment,0.0
+CAMP_0206,CUST_037,Discount,10,Email,2025-01-13,0,0,Treatment,0.0
+CAMP_0207,CUST_437,Flash Sale,50,In-App Push,2025-01-28,0,0,Treatment,0.0
+CAMP_0208,CUST_443,Loyalty Reward,10,SMS,2025-04-11,0,0,Treatment,0.0
+CAMP_0209,CUST_317,Flash Sale,10,Email,2025-02-25,1,0,Treatment,0.0
+CAMP_0210,CUST_359,Discount,0,SMS,2025-02-17,0,0,Treatment,0.0
+CAMP_0211,CUST_082,BOGO,0,SMS,2025-02-05,0,0,Treatment,0.0
+CAMP_0212,CUST_043,New Arrival,30,SMS,2025-04-07,1,0,Treatment,0.0
+CAMP_0213,CUST_161,Flash Sale,20,SMS,2025-04-06,0,0,Treatment,0.0
+CAMP_0214,CUST_244,BOGO,0,SMS,2025-01-08,0,0,Treatment,0.0
+CAMP_0215,CUST_438,Loyalty Reward,10,Email,2025-03-10,0,0,Treatment,0.0
+CAMP_0216,CUST_090,Discount,30,In-App Push,2025-01-28,1,0,Treatment,0.0
+CAMP_0217,CUST_214,Loyalty Reward,50,Email,2025-03-27,0,0,Treatment,0.0
+CAMP_0218,CUST_123,Discount,30,SMS,2025-04-03,0,0,Treatment,0.0
+CAMP_0219,CUST_003,Discount,50,SMS,2025-04-04,0,0,Treatment,0.0
+CAMP_0220,CUST_478,Loyalty Reward,20,In-App Push,2025-03-17,0,0,Treatment,0.0
+CAMP_0221,CUST_416,Flash Sale,50,In-App Push,2025-04-13,1,0,Treatment,0.0
+CAMP_0222,CUST_370,Loyalty Reward,30,In-App Push,2025-02-21,0,0,Treatment,0.0
+CAMP_0223,CUST_025,Discount,0,In-App Push,2025-02-04,0,0,Control,0.0
+CAMP_0224,CUST_299,Discount,10,In-App Push,2025-01-03,0,0,Treatment,0.0
+CAMP_0225,CUST_280,Discount,50,In-App Push,2025-01-19,0,0,Treatment,0.0
+CAMP_0226,CUST_192,Loyalty Reward,0,In-App Push,2025-03-18,1,0,Treatment,0.0
+CAMP_0227,CUST_327,Loyalty Reward,50,Email,2025-02-06,0,0,Control,0.0
+CAMP_0228,CUST_213,Loyalty Reward,20,In-App Push,2025-01-01,0,0,Treatment,0.0
+CAMP_0229,CUST_259,Discount,30,SMS,2025-04-28,0,0,Treatment,0.0
+CAMP_0230,CUST_032,Loyalty Reward,0,In-App Push,2025-04-02,0,0,Treatment,0.0
+CAMP_0231,CUST_456,New Arrival,20,In-App Push,2025-01-10,0,0,Treatment,0.0
+CAMP_0232,CUST_275,Discount,50,SMS,2025-04-21,0,0,Treatment,0.0
+CAMP_0233,CUST_004,Loyalty Reward,30,Email,2025-04-01,1,1,Control,11733.83
+CAMP_0234,CUST_067,Discount,10,Email,2025-03-30,0,0,Treatment,0.0
+CAMP_0235,CUST_428,Loyalty Reward,50,SMS,2025-04-04,0,0,Control,0.0
+CAMP_0236,CUST_179,Loyalty Reward,0,Email,2025-03-01,0,0,Treatment,0.0
+CAMP_0237,CUST_493,Discount,50,In-App Push,2025-03-18,0,0,Treatment,0.0
+CAMP_0238,CUST_477,Flash Sale,20,SMS,2025-04-26,1,0,Control,0.0
+CAMP_0239,CUST_428,Seasonal Sale,30,SMS,2025-03-16,0,0,Treatment,0.0
+CAMP_0240,CUST_229,Loyalty Reward,20,In-App Push,2025-01-16,0,0,Treatment,0.0
+CAMP_0241,CUST_382,Loyalty Reward,20,Email,2025-01-23,0,0,Control,0.0
+CAMP_0242,CUST_298,New Arrival,30,Email,2025-03-07,0,0,Treatment,0.0
+CAMP_0243,CUST_245,Seasonal Sale,20,Email,2025-02-08,0,0,Treatment,0.0
+CAMP_0244,CUST_436,Discount,20,In-App Push,2025-03-13,0,0,Treatment,0.0
+CAMP_0245,CUST_378,Discount,10,SMS,2025-01-04,0,0,Treatment,0.0
+CAMP_0246,CUST_138,New Arrival,50,Email,2025-04-30,0,0,Treatment,0.0
+CAMP_0247,CUST_453,Flash Sale,20,SMS,2025-02-10,0,0,Treatment,0.0
+CAMP_0248,CUST_197,Discount,20,In-App Push,2025-01-10,0,0,Treatment,0.0
+CAMP_0249,CUST_483,Loyalty Reward,0,Email,2025-01-22,0,0,Treatment,0.0
+CAMP_0250,CUST_268,Flash Sale,50,In-App Push,2025-03-22,1,0,Treatment,0.0
+CAMP_0251,CUST_311,Seasonal Sale,0,In-App Push,2025-04-21,0,0,Control,0.0
+CAMP_0252,CUST_043,Flash Sale,20,SMS,2025-02-03,1,0,Treatment,0.0
+CAMP_0253,CUST_468,BOGO,0,SMS,2025-04-09,0,0,Control,0.0
+CAMP_0254,CUST_099,Flash Sale,30,SMS,2025-04-16,0,0,Control,0.0
+CAMP_0255,CUST_163,Discount,0,Email,2025-04-24,0,0,Treatment,0.0
+CAMP_0256,CUST_347,Flash Sale,0,SMS,2025-01-28,1,0,Treatment,0.0
+CAMP_0257,CUST_379,Loyalty Reward,0,Email,2025-01-12,0,0,Treatment,0.0
+CAMP_0258,CUST_413,New Arrival,10,Email,2025-01-30,0,0,Control,0.0
+CAMP_0259,CUST_254,Loyalty Reward,0,Email,2025-03-28,0,0,Treatment,0.0
+CAMP_0260,CUST_178,Flash Sale,30,Email,2025-02-05,1,0,Treatment,0.0
+CAMP_0261,CUST_461,Flash Sale,50,In-App Push,2025-03-07,1,0,Treatment,0.0
+CAMP_0262,CUST_332,Flash Sale,10,Email,2025-04-20,0,0,Treatment,0.0
+CAMP_0263,CUST_319,Discount,30,Email,2025-01-23,0,0,Treatment,0.0
+CAMP_0264,CUST_308,New Arrival,20,SMS,2025-02-04,0,0,Treatment,0.0
+CAMP_0265,CUST_216,Flash Sale,50,SMS,2025-03-11,1,1,Treatment,5124.56
+CAMP_0266,CUST_133,Loyalty Reward,50,In-App Push,2025-01-22,0,0,Treatment,0.0
+CAMP_0267,CUST_139,Flash Sale,30,Email,2025-02-06,0,0,Control,0.0
+CAMP_0268,CUST_223,Discount,0,In-App Push,2025-01-16,0,0,Treatment,0.0
+CAMP_0269,CUST_127,Flash Sale,30,Email,2025-04-09,0,0,Treatment,0.0
+CAMP_0270,CUST_161,Discount,30,In-App Push,2025-03-31,0,0,Treatment,0.0
+CAMP_0271,CUST_200,Discount,20,In-App Push,2025-04-18,0,0,Treatment,0.0
+CAMP_0272,CUST_208,Loyalty Reward,0,SMS,2025-04-10,0,0,Treatment,0.0
+CAMP_0273,CUST_197,Loyalty Reward,20,SMS,2025-04-29,0,0,Treatment,0.0
+CAMP_0274,CUST_342,Loyalty Reward,0,Email,2025-03-24,0,0,Treatment,0.0
+CAMP_0275,CUST_329,Loyalty Reward,10,Email,2025-03-19,0,0,Treatment,0.0
+CAMP_0276,CUST_337,Flash Sale,0,In-App Push,2025-02-02,0,0,Control,0.0
+CAMP_0277,CUST_188,Flash Sale,0,In-App Push,2025-01-06,0,0,Treatment,0.0
+CAMP_0278,CUST_327,Loyalty Reward,30,SMS,2025-04-11,0,0,Treatment,0.0
+CAMP_0279,CUST_354,Discount,50,SMS,2025-01-08,1,0,Treatment,0.0
+CAMP_0280,CUST_455,Loyalty Reward,0,Email,2025-03-15,0,0,Treatment,0.0
+CAMP_0281,CUST_479,Flash Sale,20,In-App Push,2025-02-11,1,0,Treatment,0.0
+CAMP_0282,CUST_023,Flash Sale,10,SMS,2025-04-12,1,0,Treatment,0.0
+CAMP_0283,CUST_214,Loyalty Reward,0,SMS,2025-02-16,0,0,Control,0.0
+CAMP_0284,CUST_154,Discount,0,SMS,2025-02-11,0,0,Treatment,0.0
+CAMP_0285,CUST_397,Loyalty Reward,0,SMS,2025-04-08,0,0,Control,0.0
+CAMP_0286,CUST_462,Loyalty Reward,0,SMS,2025-02-17,1,0,Treatment,0.0
+CAMP_0287,CUST_365,Loyalty Reward,50,In-App Push,2025-01-27,0,0,Treatment,0.0
+CAMP_0288,CUST_322,Loyalty Reward,50,SMS,2025-03-28,0,0,Treatment,0.0
+CAMP_0289,CUST_168,Flash Sale,20,SMS,2025-04-15,0,0,Treatment,0.0
+CAMP_0290,CUST_281,Discount,10,SMS,2025-04-03,0,0,Treatment,0.0
+CAMP_0291,CUST_083,Loyalty Reward,20,SMS,2025-04-22,0,0,Treatment,0.0
+CAMP_0292,CUST_001,Discount,20,In-App Push,2025-02-11,1,1,Treatment,11254.74
+CAMP_0293,CUST_433,Loyalty Reward,0,Email,2025-04-23,0,0,Control,0.0
+CAMP_0294,CUST_280,Flash Sale,50,Email,2025-04-10,1,0,Treatment,0.0
+CAMP_0295,CUST_357,Loyalty Reward,10,In-App Push,2025-02-03,0,0,Treatment,0.0
+CAMP_0296,CUST_196,Discount,50,SMS,2025-03-26,0,0,Control,0.0
+CAMP_0297,CUST_483,Flash Sale,10,In-App Push,2025-03-29,0,0,Control,0.0
+CAMP_0298,CUST_260,Discount,30,Email,2025-01-31,0,0,Treatment,0.0
+CAMP_0299,CUST_101,Loyalty Reward,0,Email,2025-02-06,0,0,Treatment,0.0
+CAMP_0300,CUST_137,Loyalty Reward,20,Email,2025-01-25,0,0,Treatment,0.0
+CAMP_0301,CUST_353,BOGO,0,In-App Push,2025-04-10,0,0,Treatment,0.0
+CAMP_0302,CUST_159,Loyalty Reward,0,SMS,2025-02-22,0,0,Treatment,0.0
+CAMP_0303,CUST_043,Discount,30,Email,2025-04-13,1,0,Treatment,0.0
+CAMP_0304,CUST_252,BOGO,0,SMS,2025-01-25,0,0,Treatment,0.0
+CAMP_0305,CUST_113,Loyalty Reward,20,SMS,2025-01-13,0,0,Treatment,0.0
+CAMP_0306,CUST_080,Flash Sale,50,SMS,2025-01-05,0,0,Treatment,0.0
+CAMP_0307,CUST_489,Loyalty Reward,20,SMS,2025-03-09,0,0,Treatment,0.0
+CAMP_0308,CUST_144,Loyalty Reward,0,Email,2025-02-14,0,0,Control,0.0
+CAMP_0309,CUST_007,Flash Sale,30,In-App Push,2025-01-26,0,0,Treatment,0.0
+CAMP_0310,CUST_149,Flash Sale,0,SMS,2025-04-10,1,0,Treatment,0.0
+CAMP_0311,CUST_329,Loyalty Reward,10,SMS,2025-04-28,0,0,Treatment,0.0
+CAMP_0312,CUST_085,Flash Sale,50,SMS,2025-02-12,1,1,Treatment,5840.59
+CAMP_0313,CUST_240,Discount,0,SMS,2025-02-23,0,0,Treatment,0.0
+CAMP_0314,CUST_307,Discount,50,Email,2025-04-04,0,0,Treatment,0.0
+CAMP_0315,CUST_441,New Arrival,20,SMS,2025-01-09,0,0,Treatment,0.0
+CAMP_0316,CUST_082,Flash Sale,30,SMS,2025-03-22,1,1,Treatment,10950.57
+CAMP_0317,CUST_237,Loyalty Reward,20,SMS,2025-01-17,0,0,Treatment,0.0
+CAMP_0318,CUST_009,Loyalty Reward,10,In-App Push,2025-04-10,0,0,Control,0.0
+CAMP_0319,CUST_437,Flash Sale,10,Email,2025-03-06,1,0,Treatment,0.0
+CAMP_0320,CUST_377,Discount,30,Email,2025-04-27,0,0,Treatment,0.0
+CAMP_0321,CUST_015,Flash Sale,0,Email,2025-02-07,0,0,Treatment,0.0
+CAMP_0322,CUST_342,Loyalty Reward,20,Email,2025-02-08,0,0,Treatment,0.0
+CAMP_0323,CUST_183,Discount,50,In-App Push,2025-01-26,1,1,Treatment,12156.7
+CAMP_0324,CUST_350,New Arrival,10,SMS,2025-02-08,1,0,Treatment,0.0
+CAMP_0325,CUST_419,Loyalty Reward,50,SMS,2025-03-18,0,0,Treatment,0.0
+CAMP_0326,CUST_372,Loyalty Reward,50,SMS,2025-02-12,0,0,Treatment,0.0
+CAMP_0327,CUST_036,Discount,30,In-App Push,2025-04-12,1,0,Control,0.0
+CAMP_0328,CUST_066,Flash Sale,0,In-App Push,2025-02-04,1,0,Control,0.0
+CAMP_0329,CUST_344,Flash Sale,20,Email,2025-03-20,0,0,Control,0.0
+CAMP_0330,CUST_158,Loyalty Reward,10,Email,2025-04-11,1,1,Treatment,13689.24
+CAMP_0331,CUST_232,Loyalty Reward,20,SMS,2025-02-07,1,1,Treatment,4308.78
+CAMP_0332,CUST_450,Discount,50,Email,2025-03-11,0,0,Treatment,0.0
+CAMP_0333,CUST_494,Discount,50,In-App Push,2025-01-06,1,0,Treatment,0.0
+CAMP_0334,CUST_455,Loyalty Reward,0,Email,2025-02-11,0,0,Control,0.0
+CAMP_0335,CUST_344,Seasonal Sale,30,Email,2025-02-20,0,0,Treatment,0.0
+CAMP_0336,CUST_269,Flash Sale,10,In-App Push,2025-03-03,0,0,Treatment,0.0
+CAMP_0337,CUST_416,Discount,20,Email,2025-01-10,1,0,Treatment,0.0
+CAMP_0338,CUST_070,Loyalty Reward,10,Email,2025-02-27,0,0,Treatment,0.0
+CAMP_0339,CUST_429,Flash Sale,50,SMS,2025-01-03,0,0,Treatment,0.0
+CAMP_0340,CUST_420,Loyalty Reward,0,In-App Push,2025-01-31,0,0,Treatment,0.0
+CAMP_0341,CUST_061,Loyalty Reward,20,SMS,2025-02-21,1,1,Treatment,8307.1
+CAMP_0342,CUST_149,Flash Sale,50,Email,2025-04-05,0,0,Control,0.0
+CAMP_0343,CUST_134,Flash Sale,10,In-App Push,2025-02-28,0,0,Treatment,0.0
+CAMP_0344,CUST_472,Loyalty Reward,20,In-App Push,2025-01-21,0,0,Treatment,0.0
+CAMP_0345,CUST_302,Flash Sale,50,Email,2025-03-09,1,1,Treatment,11051.23
+CAMP_0346,CUST_020,Flash Sale,10,Email,2025-04-30,0,0,Control,0.0
+CAMP_0347,CUST_006,Discount,30,Email,2025-01-28,0,0,Control,0.0
+CAMP_0348,CUST_012,Seasonal Sale,20,SMS,2025-04-24,1,1,Treatment,10312.26
+CAMP_0349,CUST_462,Seasonal Sale,10,In-App Push,2025-03-31,0,0,Treatment,0.0
+CAMP_0350,CUST_145,Loyalty Reward,30,In-App Push,2025-01-16,0,0,Treatment,0.0
+CAMP_0351,CUST_321,Discount,50,SMS,2025-02-07,0,0,Treatment,0.0
+CAMP_0352,CUST_173,Loyalty Reward,50,SMS,2025-03-04,0,0,Treatment,0.0
+CAMP_0353,CUST_158,Loyalty Reward,20,SMS,2025-02-26,0,0,Control,0.0
+CAMP_0354,CUST_470,Discount,0,In-App Push,2025-03-06,0,0,Treatment,0.0
+CAMP_0355,CUST_172,Loyalty Reward,0,SMS,2025-03-24,0,0,Treatment,0.0
+CAMP_0356,CUST_460,Flash Sale,0,Email,2025-04-29,0,0,Control,0.0
+CAMP_0357,CUST_033,Loyalty Reward,30,Email,2025-03-19,1,1,Treatment,11738.89
+CAMP_0358,CUST_494,Flash Sale,0,In-App Push,2025-01-08,0,0,Treatment,0.0
+CAMP_0359,CUST_079,Flash Sale,10,Email,2025-02-21,0,0,Treatment,0.0
+CAMP_0360,CUST_479,Flash Sale,20,SMS,2025-02-24,1,0,Control,0.0
+CAMP_0361,CUST_470,Flash Sale,20,In-App Push,2025-02-26,0,0,Treatment,0.0
+CAMP_0362,CUST_184,Loyalty Reward,50,In-App Push,2025-01-03,1,1,Treatment,14721.64
+CAMP_0363,CUST_401,Discount,0,In-App Push,2025-04-24,0,0,Control,0.0
+CAMP_0364,CUST_178,Discount,30,SMS,2025-03-05,0,0,Treatment,0.0
+CAMP_0365,CUST_169,Flash Sale,50,SMS,2025-04-16,0,0,Treatment,0.0
+CAMP_0366,CUST_159,Loyalty Reward,50,Email,2025-01-16,0,0,Treatment,0.0
+CAMP_0367,CUST_290,Loyalty Reward,30,In-App Push,2025-02-15,0,0,Treatment,0.0
+CAMP_0368,CUST_393,Loyalty Reward,10,In-App Push,2025-01-27,0,0,Treatment,0.0
+CAMP_0369,CUST_381,Discount,0,In-App Push,2025-04-15,1,0,Treatment,0.0
+CAMP_0370,CUST_206,Loyalty Reward,0,SMS,2025-03-18,1,0,Treatment,0.0
+CAMP_0371,CUST_104,Loyalty Reward,50,Email,2025-01-09,0,0,Treatment,0.0
+CAMP_0372,CUST_326,Loyalty Reward,10,In-App Push,2025-03-01,0,0,Treatment,0.0
+CAMP_0373,CUST_498,Loyalty Reward,10,Email,2025-04-12,0,0,Control,0.0
+CAMP_0374,CUST_447,Loyalty Reward,20,In-App Push,2025-01-07,0,0,Treatment,0.0
+CAMP_0375,CUST_470,Discount,50,SMS,2025-02-24,0,0,Treatment,0.0
+CAMP_0376,CUST_083,Discount,10,Email,2025-03-08,0,0,Control,0.0
+CAMP_0377,CUST_260,Discount,30,In-App Push,2025-02-03,0,0,Control,0.0
+CAMP_0378,CUST_311,Loyalty Reward,50,In-App Push,2025-04-28,0,0,Treatment,0.0
+CAMP_0379,CUST_356,Loyalty Reward,30,In-App Push,2025-02-17,0,0,Control,0.0
+CAMP_0380,CUST_349,Seasonal Sale,20,SMS,2025-02-04,0,0,Treatment,0.0
+CAMP_0381,CUST_098,Loyalty Reward,10,SMS,2025-02-09,0,0,Treatment,0.0
+CAMP_0382,CUST_418,Loyalty Reward,20,Email,2025-02-01,0,0,Treatment,0.0
+CAMP_0383,CUST_470,Flash Sale,30,In-App Push,2025-02-13,0,0,Treatment,0.0
+CAMP_0384,CUST_114,Discount,20,SMS,2025-03-11,0,0,Treatment,0.0
+CAMP_0385,CUST_461,Flash Sale,20,In-App Push,2025-04-09,1,0,Treatment,0.0
+CAMP_0386,CUST_324,Loyalty Reward,10,In-App Push,2025-04-16,1,0,Treatment,0.0
+CAMP_0387,CUST_397,Loyalty Reward,20,Email,2025-04-30,0,0,Treatment,0.0
+CAMP_0388,CUST_225,Flash Sale,30,In-App Push,2025-02-24,0,0,Treatment,0.0
+CAMP_0389,CUST_164,Flash Sale,50,Email,2025-03-28,0,0,Treatment,0.0
+CAMP_0390,CUST_246,Loyalty Reward,50,Email,2025-03-13,0,0,Treatment,0.0
+CAMP_0391,CUST_328,Flash Sale,0,SMS,2025-01-25,1,0,Control,0.0
+CAMP_0392,CUST_115,Flash Sale,0,In-App Push,2025-04-14,0,0,Treatment,0.0
+CAMP_0393,CUST_192,Loyalty Reward,10,SMS,2025-02-27,0,0,Treatment,0.0
+CAMP_0394,CUST_464,Discount,30,Email,2025-01-21,0,0,Treatment,0.0
+CAMP_0395,CUST_307,Flash Sale,20,SMS,2025-01-19,0,0,Treatment,0.0
+CAMP_0396,CUST_187,Flash Sale,10,Email,2025-03-30,0,0,Treatment,0.0
+CAMP_0397,CUST_118,Seasonal Sale,0,In-App Push,2025-01-04,0,0,Control,0.0
+CAMP_0398,CUST_256,BOGO,0,Email,2025-02-09,0,0,Treatment,0.0
+CAMP_0399,CUST_070,BOGO,0,SMS,2025-03-13,0,0,Treatment,0.0
+CAMP_0400,CUST_074,Discount,30,SMS,2025-01-24,0,0,Treatment,0.0
+CAMP_0401,CUST_471,BOGO,0,Email,2025-01-14,0,0,Treatment,0.0
+CAMP_0402,CUST_135,Loyalty Reward,0,SMS,2025-02-24,0,0,Treatment,0.0
+CAMP_0403,CUST_050,Loyalty Reward,10,SMS,2025-02-08,0,0,Control,0.0
+CAMP_0404,CUST_468,Loyalty Reward,20,Email,2025-02-21,0,0,Control,0.0
+CAMP_0405,CUST_310,Flash Sale,0,SMS,2025-01-09,0,0,Treatment,0.0
+CAMP_0406,CUST_335,Loyalty Reward,20,SMS,2025-02-24,0,0,Treatment,0.0
+CAMP_0407,CUST_141,BOGO,0,Email,2025-01-22,0,0,Control,0.0
+CAMP_0408,CUST_101,Loyalty Reward,20,Email,2025-04-13,0,0,Treatment,0.0
+CAMP_0409,CUST_181,Loyalty Reward,50,In-App Push,2025-02-07,0,0,Control,0.0
+CAMP_0410,CUST_115,Discount,10,In-App Push,2025-03-30,0,0,Treatment,0.0
+CAMP_0411,CUST_076,Seasonal Sale,10,SMS,2025-03-12,0,0,Treatment,0.0
+CAMP_0412,CUST_196,Flash Sale,10,SMS,2025-01-06,0,0,Control,0.0
+CAMP_0413,CUST_213,Flash Sale,50,Email,2025-01-10,1,1,Control,6828.21
+CAMP_0414,CUST_175,Discount,20,In-App Push,2025-03-01,1,0,Treatment,0.0
+CAMP_0415,CUST_499,Loyalty Reward,30,Email,2025-02-27,0,0,Treatment,0.0
+CAMP_0416,CUST_121,Loyalty Reward,10,In-App Push,2025-04-03,0,0,Treatment,0.0
+CAMP_0417,CUST_438,Loyalty Reward,30,Email,2025-04-28,0,0,Treatment,0.0
+CAMP_0418,CUST_266,Flash Sale,10,In-App Push,2025-04-12,1,0,Treatment,0.0
+CAMP_0419,CUST_183,Loyalty Reward,0,Email,2025-03-07,0,0,Treatment,0.0
+CAMP_0420,CUST_446,Discount,30,Email,2025-03-16,0,0,Control,0.0
+CAMP_0421,CUST_368,Seasonal Sale,30,Email,2025-03-15,0,0,Treatment,0.0
+CAMP_0422,CUST_124,Discount,10,Email,2025-02-28,0,0,Treatment,0.0
+CAMP_0423,CUST_099,Discount,20,SMS,2025-03-02,0,0,Control,0.0
+CAMP_0424,CUST_162,Flash Sale,20,SMS,2025-04-19,0,0,Control,0.0
+CAMP_0425,CUST_306,Loyalty Reward,10,Email,2025-02-02,0,0,Treatment,0.0
+CAMP_0426,CUST_241,Loyalty Reward,10,In-App Push,2025-03-22,0,0,Treatment,0.0
+CAMP_0427,CUST_289,Discount,20,SMS,2025-01-08,0,0,Control,0.0
+CAMP_0428,CUST_221,Loyalty Reward,10,In-App Push,2025-04-09,0,0,Treatment,0.0
+CAMP_0429,CUST_306,Loyalty Reward,10,SMS,2025-04-05,0,0,Treatment,0.0
+CAMP_0430,CUST_300,Discount,0,In-App Push,2025-03-16,0,0,Treatment,0.0
+CAMP_0431,CUST_152,Loyalty Reward,0,Email,2025-03-26,0,0,Control,0.0
+CAMP_0432,CUST_316,Loyalty Reward,20,SMS,2025-04-12,0,0,Treatment,0.0
+CAMP_0433,CUST_483,Loyalty Reward,50,SMS,2025-01-08,1,1,Control,8298.03
+CAMP_0434,CUST_469,Discount,0,Email,2025-01-28,0,0,Treatment,0.0
+CAMP_0435,CUST_485,Loyalty Reward,50,In-App Push,2025-02-15,0,0,Treatment,0.0
+CAMP_0436,CUST_109,Flash Sale,50,In-App Push,2025-04-10,1,0,Treatment,0.0
+CAMP_0437,CUST_076,Loyalty Reward,20,SMS,2025-02-12,1,0,Treatment,0.0
+CAMP_0438,CUST_046,Flash Sale,10,In-App Push,2025-02-09,1,0,Treatment,0.0
+CAMP_0439,CUST_221,Loyalty Reward,50,SMS,2025-01-29,0,0,Treatment,0.0
+CAMP_0440,CUST_236,Loyalty Reward,0,In-App Push,2025-04-21,0,0,Treatment,0.0
+CAMP_0441,CUST_294,Loyalty Reward,0,In-App Push,2025-02-09,0,0,Control,0.0
+CAMP_0442,CUST_256,Discount,50,In-App Push,2025-03-06,0,0,Treatment,0.0
+CAMP_0443,CUST_433,Loyalty Reward,30,Email,2025-03-29,0,0,Treatment,0.0
+CAMP_0444,CUST_376,Loyalty Reward,20,SMS,2025-03-29,0,0,Treatment,0.0
+CAMP_0445,CUST_471,Flash Sale,30,SMS,2025-02-03,0,0,Treatment,0.0
+CAMP_0446,CUST_167,Flash Sale,50,SMS,2025-01-02,0,0,Treatment,0.0
+CAMP_0447,CUST_356,BOGO,0,SMS,2025-04-07,0,0,Control,0.0
+CAMP_0448,CUST_174,Flash Sale,50,In-App Push,2025-02-06,0,0,Treatment,0.0
+CAMP_0449,CUST_060,Discount,50,Email,2025-04-09,0,0,Treatment,0.0
+CAMP_0450,CUST_001,Discount,0,Email,2025-03-04,0,0,Treatment,0.0
+CAMP_0451,CUST_141,Loyalty Reward,50,Email,2025-03-14,0,0,Treatment,0.0
+CAMP_0452,CUST_330,Seasonal Sale,0,In-App Push,2025-02-01,0,0,Treatment,0.0
+CAMP_0453,CUST_249,Flash Sale,30,In-App Push,2025-01-26,0,0,Treatment,0.0
+CAMP_0454,CUST_133,Loyalty Reward,50,In-App Push,2025-02-23,0,0,Treatment,0.0
+CAMP_0455,CUST_195,Loyalty Reward,0,In-App Push,2025-01-21,0,0,Treatment,0.0
+CAMP_0456,CUST_183,Loyalty Reward,50,SMS,2025-03-15,0,0,Treatment,0.0
+CAMP_0457,CUST_179,Loyalty Reward,30,SMS,2025-02-09,0,0,Treatment,0.0
+CAMP_0458,CUST_469,Discount,10,SMS,2025-01-05,0,0,Treatment,0.0
+CAMP_0459,CUST_296,New Arrival,50,In-App Push,2025-04-27,0,0,Treatment,0.0
+CAMP_0460,CUST_152,Loyalty Reward,50,In-App Push,2025-04-01,1,1,Treatment,10619.8
+CAMP_0461,CUST_461,Discount,20,SMS,2025-02-02,0,0,Treatment,0.0
+CAMP_0462,CUST_073,Loyalty Reward,50,SMS,2025-02-28,1,1,Treatment,12490.3
+CAMP_0463,CUST_315,New Arrival,20,In-App Push,2025-04-13,0,0,Treatment,0.0
+CAMP_0464,CUST_014,Loyalty Reward,10,In-App Push,2025-01-24,0,0,Treatment,0.0
+CAMP_0465,CUST_494,BOGO,0,Email,2025-02-10,1,0,Treatment,0.0
+CAMP_0466,CUST_438,Loyalty Reward,30,SMS,2025-02-17,1,1,Treatment,11640.9
+CAMP_0467,CUST_077,Discount,10,Email,2025-01-03,0,0,Control,0.0
+CAMP_0468,CUST_206,BOGO,0,SMS,2025-04-29,0,0,Treatment,0.0
+CAMP_0469,CUST_495,Loyalty Reward,20,In-App Push,2025-02-26,0,0,Treatment,0.0
+CAMP_0470,CUST_379,Flash Sale,0,Email,2025-02-23,0,0,Control,0.0
+CAMP_0471,CUST_109,Discount,20,SMS,2025-04-03,0,0,Control,0.0
+CAMP_0472,CUST_467,BOGO,0,SMS,2025-01-14,1,0,Treatment,0.0
+CAMP_0473,CUST_437,Discount,30,Email,2025-02-20,0,0,Treatment,0.0
+CAMP_0474,CUST_128,Discount,30,SMS,2025-01-14,0,0,Treatment,0.0
+CAMP_0475,CUST_202,Discount,10,In-App Push,2025-02-23,0,0,Treatment,0.0
+CAMP_0476,CUST_145,Loyalty Reward,20,Email,2025-03-20,0,0,Treatment,0.0
+CAMP_0477,CUST_459,Flash Sale,50,In-App Push,2025-02-09,1,1,Treatment,8167.28
+CAMP_0478,CUST_248,Loyalty Reward,0,In-App Push,2025-02-26,0,0,Treatment,0.0
+CAMP_0479,CUST_420,Loyalty Reward,0,SMS,2025-03-29,0,0,Control,0.0
+CAMP_0480,CUST_151,Discount,20,Email,2025-01-04,0,0,Control,0.0
+CAMP_0481,CUST_186,Loyalty Reward,50,In-App Push,2025-02-23,0,0,Treatment,0.0
+CAMP_0482,CUST_165,Loyalty Reward,10,In-App Push,2025-02-12,0,0,Treatment,0.0
+CAMP_0483,CUST_026,Loyalty Reward,0,In-App Push,2025-04-04,0,0,Control,0.0
+CAMP_0484,CUST_422,Flash Sale,20,Email,2025-02-07,0,0,Treatment,0.0
+CAMP_0485,CUST_050,Discount,20,Email,2025-01-05,0,0,Treatment,0.0
+CAMP_0486,CUST_006,Flash Sale,30,SMS,2025-03-25,0,0,Treatment,0.0
+CAMP_0487,CUST_361,Loyalty Reward,30,In-App Push,2025-02-19,0,0,Treatment,0.0
+CAMP_0488,CUST_393,Loyalty Reward,10,Email,2025-02-13,0,0,Treatment,0.0
+CAMP_0489,CUST_240,Discount,20,In-App Push,2025-01-18,0,0,Treatment,0.0
+CAMP_0490,CUST_052,Loyalty Reward,20,In-App Push,2025-03-28,0,0,Treatment,0.0
+CAMP_0491,CUST_042,Seasonal Sale,20,In-App Push,2025-01-29,1,0,Control,0.0
+CAMP_0492,CUST_238,Discount,30,Email,2025-04-14,1,0,Control,0.0
+CAMP_0493,CUST_021,Discount,0,In-App Push,2025-01-07,0,0,Control,0.0
+CAMP_0494,CUST_379,Discount,0,SMS,2025-04-04,0,0,Treatment,0.0
+CAMP_0495,CUST_167,Flash Sale,0,In-App Push,2025-03-31,0,0,Control,0.0
+CAMP_0496,CUST_033,Loyalty Reward,10,Email,2025-04-08,0,0,Treatment,0.0
+CAMP_0497,CUST_478,Loyalty Reward,20,In-App Push,2025-03-01,0,0,Treatment,0.0
+CAMP_0498,CUST_471,Loyalty Reward,30,Email,2025-01-23,0,0,Treatment,0.0
+CAMP_0499,CUST_363,Loyalty Reward,50,In-App Push,2025-02-14,0,0,Treatment,0.0
+CAMP_0500,CUST_434,Loyalty Reward,30,In-App Push,2025-01-01,0,0,Treatment,0.0
+CAMP_0501,CUST_053,Discount,10,Email,2025-03-10,0,0,Treatment,0.0
+CAMP_0502,CUST_498,Loyalty Reward,0,SMS,2025-04-24,0,0,Treatment,0.0
+CAMP_0503,CUST_251,BOGO,0,SMS,2025-01-22,0,0,Treatment,0.0
+CAMP_0504,CUST_470,Flash Sale,50,In-App Push,2025-02-26,0,0,Treatment,0.0
+CAMP_0505,CUST_336,BOGO,0,SMS,2025-01-24,0,0,Treatment,0.0
+CAMP_0506,CUST_148,Flash Sale,0,In-App Push,2025-04-24,0,0,Treatment,0.0
+CAMP_0507,CUST_330,Loyalty Reward,10,Email,2025-01-12,0,0,Control,0.0
+CAMP_0508,CUST_389,Flash Sale,20,In-App Push,2025-04-26,0,0,Treatment,0.0
+CAMP_0509,CUST_493,New Arrival,0,Email,2025-01-12,0,0,Treatment,0.0
+CAMP_0510,CUST_334,New Arrival,50,In-App Push,2025-04-14,0,0,Treatment,0.0
+CAMP_0511,CUST_036,Discount,20,In-App Push,2025-02-09,0,0,Treatment,0.0
+CAMP_0512,CUST_209,Loyalty Reward,30,Email,2025-01-05,0,0,Treatment,0.0
+CAMP_0513,CUST_023,Flash Sale,50,Email,2025-04-19,1,0,Treatment,0.0
+CAMP_0514,CUST_170,Loyalty Reward,50,Email,2025-03-19,0,0,Treatment,0.0
+CAMP_0515,CUST_186,Loyalty Reward,0,In-App Push,2025-03-25,0,0,Treatment,0.0
+CAMP_0516,CUST_326,Loyalty Reward,50,In-App Push,2025-04-15,0,0,Treatment,0.0
+CAMP_0517,CUST_131,Flash Sale,0,Email,2025-03-26,0,0,Treatment,0.0
+CAMP_0518,CUST_094,New Arrival,20,In-App Push,2025-02-14,0,0,Control,0.0
+CAMP_0519,CUST_484,Loyalty Reward,10,Email,2025-03-13,0,0,Treatment,0.0
+CAMP_0520,CUST_423,Discount,30,Email,2025-03-01,0,0,Treatment,0.0
+CAMP_0521,CUST_331,Discount,20,Email,2025-03-01,0,0,Treatment,0.0
+CAMP_0522,CUST_465,Flash Sale,0,In-App Push,2025-03-07,1,0,Treatment,0.0
+CAMP_0523,CUST_131,Discount,50,Email,2025-03-21,1,1,Treatment,9307.16
+CAMP_0524,CUST_462,Loyalty Reward,0,SMS,2025-04-09,0,0,Treatment,0.0
+CAMP_0525,CUST_467,Loyalty Reward,50,SMS,2025-01-09,1,1,Control,10441.83
+CAMP_0526,CUST_483,BOGO,0,In-App Push,2025-04-22,0,0,Treatment,0.0
+CAMP_0527,CUST_382,Seasonal Sale,20,SMS,2025-04-26,1,0,Treatment,0.0
+CAMP_0528,CUST_304,Loyalty Reward,10,SMS,2025-03-24,0,0,Treatment,0.0
+CAMP_0529,CUST_356,Loyalty Reward,30,Email,2025-01-30,0,0,Control,0.0
+CAMP_0530,CUST_496,Loyalty Reward,30,In-App Push,2025-02-21,0,0,Treatment,0.0
+CAMP_0531,CUST_418,Loyalty Reward,10,Email,2025-01-19,0,0,Treatment,0.0
+CAMP_0532,CUST_458,Discount,20,SMS,2025-01-06,0,0,Treatment,0.0
+CAMP_0533,CUST_250,Discount,0,In-App Push,2025-04-01,0,0,Treatment,0.0
+CAMP_0534,CUST_405,Loyalty Reward,20,SMS,2025-03-29,1,1,Treatment,13639.25
+CAMP_0535,CUST_457,New Arrival,30,In-App Push,2025-04-10,0,0,Treatment,0.0
+CAMP_0536,CUST_102,New Arrival,30,SMS,2025-01-01,1,0,Treatment,0.0
+CAMP_0537,CUST_200,Discount,30,In-App Push,2025-03-08,0,0,Treatment,0.0
+CAMP_0538,CUST_483,BOGO,0,SMS,2025-04-30,0,0,Treatment,0.0
+CAMP_0539,CUST_370,Loyalty Reward,20,In-App Push,2025-01-30,1,1,Treatment,6047.26
+CAMP_0540,CUST_204,Loyalty Reward,0,SMS,2025-04-19,0,0,Treatment,0.0
+CAMP_0541,CUST_396,Discount,10,Email,2025-01-18,0,0,Control,0.0
+CAMP_0542,CUST_405,Loyalty Reward,30,In-App Push,2025-01-06,0,0,Treatment,0.0
+CAMP_0543,CUST_449,Flash Sale,30,SMS,2025-03-18,0,0,Treatment,0.0
+CAMP_0544,CUST_459,Discount,0,In-App Push,2025-03-17,0,0,Treatment,0.0
+CAMP_0545,CUST_407,Flash Sale,20,In-App Push,2025-01-25,0,0,Treatment,0.0
+CAMP_0546,CUST_288,Loyalty Reward,50,In-App Push,2025-02-09,1,0,Control,0.0
+CAMP_0547,CUST_323,BOGO,0,Email,2025-02-10,0,0,Control,0.0
+CAMP_0548,CUST_004,BOGO,0,SMS,2025-01-28,0,0,Treatment,0.0
+CAMP_0549,CUST_108,Discount,30,Email,2025-04-03,0,0,Treatment,0.0
+CAMP_0550,CUST_262,Discount,20,Email,2025-03-06,0,0,Treatment,0.0
+CAMP_0551,CUST_419,BOGO,0,SMS,2025-03-15,0,0,Treatment,0.0
+CAMP_0552,CUST_050,Loyalty Reward,30,SMS,2025-03-03,0,0,Treatment,0.0
+CAMP_0553,CUST_009,Flash Sale,0,SMS,2025-02-20,0,0,Treatment,0.0
+CAMP_0554,CUST_277,Loyalty Reward,10,In-App Push,2025-02-13,1,1,Treatment,10664.23
+CAMP_0555,CUST_270,Loyalty Reward,20,Email,2025-01-26,1,1,Control,9133.65
+CAMP_0556,CUST_333,Flash Sale,30,SMS,2025-03-16,0,0,Treatment,0.0
+CAMP_0557,CUST_234,Flash Sale,30,SMS,2025-01-30,0,0,Treatment,0.0
+CAMP_0558,CUST_369,Flash Sale,10,In-App Push,2025-04-08,1,0,Treatment,0.0
+CAMP_0559,CUST_404,Loyalty Reward,10,Email,2025-04-09,0,0,Control,0.0
+CAMP_0560,CUST_473,Loyalty Reward,50,Email,2025-03-25,0,0,Treatment,0.0
+CAMP_0561,CUST_094,Loyalty Reward,30,Email,2025-03-22,0,0,Treatment,0.0
+CAMP_0562,CUST_361,Flash Sale,10,Email,2025-03-22,0,0,Treatment,0.0
+CAMP_0563,CUST_054,Seasonal Sale,50,SMS,2025-02-02,0,0,Treatment,0.0
+CAMP_0564,CUST_199,Loyalty Reward,50,Email,2025-04-20,1,1,Treatment,4390.89
+CAMP_0565,CUST_381,Flash Sale,50,In-App Push,2025-01-31,0,0,Control,0.0
+CAMP_0566,CUST_453,New Arrival,0,In-App Push,2025-01-27,1,0,Treatment,0.0
+CAMP_0567,CUST_072,BOGO,0,SMS,2025-03-06,0,0,Treatment,0.0
+CAMP_0568,CUST_044,BOGO,0,Email,2025-03-30,1,0,Treatment,0.0
+CAMP_0569,CUST_038,Loyalty Reward,30,Email,2025-03-21,0,0,Treatment,0.0
+CAMP_0570,CUST_074,Flash Sale,20,SMS,2025-04-22,0,0,Treatment,0.0
+CAMP_0571,CUST_378,Discount,0,Email,2025-02-12,0,0,Treatment,0.0
+CAMP_0572,CUST_200,Discount,10,SMS,2025-02-27,0,0,Treatment,0.0
+CAMP_0573,CUST_284,Flash Sale,50,Email,2025-02-09,0,0,Treatment,0.0
+CAMP_0574,CUST_098,Loyalty Reward,0,In-App Push,2025-04-20,0,0,Treatment,0.0
+CAMP_0575,CUST_313,Loyalty Reward,20,In-App Push,2025-02-11,1,0,Treatment,0.0
+CAMP_0576,CUST_216,Discount,50,Email,2025-03-20,0,0,Treatment,0.0
+CAMP_0577,CUST_023,Flash Sale,30,Email,2025-03-01,1,1,Control,14809.81
+CAMP_0578,CUST_422,Discount,10,In-App Push,2025-02-04,0,0,Treatment,0.0
+CAMP_0579,CUST_485,Loyalty Reward,0,In-App Push,2025-03-15,0,0,Treatment,0.0
+CAMP_0580,CUST_075,Discount,30,SMS,2025-03-16,0,0,Control,0.0
+CAMP_0581,CUST_328,Flash Sale,30,SMS,2025-02-17,0,0,Treatment,0.0
+CAMP_0582,CUST_426,Seasonal Sale,30,Email,2025-04-29,1,0,Control,0.0
+CAMP_0583,CUST_216,Loyalty Reward,30,Email,2025-02-03,0,0,Treatment,0.0
+CAMP_0584,CUST_025,Discount,50,Email,2025-01-08,0,0,Treatment,0.0
+CAMP_0585,CUST_392,New Arrival,50,Email,2025-04-30,0,0,Treatment,0.0
+CAMP_0586,CUST_236,Loyalty Reward,50,In-App Push,2025-01-10,0,0,Treatment,0.0
+CAMP_0587,CUST_337,Flash Sale,10,In-App Push,2025-02-02,1,0,Treatment,0.0
+CAMP_0588,CUST_351,Loyalty Reward,50,SMS,2025-04-11,0,0,Treatment,0.0
+CAMP_0589,CUST_401,Flash Sale,10,In-App Push,2025-01-26,0,0,Treatment,0.0
+CAMP_0590,CUST_048,Loyalty Reward,20,In-App Push,2025-04-09,0,0,Treatment,0.0
+CAMP_0591,CUST_442,BOGO,0,SMS,2025-03-30,0,0,Treatment,0.0
+CAMP_0592,CUST_037,New Arrival,0,SMS,2025-02-19,0,0,Control,0.0
+CAMP_0593,CUST_368,Flash Sale,20,In-App Push,2025-01-17,0,0,Control,0.0
+CAMP_0594,CUST_312,Loyalty Reward,50,Email,2025-02-20,0,0,Control,0.0
+CAMP_0595,CUST_198,Flash Sale,10,In-App Push,2025-03-19,0,0,Treatment,0.0
+CAMP_0596,CUST_163,Discount,10,SMS,2025-02-19,0,0,Control,0.0
+CAMP_0597,CUST_243,Loyalty Reward,0,SMS,2025-02-06,0,0,Treatment,0.0
+CAMP_0598,CUST_244,Loyalty Reward,0,SMS,2025-04-07,0,0,Treatment,0.0
+CAMP_0599,CUST_294,Loyalty Reward,0,SMS,2025-03-16,0,0,Control,0.0
+CAMP_0600,CUST_044,Loyalty Reward,10,SMS,2025-04-21,0,0,Treatment,0.0
+CAMP_0601,CUST_498,Loyalty Reward,10,SMS,2025-02-08,1,1,Treatment,3784.12
+CAMP_0602,CUST_327,Loyalty Reward,50,SMS,2025-01-10,0,0,Treatment,0.0
+CAMP_0603,CUST_332,Loyalty Reward,20,SMS,2025-04-20,0,0,Treatment,0.0
+CAMP_0604,CUST_120,Loyalty Reward,30,Email,2025-03-18,0,0,Control,0.0
+CAMP_0605,CUST_408,Loyalty Reward,0,SMS,2025-04-01,0,0,Treatment,0.0
+CAMP_0606,CUST_146,Loyalty Reward,10,In-App Push,2025-02-25,0,0,Control,0.0
+CAMP_0607,CUST_259,Flash Sale,30,In-App Push,2025-03-31,0,0,Treatment,0.0
+CAMP_0608,CUST_326,Loyalty Reward,50,SMS,2025-04-11,0,0,Control,0.0
+CAMP_0609,CUST_450,New Arrival,20,Email,2025-01-24,0,0,Treatment,0.0
+CAMP_0610,CUST_268,Flash Sale,20,SMS,2025-04-28,0,0,Treatment,0.0
+CAMP_0611,CUST_245,Loyalty Reward,20,Email,2025-01-18,0,0,Treatment,0.0
+CAMP_0612,CUST_346,Loyalty Reward,10,SMS,2025-01-08,0,0,Treatment,0.0
+CAMP_0613,CUST_060,Discount,20,In-App Push,2025-04-07,0,0,Control,0.0
+CAMP_0614,CUST_491,Loyalty Reward,0,In-App Push,2025-04-16,1,0,Treatment,0.0
+CAMP_0615,CUST_489,Discount,20,Email,2025-02-11,0,0,Treatment,0.0
+CAMP_0616,CUST_143,Loyalty Reward,0,Email,2025-02-25,0,0,Treatment,0.0
+CAMP_0617,CUST_454,Flash Sale,30,Email,2025-03-20,0,0,Control,0.0
+CAMP_0618,CUST_068,Flash Sale,30,In-App Push,2025-03-02,0,0,Treatment,0.0
+CAMP_0619,CUST_373,Loyalty Reward,0,Email,2025-01-08,0,0,Treatment,0.0
+CAMP_0620,CUST_110,Loyalty Reward,20,In-App Push,2025-04-14,0,0,Treatment,0.0
+CAMP_0621,CUST_024,Flash Sale,10,In-App Push,2025-01-24,1,0,Treatment,0.0
+CAMP_0622,CUST_228,Discount,30,Email,2025-03-03,0,0,Treatment,0.0
+CAMP_0623,CUST_307,Flash Sale,10,In-App Push,2025-01-02,0,0,Treatment,0.0
+CAMP_0624,CUST_308,Discount,20,SMS,2025-01-12,0,0,Control,0.0
+CAMP_0625,CUST_386,Flash Sale,20,SMS,2025-01-22,1,0,Treatment,0.0
+CAMP_0626,CUST_046,Discount,0,In-App Push,2025-01-24,0,0,Treatment,0.0
+CAMP_0627,CUST_484,Flash Sale,10,Email,2025-01-26,0,0,Treatment,0.0
+CAMP_0628,CUST_164,Flash Sale,10,SMS,2025-01-18,0,0,Treatment,0.0
+CAMP_0629,CUST_086,Loyalty Reward,0,In-App Push,2025-02-09,0,0,Control,0.0
+CAMP_0630,CUST_116,Flash Sale,50,In-App Push,2025-04-27,0,0,Treatment,0.0
+CAMP_0631,CUST_025,Flash Sale,30,SMS,2025-02-19,1,0,Control,0.0
+CAMP_0632,CUST_325,Loyalty Reward,20,SMS,2025-03-07,0,0,Treatment,0.0
+CAMP_0633,CUST_007,Flash Sale,30,In-App Push,2025-03-13,0,0,Treatment,0.0
+CAMP_0634,CUST_181,Loyalty Reward,50,Email,2025-02-06,0,0,Treatment,0.0
+CAMP_0635,CUST_077,New Arrival,20,Email,2025-02-03,0,0,Treatment,0.0
+CAMP_0636,CUST_409,Flash Sale,20,In-App Push,2025-02-27,1,0,Treatment,0.0
+CAMP_0637,CUST_078,Loyalty Reward,10,SMS,2025-04-29,0,0,Treatment,0.0
+CAMP_0638,CUST_434,Loyalty Reward,50,In-App Push,2025-01-15,0,0,Treatment,0.0
+CAMP_0639,CUST_488,Discount,10,Email,2025-03-04,0,0,Treatment,0.0
+CAMP_0640,CUST_279,Discount,10,Email,2025-02-28,0,0,Control,0.0
+CAMP_0641,CUST_095,Flash Sale,0,Email,2025-02-11,0,0,Control,0.0
+CAMP_0642,CUST_364,Loyalty Reward,10,Email,2025-02-09,0,0,Treatment,0.0
+CAMP_0643,CUST_116,Discount,10,In-App Push,2025-01-19,1,0,Treatment,0.0
+CAMP_0644,CUST_003,Flash Sale,30,SMS,2025-03-19,0,0,Treatment,0.0
+CAMP_0645,CUST_468,Loyalty Reward,10,In-App Push,2025-02-21,0,0,Treatment,0.0
+CAMP_0646,CUST_289,Discount,10,In-App Push,2025-01-31,0,0,Treatment,0.0
+CAMP_0647,CUST_105,Loyalty Reward,50,Email,2025-03-23,0,0,Control,0.0
+CAMP_0648,CUST_104,Loyalty Reward,30,SMS,2025-03-05,0,0,Treatment,0.0
+CAMP_0649,CUST_181,Loyalty Reward,30,In-App Push,2025-03-01,0,0,Treatment,0.0
+CAMP_0650,CUST_103,Discount,50,In-App Push,2025-01-21,1,0,Treatment,0.0
+CAMP_0651,CUST_238,Loyalty Reward,0,In-App Push,2025-01-24,0,0,Control,0.0
+CAMP_0652,CUST_365,BOGO,0,In-App Push,2025-02-23,0,0,Treatment,0.0
+CAMP_0653,CUST_222,Loyalty Reward,50,Email,2025-03-07,0,0,Treatment,0.0
+CAMP_0654,CUST_011,Seasonal Sale,10,In-App Push,2025-02-28,1,0,Treatment,0.0
+CAMP_0655,CUST_456,Flash Sale,10,Email,2025-02-23,0,0,Treatment,0.0
+CAMP_0656,CUST_048,Loyalty Reward,20,Email,2025-02-24,0,0,Treatment,0.0
+CAMP_0657,CUST_039,Discount,10,In-App Push,2025-04-03,0,0,Treatment,0.0
+CAMP_0658,CUST_481,Discount,50,SMS,2025-03-26,0,0,Treatment,0.0
+CAMP_0659,CUST_467,BOGO,0,Email,2025-04-19,0,0,Treatment,0.0
+CAMP_0660,CUST_053,Discount,50,In-App Push,2025-04-06,0,0,Treatment,0.0
+CAMP_0661,CUST_243,Loyalty Reward,20,In-App Push,2025-01-01,0,0,Control,0.0
+CAMP_0662,CUST_243,Loyalty Reward,0,Email,2025-04-07,0,0,Treatment,0.0
+CAMP_0663,CUST_257,Flash Sale,50,SMS,2025-04-21,0,0,Treatment,0.0
+CAMP_0664,CUST_293,Discount,50,Email,2025-04-28,0,0,Treatment,0.0
+CAMP_0665,CUST_061,BOGO,0,In-App Push,2025-03-11,0,0,Control,0.0
+CAMP_0666,CUST_012,Loyalty Reward,30,In-App Push,2025-04-17,1,0,Treatment,0.0
+CAMP_0667,CUST_446,Discount,50,SMS,2025-04-18,0,0,Treatment,0.0
+CAMP_0668,CUST_448,Flash Sale,20,Email,2025-01-16,0,0,Treatment,0.0
+CAMP_0669,CUST_181,Loyalty Reward,10,Email,2025-04-28,0,0,Treatment,0.0
+CAMP_0670,CUST_365,Loyalty Reward,10,Email,2025-01-18,0,0,Treatment,0.0
+CAMP_0671,CUST_262,Seasonal Sale,20,SMS,2025-02-26,0,0,Treatment,0.0
+CAMP_0672,CUST_119,Flash Sale,50,Email,2025-01-16,1,0,Control,0.0
+CAMP_0673,CUST_167,Discount,50,In-App Push,2025-03-18,1,1,Control,4333.92
+CAMP_0674,CUST_337,New Arrival,0,SMS,2025-04-29,0,0,Treatment,0.0
+CAMP_0675,CUST_284,BOGO,0,In-App Push,2025-03-10,0,0,Treatment,0.0
+CAMP_0676,CUST_378,Seasonal Sale,20,In-App Push,2025-01-04,0,0,Treatment,0.0
+CAMP_0677,CUST_296,Flash Sale,20,In-App Push,2025-04-26,0,0,Treatment,0.0
+CAMP_0678,CUST_225,BOGO,0,In-App Push,2025-01-31,0,0,Treatment,0.0
+CAMP_0679,CUST_323,Loyalty Reward,30,In-App Push,2025-04-22,0,0,Treatment,0.0
+CAMP_0680,CUST_388,Flash Sale,0,In-App Push,2025-01-01,0,0,Treatment,0.0
+CAMP_0681,CUST_322,Loyalty Reward,10,In-App Push,2025-04-02,0,0,Treatment,0.0
+CAMP_0682,CUST_106,Loyalty Reward,10,In-App Push,2025-02-28,0,0,Treatment,0.0
+CAMP_0683,CUST_160,Flash Sale,0,SMS,2025-01-29,0,0,Treatment,0.0
+CAMP_0684,CUST_054,Loyalty Reward,20,SMS,2025-02-28,0,0,Treatment,0.0
+CAMP_0685,CUST_257,Flash Sale,10,In-App Push,2025-02-12,0,0,Treatment,0.0
+CAMP_0686,CUST_304,BOGO,0,In-App Push,2025-03-12,1,0,Treatment,0.0
+CAMP_0687,CUST_327,Loyalty Reward,10,In-App Push,2025-04-06,0,0,Treatment,0.0
+CAMP_0688,CUST_190,Flash Sale,20,SMS,2025-03-25,1,0,Treatment,0.0
+CAMP_0689,CUST_405,BOGO,0,SMS,2025-03-11,0,0,Treatment,0.0
+CAMP_0690,CUST_375,Flash Sale,20,In-App Push,2025-01-07,1,0,Treatment,0.0
+CAMP_0691,CUST_005,Loyalty Reward,30,In-App Push,2025-02-14,0,0,Treatment,0.0
+CAMP_0692,CUST_059,Discount,50,Email,2025-02-09,0,0,Control,0.0
+CAMP_0693,CUST_189,Loyalty Reward,0,Email,2025-01-14,0,0,Treatment,0.0
+CAMP_0694,CUST_454,Discount,50,SMS,2025-04-07,0,0,Treatment,0.0
+CAMP_0695,CUST_359,Flash Sale,30,SMS,2025-01-27,0,0,Treatment,0.0
+CAMP_0696,CUST_236,Loyalty Reward,30,In-App Push,2025-01-29,0,0,Control,0.0
+CAMP_0697,CUST_080,Discount,10,SMS,2025-01-31,0,0,Treatment,0.0
+CAMP_0698,CUST_300,Seasonal Sale,0,Email,2025-04-05,0,0,Treatment,0.0
+CAMP_0699,CUST_265,Flash Sale,50,In-App Push,2025-04-20,0,0,Treatment,0.0
+CAMP_0700,CUST_085,Discount,20,In-App Push,2025-04-10,1,0,Control,0.0
+CAMP_0701,CUST_053,Flash Sale,50,In-App Push,2025-02-26,1,0,Control,0.0
+CAMP_0702,CUST_297,Loyalty Reward,50,In-App Push,2025-03-21,0,0,Treatment,0.0
+CAMP_0703,CUST_125,Flash Sale,30,SMS,2025-04-25,1,0,Treatment,0.0
+CAMP_0704,CUST_262,Flash Sale,20,In-App Push,2025-02-17,1,0,Treatment,0.0
+CAMP_0705,CUST_396,Flash Sale,30,SMS,2025-02-12,0,0,Treatment,0.0
+CAMP_0706,CUST_449,Discount,20,SMS,2025-03-03,0,0,Treatment,0.0
+CAMP_0707,CUST_145,Loyalty Reward,10,In-App Push,2025-02-05,0,0,Treatment,0.0
+CAMP_0708,CUST_452,New Arrival,20,In-App Push,2025-04-02,0,0,Treatment,0.0
+CAMP_0709,CUST_364,Loyalty Reward,20,Email,2025-02-24,0,0,Treatment,0.0
+CAMP_0710,CUST_012,Flash Sale,0,In-App Push,2025-01-19,0,0,Treatment,0.0
+CAMP_0711,CUST_249,Discount,0,Email,2025-04-03,0,0,Treatment,0.0
+CAMP_0712,CUST_162,Discount,10,SMS,2025-02-19,0,0,Treatment,0.0
+CAMP_0713,CUST_470,Discount,50,SMS,2025-03-21,0,0,Treatment,0.0
+CAMP_0714,CUST_208,Loyalty Reward,20,SMS,2025-04-29,0,0,Treatment,0.0
+CAMP_0715,CUST_071,BOGO,0,Email,2025-04-01,0,0,Treatment,0.0
+CAMP_0716,CUST_429,Discount,0,In-App Push,2025-01-25,0,0,Treatment,0.0
+CAMP_0717,CUST_005,Loyalty Reward,20,Email,2025-01-02,0,0,Treatment,0.0
+CAMP_0718,CUST_243,Loyalty Reward,50,Email,2025-03-11,0,0,Treatment,0.0
+CAMP_0719,CUST_375,Discount,0,In-App Push,2025-01-09,0,0,Control,0.0
+CAMP_0720,CUST_045,Discount,50,In-App Push,2025-03-01,0,0,Treatment,0.0
+CAMP_0721,CUST_391,Flash Sale,30,In-App Push,2025-04-15,0,0,Treatment,0.0
+CAMP_0722,CUST_109,Loyalty Reward,30,SMS,2025-03-16,1,0,Treatment,0.0
+CAMP_0723,CUST_393,Loyalty Reward,0,Email,2025-04-23,0,0,Control,0.0
+CAMP_0724,CUST_141,Loyalty Reward,0,SMS,2025-02-05,0,0,Treatment,0.0
+CAMP_0725,CUST_024,Discount,20,Email,2025-01-03,0,0,Treatment,0.0
+CAMP_0726,CUST_371,Discount,10,In-App Push,2025-04-22,1,0,Treatment,0.0
+CAMP_0727,CUST_352,Loyalty Reward,20,In-App Push,2025-04-18,0,0,Treatment,0.0
+CAMP_0728,CUST_381,Flash Sale,30,SMS,2025-03-10,1,1,Control,11393.75
+CAMP_0729,CUST_092,Loyalty Reward,50,Email,2025-02-03,0,0,Control,0.0
+CAMP_0730,CUST_134,Seasonal Sale,50,SMS,2025-03-13,0,0,Treatment,0.0
+CAMP_0731,CUST_376,Loyalty Reward,30,SMS,2025-02-20,0,0,Treatment,0.0
+CAMP_0732,CUST_025,Discount,0,SMS,2025-04-25,0,0,Treatment,0.0
+CAMP_0733,CUST_303,BOGO,0,SMS,2025-04-22,0,0,Control,0.0
+CAMP_0734,CUST_168,Discount,0,Email,2025-01-25,0,0,Treatment,0.0
+CAMP_0735,CUST_464,Seasonal Sale,30,SMS,2025-03-09,0,0,Treatment,0.0
+CAMP_0736,CUST_076,Discount,20,In-App Push,2025-02-11,0,0,Treatment,0.0
+CAMP_0737,CUST_124,Discount,20,Email,2025-04-15,0,0,Treatment,0.0
+CAMP_0738,CUST_064,Flash Sale,30,In-App Push,2025-01-10,1,1,Control,11288.12
+CAMP_0739,CUST_319,Flash Sale,10,In-App Push,2025-01-04,0,0,Treatment,0.0
+CAMP_0740,CUST_159,Loyalty Reward,10,SMS,2025-04-28,0,0,Control,0.0
+CAMP_0741,CUST_440,Flash Sale,10,In-App Push,2025-03-15,1,0,Treatment,0.0
+CAMP_0742,CUST_190,Flash Sale,50,SMS,2025-02-10,0,0,Control,0.0
+CAMP_0743,CUST_047,Discount,10,In-App Push,2025-02-10,0,0,Treatment,0.0
+CAMP_0744,CUST_135,Loyalty Reward,0,Email,2025-01-17,0,0,Treatment,0.0
+CAMP_0745,CUST_022,Discount,50,In-App Push,2025-01-25,0,0,Treatment,0.0
+CAMP_0746,CUST_012,Flash Sale,0,In-App Push,2025-01-08,1,0,Treatment,0.0
+CAMP_0747,CUST_276,Seasonal Sale,20,In-App Push,2025-04-20,0,0,Treatment,0.0
+CAMP_0748,CUST_446,Seasonal Sale,0,Email,2025-02-18,0,0,Treatment,0.0
+CAMP_0749,CUST_263,Flash Sale,0,SMS,2025-03-30,0,0,Treatment,0.0
+CAMP_0750,CUST_425,Loyalty Reward,10,Email,2025-03-13,0,0,Treatment,0.0
+CAMP_0751,CUST_092,Loyalty Reward,30,Email,2025-03-19,0,0,Treatment,0.0
+CAMP_0752,CUST_277,Loyalty Reward,50,SMS,2025-02-28,0,0,Treatment,0.0
+CAMP_0753,CUST_166,Discount,20,SMS,2025-03-19,0,0,Treatment,0.0
+CAMP_0754,CUST_369,Discount,10,In-App Push,2025-02-08,1,0,Treatment,0.0
+CAMP_0755,CUST_269,Flash Sale,50,In-App Push,2025-03-07,1,0,Control,0.0
+CAMP_0756,CUST_281,Discount,20,In-App Push,2025-03-25,0,0,Treatment,0.0
+CAMP_0757,CUST_103,Discount,20,Email,2025-03-01,0,0,Treatment,0.0
+CAMP_0758,CUST_044,Flash Sale,10,In-App Push,2025-01-07,1,0,Treatment,0.0
+CAMP_0759,CUST_393,Loyalty Reward,30,SMS,2025-02-24,0,0,Treatment,0.0
+CAMP_0760,CUST_016,Discount,30,In-App Push,2025-04-24,0,0,Treatment,0.0
+CAMP_0761,CUST_441,Flash Sale,10,In-App Push,2025-03-08,1,0,Treatment,0.0
+CAMP_0762,CUST_113,Loyalty Reward,20,Email,2025-03-10,0,0,Treatment,0.0
+CAMP_0763,CUST_338,Loyalty Reward,30,SMS,2025-04-17,0,0,Treatment,0.0
+CAMP_0764,CUST_414,Discount,0,In-App Push,2025-01-14,0,0,Treatment,0.0
+CAMP_0765,CUST_225,BOGO,0,In-App Push,2025-01-27,0,0,Treatment,0.0
+CAMP_0766,CUST_323,Loyalty Reward,10,Email,2025-01-09,0,0,Treatment,0.0
+CAMP_0767,CUST_392,Loyalty Reward,10,Email,2025-03-17,1,1,Treatment,8513.84
+CAMP_0768,CUST_017,Flash Sale,0,Email,2025-03-31,0,0,Control,0.0
+CAMP_0769,CUST_423,Discount,50,In-App Push,2025-03-12,0,0,Treatment,0.0
+CAMP_0770,CUST_493,Flash Sale,30,Email,2025-01-05,1,0,Treatment,0.0
+CAMP_0771,CUST_316,Loyalty Reward,10,SMS,2025-02-03,1,1,Treatment,5658.04
+CAMP_0772,CUST_358,BOGO,0,SMS,2025-04-26,0,0,Treatment,0.0
+CAMP_0773,CUST_089,Loyalty Reward,20,Email,2025-03-14,0,0,Treatment,0.0
+CAMP_0774,CUST_369,Seasonal Sale,0,SMS,2025-04-03,0,0,Control,0.0
+CAMP_0775,CUST_347,Loyalty Reward,0,Email,2025-03-09,0,0,Treatment,0.0
+CAMP_0776,CUST_135,BOGO,0,SMS,2025-04-02,0,0,Treatment,0.0
+CAMP_0777,CUST_055,Flash Sale,30,Email,2025-02-01,1,0,Control,0.0
+CAMP_0778,CUST_310,Seasonal Sale,50,SMS,2025-01-11,0,0,Control,0.0
+CAMP_0779,CUST_168,Discount,50,Email,2025-04-12,0,0,Treatment,0.0
+CAMP_0780,CUST_390,Seasonal Sale,0,Email,2025-02-28,0,0,Treatment,0.0
+CAMP_0781,CUST_474,BOGO,0,Email,2025-03-05,0,0,Treatment,0.0
+CAMP_0782,CUST_017,Discount,0,In-App Push,2025-02-14,1,0,Treatment,0.0
+CAMP_0783,CUST_241,Loyalty Reward,20,SMS,2025-03-14,0,0,Treatment,0.0
+CAMP_0784,CUST_032,Discount,30,Email,2025-01-09,0,0,Treatment,0.0
+CAMP_0785,CUST_290,Loyalty Reward,20,Email,2025-04-11,0,0,Treatment,0.0
+CAMP_0786,CUST_319,Flash Sale,50,Email,2025-01-28,1,0,Treatment,0.0
+CAMP_0787,CUST_136,BOGO,0,In-App Push,2025-03-11,0,0,Treatment,0.0
+CAMP_0788,CUST_422,Seasonal Sale,50,Email,2025-03-19,0,0,Treatment,0.0
+CAMP_0789,CUST_023,Flash Sale,20,In-App Push,2025-01-04,1,0,Treatment,0.0
+CAMP_0790,CUST_386,Discount,30,Email,2025-03-03,1,0,Control,0.0
+CAMP_0791,CUST_492,Discount,10,Email,2025-02-23,0,0,Treatment,0.0
+CAMP_0792,CUST_419,Flash Sale,30,Email,2025-01-04,1,0,Treatment,0.0
+CAMP_0793,CUST_099,Loyalty Reward,20,In-App Push,2025-01-24,0,0,Treatment,0.0
+CAMP_0794,CUST_284,Discount,50,Email,2025-02-06,0,0,Treatment,0.0
+CAMP_0795,CUST_213,Discount,20,SMS,2025-01-02,0,0,Treatment,0.0
+CAMP_0796,CUST_277,Loyalty Reward,0,SMS,2025-04-07,0,0,Treatment,0.0
+CAMP_0797,CUST_093,Flash Sale,20,Email,2025-02-11,0,0,Treatment,0.0
+CAMP_0798,CUST_080,Flash Sale,20,Email,2025-02-06,0,0,Treatment,0.0
+CAMP_0799,CUST_390,Flash Sale,0,SMS,2025-01-31,0,0,Treatment,0.0
+CAMP_0800,CUST_246,BOGO,0,Email,2025-01-07,0,0,Treatment,0.0
+CAMP_0801,CUST_318,Seasonal Sale,50,SMS,2025-04-20,1,0,Treatment,0.0
+CAMP_0802,CUST_190,Discount,0,SMS,2025-03-05,0,0,Treatment,0.0
+CAMP_0803,CUST_358,Loyalty Reward,30,In-App Push,2025-04-24,0,0,Treatment,0.0
+CAMP_0804,CUST_220,Discount,50,Email,2025-03-17,0,0,Treatment,0.0
+CAMP_0805,CUST_457,Loyalty Reward,10,Email,2025-03-27,0,0,Treatment,0.0
+CAMP_0806,CUST_076,Loyalty Reward,0,SMS,2025-03-31,0,0,Treatment,0.0
+CAMP_0807,CUST_316,Seasonal Sale,20,SMS,2025-04-10,0,0,Treatment,0.0
+CAMP_0808,CUST_351,Loyalty Reward,10,Email,2025-03-13,0,0,Treatment,0.0
+CAMP_0809,CUST_298,Loyalty Reward,10,Email,2025-04-24,0,0,Treatment,0.0
+CAMP_0810,CUST_406,Discount,30,SMS,2025-04-14,1,0,Treatment,0.0
+CAMP_0811,CUST_459,Discount,10,Email,2025-01-24,0,0,Treatment,0.0
+CAMP_0812,CUST_287,Discount,30,In-App Push,2025-02-11,0,0,Treatment,0.0
+CAMP_0813,CUST_097,Loyalty Reward,0,SMS,2025-03-23,0,0,Treatment,0.0
+CAMP_0814,CUST_237,Loyalty Reward,50,In-App Push,2025-01-28,0,0,Control,0.0
+CAMP_0815,CUST_379,Discount,30,Email,2025-04-16,0,0,Treatment,0.0
+CAMP_0816,CUST_137,Flash Sale,20,Email,2025-01-22,0,0,Treatment,0.0
+CAMP_0817,CUST_432,Loyalty Reward,20,SMS,2025-02-03,0,0,Treatment,0.0
+CAMP_0818,CUST_320,Flash Sale,30,In-App Push,2025-03-17,0,0,Treatment,0.0
+CAMP_0819,CUST_195,Flash Sale,20,In-App Push,2025-01-09,0,0,Treatment,0.0
+CAMP_0820,CUST_021,Discount,50,SMS,2025-01-30,0,0,Treatment,0.0
+CAMP_0821,CUST_445,Loyalty Reward,0,SMS,2025-01-05,0,0,Treatment,0.0
+CAMP_0822,CUST_203,Flash Sale,30,SMS,2025-04-29,1,1,Treatment,6523.02
+CAMP_0823,CUST_298,Loyalty Reward,50,SMS,2025-02-06,0,0,Treatment,0.0
+CAMP_0824,CUST_460,Flash Sale,50,SMS,2025-04-23,1,0,Treatment,0.0
+CAMP_0825,CUST_483,BOGO,0,Email,2025-04-08,0,0,Treatment,0.0
+CAMP_0826,CUST_011,New Arrival,50,Email,2025-02-10,0,0,Control,0.0
+CAMP_0827,CUST_202,Discount,20,Email,2025-04-02,0,0,Control,0.0
+CAMP_0828,CUST_021,Discount,20,In-App Push,2025-02-04,1,0,Treatment,0.0
+CAMP_0829,CUST_239,Flash Sale,10,Email,2025-04-12,0,0,Treatment,0.0
+CAMP_0830,CUST_039,BOGO,0,SMS,2025-02-05,0,0,Treatment,0.0
+CAMP_0831,CUST_189,Loyalty Reward,30,SMS,2025-01-01,0,0,Treatment,0.0
+CAMP_0832,CUST_099,Discount,20,Email,2025-01-29,0,0,Treatment,0.0
+CAMP_0833,CUST_413,Flash Sale,20,In-App Push,2025-04-23,0,0,Treatment,0.0
+CAMP_0834,CUST_083,Discount,0,In-App Push,2025-04-06,0,0,Treatment,0.0
+CAMP_0835,CUST_446,Loyalty Reward,30,In-App Push,2025-03-13,0,0,Treatment,0.0
+CAMP_0836,CUST_328,Discount,50,SMS,2025-02-04,0,0,Treatment,0.0
+CAMP_0837,CUST_027,Loyalty Reward,30,Email,2025-03-04,0,0,Control,0.0
+CAMP_0838,CUST_230,Discount,50,In-App Push,2025-03-25,0,0,Treatment,0.0
+CAMP_0839,CUST_009,Loyalty Reward,50,Email,2025-03-02,0,0,Treatment,0.0
+CAMP_0840,CUST_248,Discount,50,In-App Push,2025-03-15,0,0,Treatment,0.0
+CAMP_0841,CUST_199,BOGO,0,SMS,2025-04-26,0,0,Treatment,0.0
+CAMP_0842,CUST_345,BOGO,0,Email,2025-02-03,0,0,Treatment,0.0
+CAMP_0843,CUST_278,Flash Sale,30,In-App Push,2025-02-11,0,0,Treatment,0.0
+CAMP_0844,CUST_352,Loyalty Reward,0,In-App Push,2025-04-11,0,0,Treatment,0.0
+CAMP_0845,CUST_149,Discount,0,SMS,2025-02-15,0,0,Treatment,0.0
+CAMP_0846,CUST_224,Discount,10,SMS,2025-04-04,0,0,Control,0.0
+CAMP_0847,CUST_002,Loyalty Reward,30,Email,2025-04-03,0,0,Treatment,0.0
+CAMP_0848,CUST_172,Loyalty Reward,0,Email,2025-01-16,0,0,Control,0.0
+CAMP_0849,CUST_494,Flash Sale,30,Email,2025-04-07,1,0,Treatment,0.0
+CAMP_0850,CUST_203,Flash Sale,50,In-App Push,2025-04-09,1,0,Treatment,0.0
+CAMP_0851,CUST_277,BOGO,0,SMS,2025-02-13,0,0,Treatment,0.0
+CAMP_0852,CUST_203,Discount,30,SMS,2025-01-09,0,0,Treatment,0.0
+CAMP_0853,CUST_390,Discount,20,SMS,2025-02-12,0,0,Treatment,0.0
+CAMP_0854,CUST_048,Discount,50,In-App Push,2025-04-22,0,0,Treatment,0.0
+CAMP_0855,CUST_084,Loyalty Reward,30,Email,2025-03-08,0,0,Treatment,0.0
+CAMP_0856,CUST_065,Discount,30,SMS,2025-01-16,0,0,Treatment,0.0
+CAMP_0857,CUST_377,Discount,0,In-App Push,2025-02-18,0,0,Control,0.0
+CAMP_0858,CUST_262,Flash Sale,20,SMS,2025-01-18,0,0,Treatment,0.0
+CAMP_0859,CUST_121,Loyalty Reward,10,Email,2025-03-31,0,0,Treatment,0.0
+CAMP_0860,CUST_044,Flash Sale,20,SMS,2025-02-11,1,0,Control,0.0
+CAMP_0861,CUST_041,Loyalty Reward,50,SMS,2025-03-16,0,0,Treatment,0.0
+CAMP_0862,CUST_214,Loyalty Reward,30,In-App Push,2025-03-15,0,0,Treatment,0.0
+CAMP_0863,CUST_405,Loyalty Reward,30,SMS,2025-04-04,0,0,Treatment,0.0
+CAMP_0864,CUST_045,Loyalty Reward,50,In-App Push,2025-04-20,0,0,Treatment,0.0
+CAMP_0865,CUST_030,Loyalty Reward,30,SMS,2025-03-20,0,0,Control,0.0
+CAMP_0866,CUST_319,Flash Sale,30,SMS,2025-01-04,1,0,Treatment,0.0
+CAMP_0867,CUST_496,Loyalty Reward,0,In-App Push,2025-04-04,0,0,Treatment,0.0
+CAMP_0868,CUST_117,Flash Sale,10,Email,2025-02-01,0,0,Treatment,0.0
+CAMP_0869,CUST_202,Discount,20,Email,2025-03-02,1,0,Treatment,0.0
+CAMP_0870,CUST_424,Discount,50,Email,2025-03-04,0,0,Treatment,0.0
+CAMP_0871,CUST_196,Flash Sale,30,In-App Push,2025-03-25,1,0,Treatment,0.0
+CAMP_0872,CUST_460,New Arrival,50,Email,2025-02-16,0,0,Control,0.0
+CAMP_0873,CUST_422,Discount,0,Email,2025-03-07,0,0,Treatment,0.0
+CAMP_0874,CUST_124,New Arrival,20,In-App Push,2025-04-12,0,0,Control,0.0
+CAMP_0875,CUST_392,Loyalty Reward,20,In-App Push,2025-03-06,0,0,Treatment,0.0
+CAMP_0876,CUST_171,Flash Sale,50,Email,2025-01-15,1,1,Treatment,9284.49
+CAMP_0877,CUST_309,Discount,50,SMS,2025-03-16,1,0,Treatment,0.0
+CAMP_0878,CUST_032,Discount,30,SMS,2025-04-12,0,0,Treatment,0.0
+CAMP_0879,CUST_414,Discount,20,In-App Push,2025-02-06,0,0,Treatment,0.0
+CAMP_0880,CUST_192,Discount,30,SMS,2025-03-31,0,0,Control,0.0
+CAMP_0881,CUST_365,Loyalty Reward,50,Email,2025-02-19,0,0,Treatment,0.0
+CAMP_0882,CUST_336,BOGO,0,SMS,2025-04-16,0,0,Treatment,0.0
+CAMP_0883,CUST_244,Loyalty Reward,20,SMS,2025-04-14,0,0,Treatment,0.0
+CAMP_0884,CUST_495,Loyalty Reward,50,In-App Push,2025-01-28,0,0,Treatment,0.0
+CAMP_0885,CUST_203,Discount,50,In-App Push,2025-04-30,1,1,Treatment,8425.27
+CAMP_0886,CUST_214,Loyalty Reward,20,In-App Push,2025-01-27,0,0,Treatment,0.0
+CAMP_0887,CUST_172,Loyalty Reward,20,SMS,2025-02-02,0,0,Treatment,0.0
+CAMP_0888,CUST_200,Flash Sale,10,SMS,2025-02-04,0,0,Treatment,0.0
+CAMP_0889,CUST_463,Loyalty Reward,50,In-App Push,2025-03-13,0,0,Treatment,0.0
+CAMP_0890,CUST_055,Flash Sale,0,In-App Push,2025-03-30,0,0,Treatment,0.0
+CAMP_0891,CUST_297,Loyalty Reward,30,SMS,2025-01-03,0,0,Treatment,0.0
+CAMP_0892,CUST_352,Seasonal Sale,30,Email,2025-01-10,0,0,Treatment,0.0
+CAMP_0893,CUST_210,Loyalty Reward,30,SMS,2025-01-10,0,0,Treatment,0.0
+CAMP_0894,CUST_096,Discount,20,In-App Push,2025-03-07,1,1,Treatment,11917.56
+CAMP_0895,CUST_224,Loyalty Reward,50,Email,2025-03-01,0,0,Treatment,0.0
+CAMP_0896,CUST_352,Loyalty Reward,10,Email,2025-03-08,0,0,Treatment,0.0
+CAMP_0897,CUST_176,Flash Sale,30,In-App Push,2025-01-23,0,0,Treatment,0.0
+CAMP_0898,CUST_298,Discount,30,In-App Push,2025-01-01,0,0,Treatment,0.0
+CAMP_0899,CUST_132,Loyalty Reward,0,SMS,2025-01-22,0,0,Treatment,0.0
+CAMP_0900,CUST_106,Loyalty Reward,20,In-App Push,2025-02-11,0,0,Treatment,0.0
+CAMP_0901,CUST_176,Discount,10,In-App Push,2025-03-30,1,0,Treatment,0.0
+CAMP_0902,CUST_462,Loyalty Reward,50,Email,2025-01-02,0,0,Treatment,0.0
+CAMP_0903,CUST_120,Loyalty Reward,30,SMS,2025-04-06,0,0,Treatment,0.0
+CAMP_0904,CUST_444,Flash Sale,20,In-App Push,2025-01-25,0,0,Treatment,0.0
+CAMP_0905,CUST_398,Loyalty Reward,0,Email,2025-03-20,0,0,Treatment,0.0
+CAMP_0906,CUST_353,Loyalty Reward,0,Email,2025-03-22,0,0,Treatment,0.0
+CAMP_0907,CUST_299,Loyalty Reward,0,SMS,2025-02-21,0,0,Treatment,0.0
+CAMP_0908,CUST_131,Discount,0,SMS,2025-03-06,0,0,Treatment,0.0
+CAMP_0909,CUST_051,Loyalty Reward,0,Email,2025-02-07,0,0,Treatment,0.0
+CAMP_0910,CUST_453,Flash Sale,50,Email,2025-01-11,0,0,Treatment,0.0
+CAMP_0911,CUST_223,Discount,20,In-App Push,2025-01-10,0,0,Treatment,0.0
+CAMP_0912,CUST_247,Loyalty Reward,20,SMS,2025-02-25,0,0,Treatment,0.0
+CAMP_0913,CUST_442,Seasonal Sale,20,In-App Push,2025-04-11,0,0,Treatment,0.0
+CAMP_0914,CUST_261,Loyalty Reward,30,Email,2025-03-05,0,0,Treatment,0.0
+CAMP_0915,CUST_163,Discount,20,SMS,2025-02-04,0,0,Treatment,0.0
+CAMP_0916,CUST_250,Discount,0,In-App Push,2025-01-17,0,0,Treatment,0.0
+CAMP_0917,CUST_197,Loyalty Reward,30,In-App Push,2025-02-19,0,0,Treatment,0.0
+CAMP_0918,CUST_053,BOGO,0,In-App Push,2025-04-19,0,0,Treatment,0.0
+CAMP_0919,CUST_459,Discount,10,SMS,2025-01-20,0,0,Treatment,0.0
+CAMP_0920,CUST_066,Discount,0,SMS,2025-04-14,0,0,Treatment,0.0
+CAMP_0921,CUST_407,Discount,10,Email,2025-02-04,0,0,Control,0.0
+CAMP_0922,CUST_433,Loyalty Reward,30,In-App Push,2025-03-26,1,1,Treatment,12931.11
+CAMP_0923,CUST_182,Loyalty Reward,0,In-App Push,2025-04-27,0,0,Treatment,0.0
+CAMP_0924,CUST_215,Flash Sale,0,In-App Push,2025-04-13,0,0,Treatment,0.0
+CAMP_0925,CUST_401,Discount,20,Email,2025-04-07,0,0,Treatment,0.0
+CAMP_0926,CUST_381,Discount,10,SMS,2025-02-12,0,0,Treatment,0.0
+CAMP_0927,CUST_162,Flash Sale,0,In-App Push,2025-03-21,0,0,Treatment,0.0
+CAMP_0928,CUST_384,Flash Sale,0,In-App Push,2025-03-03,1,0,Treatment,0.0
+CAMP_0929,CUST_102,Flash Sale,50,In-App Push,2025-04-07,0,0,Treatment,0.0
+CAMP_0930,CUST_181,Seasonal Sale,20,Email,2025-03-11,0,0,Treatment,0.0
+CAMP_0931,CUST_301,Flash Sale,0,SMS,2025-04-02,0,0,Treatment,0.0
+CAMP_0932,CUST_338,Loyalty Reward,0,SMS,2025-02-04,0,0,Treatment,0.0
+CAMP_0933,CUST_401,Discount,0,SMS,2025-03-03,0,0,Treatment,0.0
+CAMP_0934,CUST_300,Discount,20,In-App Push,2025-01-26,1,0,Treatment,0.0
+CAMP_0935,CUST_154,Loyalty Reward,0,SMS,2025-01-17,0,0,Treatment,0.0
+CAMP_0936,CUST_160,Discount,0,Email,2025-01-31,1,0,Treatment,0.0
+CAMP_0937,CUST_198,Flash Sale,20,In-App Push,2025-03-21,0,0,Control,0.0
+CAMP_0938,CUST_444,Discount,10,SMS,2025-03-24,0,0,Treatment,0.0
+CAMP_0939,CUST_134,Flash Sale,30,SMS,2025-01-07,1,0,Treatment,0.0
+CAMP_0940,CUST_468,BOGO,0,In-App Push,2025-01-05,0,0,Treatment,0.0
+CAMP_0941,CUST_421,Discount,10,SMS,2025-02-13,0,0,Treatment,0.0
+CAMP_0942,CUST_263,Discount,0,SMS,2025-01-27,1,0,Treatment,0.0
+CAMP_0943,CUST_084,Loyalty Reward,30,In-App Push,2025-01-23,0,0,Treatment,0.0
+CAMP_0944,CUST_169,Flash Sale,20,In-App Push,2025-02-05,1,0,Treatment,0.0
+CAMP_0945,CUST_056,Seasonal Sale,20,Email,2025-03-09,0,0,Treatment,0.0
+CAMP_0946,CUST_158,Loyalty Reward,10,In-App Push,2025-01-16,0,0,Control,0.0
+CAMP_0947,CUST_041,Loyalty Reward,30,In-App Push,2025-03-17,0,0,Treatment,0.0
+CAMP_0948,CUST_055,Seasonal Sale,50,In-App Push,2025-02-01,0,0,Treatment,0.0
+CAMP_0949,CUST_256,Flash Sale,50,Email,2025-03-22,0,0,Control,0.0
+CAMP_0950,CUST_225,BOGO,0,Email,2025-04-22,0,0,Treatment,0.0
+CAMP_0951,CUST_036,Flash Sale,50,SMS,2025-03-27,0,0,Treatment,0.0
+CAMP_0952,CUST_069,Loyalty Reward,20,SMS,2025-01-28,0,0,Treatment,0.0
+CAMP_0953,CUST_364,Loyalty Reward,0,In-App Push,2025-02-02,0,0,Treatment,0.0
+CAMP_0954,CUST_249,Flash Sale,20,SMS,2025-01-16,0,0,Treatment,0.0
+CAMP_0955,CUST_292,Loyalty Reward,0,SMS,2025-01-24,0,0,Treatment,0.0
+CAMP_0956,CUST_278,BOGO,0,In-App Push,2025-03-23,0,0,Control,0.0
+CAMP_0957,CUST_318,Flash Sale,20,SMS,2025-04-12,0,0,Control,0.0
+CAMP_0958,CUST_393,Loyalty Reward,20,SMS,2025-02-08,0,0,Treatment,0.0
+CAMP_0959,CUST_439,Loyalty Reward,10,SMS,2025-02-13,0,0,Treatment,0.0
+CAMP_0960,CUST_208,Loyalty Reward,50,In-App Push,2025-01-14,0,0,Treatment,0.0
+CAMP_0961,CUST_238,BOGO,0,Email,2025-03-28,0,0,Treatment,0.0
+CAMP_0962,CUST_021,BOGO,0,Email,2025-04-11,1,0,Treatment,0.0
+CAMP_0963,CUST_175,Flash Sale,50,Email,2025-02-15,1,0,Control,0.0
+CAMP_0964,CUST_277,Loyalty Reward,10,In-App Push,2025-01-12,0,0,Treatment,0.0
+CAMP_0965,CUST_397,Loyalty Reward,10,Email,2025-02-25,0,0,Control,0.0
+CAMP_0966,CUST_145,Loyalty Reward,20,SMS,2025-02-12,0,0,Treatment,0.0
+CAMP_0967,CUST_477,Discount,50,In-App Push,2025-04-13,0,0,Treatment,0.0
+CAMP_0968,CUST_273,Flash Sale,0,In-App Push,2025-04-05,1,0,Treatment,0.0
+CAMP_0969,CUST_450,New Arrival,0,Email,2025-03-22,0,0,Treatment,0.0
+CAMP_0970,CUST_035,Flash Sale,0,SMS,2025-03-08,1,0,Control,0.0
+CAMP_0971,CUST_069,Loyalty Reward,50,SMS,2025-02-09,0,0,Treatment,0.0
+CAMP_0972,CUST_295,Loyalty Reward,10,Email,2025-04-30,0,0,Treatment,0.0
+CAMP_0973,CUST_103,Discount,20,Email,2025-02-21,1,0,Treatment,0.0
+CAMP_0974,CUST_133,Loyalty Reward,30,SMS,2025-02-20,0,0,Control,0.0
+CAMP_0975,CUST_202,New Arrival,20,In-App Push,2025-02-04,0,0,Treatment,0.0
+CAMP_0976,CUST_245,Loyalty Reward,10,In-App Push,2025-02-10,0,0,Treatment,0.0
+CAMP_0977,CUST_446,Loyalty Reward,50,Email,2025-03-27,1,1,Treatment,10777.76
+CAMP_0978,CUST_034,Discount,20,In-App Push,2025-04-08,0,0,Treatment,0.0
+CAMP_0979,CUST_097,Discount,10,SMS,2025-01-10,0,0,Control,0.0
+CAMP_0980,CUST_174,Discount,10,Email,2025-02-05,1,0,Treatment,0.0
+CAMP_0981,CUST_221,Loyalty Reward,30,SMS,2025-04-20,0,0,Control,0.0
+CAMP_0982,CUST_399,New Arrival,50,SMS,2025-01-06,0,0,Control,0.0
+CAMP_0983,CUST_062,Loyalty Reward,30,SMS,2025-01-08,0,0,Treatment,0.0
+CAMP_0984,CUST_331,Discount,30,SMS,2025-02-28,0,0,Treatment,0.0
+CAMP_0985,CUST_122,Loyalty Reward,30,Email,2025-04-10,0,0,Treatment,0.0
+CAMP_0986,CUST_229,Seasonal Sale,10,SMS,2025-03-13,0,0,Treatment,0.0
+CAMP_0987,CUST_480,Loyalty Reward,10,In-App Push,2025-02-07,0,0,Control,0.0
+CAMP_0988,CUST_189,Loyalty Reward,20,In-App Push,2025-04-25,0,0,Treatment,0.0
+CAMP_0989,CUST_444,New Arrival,30,Email,2025-04-14,1,1,Control,12141.6
+CAMP_0990,CUST_012,Discount,10,SMS,2025-01-21,0,0,Treatment,0.0
+CAMP_0991,CUST_249,Discount,50,Email,2025-03-25,0,0,Treatment,0.0
+CAMP_0992,CUST_176,Loyalty Reward,20,In-App Push,2025-04-04,0,0,Control,0.0
+CAMP_0993,CUST_010,Seasonal Sale,0,In-App Push,2025-02-24,1,1,Control,9850.69
+CAMP_0994,CUST_469,Discount,0,In-App Push,2025-03-02,1,0,Treatment,0.0
+CAMP_0995,CUST_052,Loyalty Reward,10,In-App Push,2025-02-07,0,0,Treatment,0.0
+CAMP_0996,CUST_374,Discount,20,SMS,2025-04-23,0,0,Control,0.0
+CAMP_0997,CUST_334,Loyalty Reward,0,SMS,2025-03-14,0,0,Treatment,0.0
+CAMP_0998,CUST_055,Flash Sale,20,SMS,2025-02-11,1,1,Treatment,3212.03
+CAMP_0999,CUST_363,Loyalty Reward,0,Email,2025-03-04,0,0,Treatment,0.0
+CAMP_1000,CUST_038,Loyalty Reward,0,Email,2025-04-27,0,0,Treatment,0.0

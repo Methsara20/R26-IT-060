@@ -32,6 +32,15 @@ from app.routes import weather_routes
 from app.routes import decision_workflow_routes
 from app.routes.marketing_opportunity_routes import router as marketing_opportunity_router
 
+# Merged backend2 routes
+from app.routes import kpi_routes
+from app.routes import recommend_routes
+from app.routes import poster_routes
+from app.routes import calendar_routes
+from app.routes import customer_routes
+from app.routes import upload_routes
+from app.routes import report_routes
+
 app = FastAPI()
 
 from fastapi import Request
@@ -74,6 +83,16 @@ app.include_router(chat_router)
 app.include_router(weather_routes.router)
 app.include_router(decision_workflow_routes.router)
 app.include_router(marketing_opportunity_router)
+
+# Merged backend2 routers
+app.include_router(kpi_routes.router)
+app.include_router(recommend_routes.router)
+app.include_router(poster_routes.router)
+app.include_router(calendar_routes.router)
+app.include_router(customer_routes.router)
+app.include_router(upload_routes.router)
+app.include_router(report_routes.router)
+
 app.mount("/generated", StaticFiles(directory="generated"), name="generated")
 
 
