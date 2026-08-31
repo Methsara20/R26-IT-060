@@ -11,6 +11,12 @@ load_dotenv()
 GEMINI_API_KEY2 = os.getenv("GEMINI_API_KEY2")
 LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "skyhigh_logo.png")
 
+def _get_db():
+    import os
+    from app.mongo_client import MongoFirestoreClient
+    return MongoFirestoreClient(os.getenv("MONGODB_URI"))
+
+
 _client = None
 
 
@@ -269,10 +275,9 @@ def save_generation_to_history(config: dict) -> str | None:
     to stay well within Firestore's 1MB per-document limit and keep
     quota usage light). Returns the new document ID, or None on failure.
     """
-    from app.config.firebase_config import get_db
     from datetime import datetime
 
-    db = get_db()
+    db = _get_db()
     if not db:
         return None
     try:
@@ -288,9 +293,7 @@ def save_generation_to_history(config: dict) -> str | None:
 
 
 def get_generation_history(limit: int = 50) -> list[dict]:
-    from app.config.firebase_config import get_db
-
-    db = get_db()
+    db = _get_db()
     if not db:
         return []
     try:
@@ -320,10 +323,9 @@ def save_scheduled_post(
     the Scheduled Posts list), since there's no always-on backend to fire
     this automatically at the exact scheduled time.
     """
-    from app.config.firebase_config import get_db
     from datetime import datetime
 
-    db = get_db()
+    db = _get_db()
     if not db:
         return None
     try:
@@ -351,9 +353,7 @@ def get_scheduled_posts(status: str = None) -> list[dict]:
     for the list view) — use get_scheduled_post_by_id for the full record
     including the image, when actually sending.
     """
-    from app.config.firebase_config import get_db
-
-    db = get_db()
+    db = _get_db()
     if not db:
         return []
     try:
@@ -380,9 +380,7 @@ def get_scheduled_posts(status: str = None) -> list[dict]:
 
 
 def get_scheduled_post_by_id(post_id: str) -> dict | None:
-    from app.config.firebase_config import get_db
-
-    db = get_db()
+    db = _get_db()
     if not db:
         return None
     try:
@@ -396,10 +394,9 @@ def get_scheduled_post_by_id(post_id: str) -> dict | None:
 
 
 def mark_scheduled_post_sent(post_id: str) -> bool:
-    from app.config.firebase_config import get_db
     from datetime import datetime
 
-    db = get_db()
+    db = _get_db()
     if not db:
         return False
     try:

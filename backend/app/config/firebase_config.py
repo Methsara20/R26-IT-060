@@ -2,7 +2,7 @@ import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-FIREBASE_KEY_PATH = "firebase-key.json"
+FIREBASE_KEY_PATH = "firebase_key.json"
 SHARED_FIREBASE_KEY_PATH = "shared-firebase-key.json"
 SHARED_APP_NAME = "shared_inventory_project"
 

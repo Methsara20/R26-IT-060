@@ -807,13 +807,18 @@ class _PosterScreenState extends State<PosterScreen> {
   }
 
   Widget _dropdown(String label, String value, List<String> options, void Function(String?) onChanged) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dropColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
+    final textColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: DropdownButtonFormField<String>(
         initialValue: value,
         isExpanded: true,
+        dropdownColor: dropColor,
         decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
-        items: options.map((o) => DropdownMenuItem(value: o, child: Text(o, overflow: TextOverflow.ellipsis))).toList(),
+        items: options.map((o) => DropdownMenuItem(value: o, child: Text(o, overflow: TextOverflow.ellipsis, style: TextStyle(color: textColor)))).toList(),
         onChanged: onChanged,
       ),
     );

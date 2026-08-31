@@ -243,14 +243,49 @@ class _CustomerIntelligenceScreenState extends State<CustomerIntelligenceScreen>
             ),
 
             const SizedBox(height: 24),
-            const Text('Top 10 Highest-Intent Customers', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            if (data?['top_intent_customers'] != null) _buildCustomerTable(data!['top_intent_customers'], showIntent: true),
-
-            const SizedBox(height: 24),
-            const Text('Top Customers by Value', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            if (data?['top_customers_by_value'] != null) _buildCustomerTable(data!['top_customers_by_value'], showSpend: true),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 900;
+                
+                final intentTable = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Top 10 Highest-Intent Customers', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    const SizedBox(height: 8),
+                    if (data?['top_intent_customers'] != null) _buildCustomerTable(data!['top_intent_customers'], showIntent: true),
+                  ],
+                );
+                
+                final valueTable = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Top Customers by Value', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    const SizedBox(height: 8),
+                    if (data?['top_customers_by_value'] != null) _buildCustomerTable(data!['top_customers_by_value'], showSpend: true),
+                  ],
+                );
+                
+                if (isWide) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: intentTable),
+                      const SizedBox(width: 24),
+                      Expanded(child: valueTable),
+                    ],
+                  );
+                } else {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      intentTable,
+                      const SizedBox(height: 24),
+                      valueTable,
+                    ],
+                  );
+                }
+              },
+            ),
           ],
         ),
       ),
