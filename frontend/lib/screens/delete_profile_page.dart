@@ -46,8 +46,9 @@ class _DeleteProfilePageState extends State<DeleteProfilePage> with SingleTicker
 
     try {
       await ApiService.deleteProfile(widget.profileId);
-      widget.onDeleted();
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        widget.onDeleted();
+      }
     } catch (e) {
       if (mounted) setState(() => message = e.toString());
     }

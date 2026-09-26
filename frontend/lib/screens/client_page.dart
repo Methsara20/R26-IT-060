@@ -97,7 +97,11 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
         ),
       );
     } catch (e) {
-      setState(() => resultMessage = e.toString());
+      String msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+      if (msg.contains('ClientException') || msg.contains('Failed to fetch')) {
+        msg = "Unable to connect to backend (https://r26-it-060.onrender.com).\nIf the backend server was sleeping (Render Free Tier), please wait 30 seconds and try again.";
+      }
+      setState(() => resultMessage = msg);
     }
 
     if (mounted) {
@@ -106,14 +110,20 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
   }
 
   Future<void> loginWithGoogle() async {
-    setState(() => isLoading = true);
-    setState(() => resultMessage = "");
+    setState(() {
+      isLoading = true;
+      resultMessage = "";
+    });
 
     try {
       final idToken = await AuthService.signInWithGoogle();
-      if (idToken == null) {
-        setState(() => isLoading = false);
-        return; // User cancelled
+      if (idToken == null || idToken.isEmpty) {
+        if (mounted) {
+          setState(() {
+            resultMessage = "Google Sign-In returned no authentication token. Please try again.";
+          });
+        }
+        return;
       }
 
       final result = await ApiService.googleLogin(idToken);
@@ -125,30 +135,37 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
         final setupResult = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => GoogleSetupPage(email: result["email"]),
+            builder: (_) => GoogleSetupPage(email: result["email"] ?? ""),
           ),
         );
 
         if (setupResult != null && setupResult is Map<String, dynamic> && mounted) {
+          final customerEmail = setupResult["email"] ?? result["email"] ?? "";
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (_) => CustomerMainPage(
-                customerEmail: setupResult["email"],
+                customerEmail: customerEmail,
                 recommendedSize: setupResult["recommended_size"],
                 profileId: setupResult["profile_id"],
                 bodyMeasurements: setupResult["body_measurements"],
               ),
             ),
           );
+        } else if (mounted) {
+          setState(() => resultMessage = "Please complete setup details to finish signing in.");
         }
       } else {
         // Existing user, log them straight in
+        final userEmail = (result["email"] ?? "") as String;
+        if (userEmail.isEmpty) {
+          throw Exception("Login succeeded but account email was missing.");
+        }
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => CustomerMainPage(
-              customerEmail: result["email"],
+              customerEmail: userEmail,
               recommendedSize: result["recommended_size"],
               profileId: result["profile_id"],
               bodyMeasurements: result["body_measurements"],
@@ -157,11 +174,17 @@ class _ClientPageState extends State<ClientPage> with SingleTickerProviderStateM
         );
       }
     } catch (e) {
-      setState(() => resultMessage = e.toString());
-    }
-
-    if (mounted) {
-      setState(() => isLoading = false);
+      String msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+      if (msg.contains('ClientException') || msg.contains('Failed to fetch')) {
+        msg = "Unable to connect to backend (https://r26-it-060.onrender.com).\nIf the backend server was sleeping (Render Free Tier), please wait 30 seconds and try again.";
+      }
+      if (mounted) {
+        setState(() => resultMessage = msg);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 

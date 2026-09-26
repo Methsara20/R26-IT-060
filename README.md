@@ -1,16 +1,16 @@
-# AI-Driven Smart Retail Intelligence System
-
----
+# AI-Driven Smart Fashion Retail System
 
 ## Project Overview
 
-This project aims to develop an **AI-driven smart retail system** that enhances customer experience, optimizes inventory management, and improves marketing effectiveness using data analytics, machine learning, and intelligent decision support.
+The **AI-Driven Smart Fashion Retail System** is an integrated intelligent retail platform designed to improve operational efficiency and customer experience in multi-store fashion retail environments.
+
+The system combines four AI-driven components within a unified architecture:
 
 The system integrates multiple AI components into a **single unified platform** to support real-time retail decision-making, bridging the gap between digital convenience and physical retail shopping.
 
 ---
 
-## Objectives
+## Research Objectives
 
 - Analyze customer behaviour using high-frequency GPS-based tracking.
 - Provide a photorealistic virtual try-on experience and AI-driven size recommendations.
@@ -126,10 +126,61 @@ Currently in **Implementation & Testing Phase**
 
 ## Team Members
 
-- IT22146588  
-- IT22244598  
-- IT22284952
-- IT22243812
+* IT22146588
+* IT22244598
+* IT22284952
+* IT22243812
+
+---
+
+## Research Contribution
+
+The main contribution of this research is an integrated **AI-Driven Smart Fashion Retail System** that connects customer-facing intelligence with operational retail decision-making.
+
+The platform integrates:
+
+* Demand forecasting
+* Inventory intelligence
+* Stock-flow optimization
+* Personalized marketing
+* Generative promotional content
+* Virtual try-on
+* Brand-specific size recommendation
+* Customer behavior tracking
+* Real-time staff assistance
+
+within a unified smart retail architecture.
+
+---
+
+## Limitations
+
+* Some datasets are simulated or prepared rather than collected entirely from live retail operations
+* Model performance depends on data quality and completeness
+* Logistics calculations use simplified assumptions
+* Virtual try-on quality may vary with pose, image quality, and garment complexity
+* Size recommendations are affected by brands represented in the training data
+* Indoor GPS accuracy may vary depending on environment and device
+* Continuous GPS tracking may increase battery consumption
+* Some operational decisions require human approval
+
+---
+
+## Future Work
+
+Future improvements include:
+
+* Real-time POS integration
+* Live traffic and logistics information
+* Hybrid forecasting models
+* Larger real-world retail datasets
+* Continuous model retraining
+* Improved indoor-positioning technologies
+* Fine-tuned generative models for virtual try-on
+* Larger brand-specific sizing datasets
+* Real-world multi-store deployment
+* Large-scale user evaluation
+* Adaptive and continuously learning AI models
 
 ---
 

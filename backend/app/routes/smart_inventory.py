@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from app.schemas.prediction_schema import SimplePredictionRequest
 from app.schemas.chat_schema import ChatRequest
-from app.services.data_service import build_payload, enrich_with_forecast, get_product_store_info
-from app.services.predictor import predict_demand
-from app.services.decision_engine import make_decision
-from app.services.explanation_service import generate_explanation
-from app.services.chat_service import handle_chat
+from app.services.smart_inventory_data_service import build_payload, enrich_with_forecast, get_product_store_info
+from app.services.smart_inventory_predictor import predict_demand
+from app.services.smart_inventory_decision_engine import make_decision
+from app.services.smart_inventory_explanation_service import generate_explanation
+from app.services.smart_inventory_chat_service import handle_chat
 
 router = APIRouter(
     tags=["Smart Inventory"]

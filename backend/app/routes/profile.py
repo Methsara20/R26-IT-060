@@ -17,9 +17,42 @@ router = APIRouter()
 
 @router.post("/create")
 def create_profile(data: ProfileCreateRequest):
-    existing_users = db.collection("profiles").where("email", "==", data.email).stream()
+    email_lower = data.email.lower()
+    email_variants = list(set([data.email, email_lower]))
+    existing_docs = db.collection("profiles").where("email", "in", email_variants).stream()
 
-    for _ in existing_users:
+    for doc in existing_docs:
+        d = doc.to_dict()
+        doc_email = d.get("email")
+        if data.password.startswith("GOOGLE_AUTH_PLACEHOLDER_"):
+            recommended_size = get_size(data.height, data.weight)
+            try:
+                body_measurements = predict_body_measurements(
+                    height=data.height,
+                    weight=data.weight,
+                    gender=data.gender,
+                )
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+            update_data = {
+                "height": data.height,
+                "weight": data.weight,
+                "gender": data.gender,
+                "recommended_size": recommended_size,
+                "predicted_shoulder_width": body_measurements["predicted_shoulder_width"],
+                "predicted_waist": body_measurements["predicted_waist"],
+                "predicted_leg_length": body_measurements["predicted_leg_length"],
+                "updated_at": firestore.SERVER_TIMESTAMP,
+            }
+            doc.reference.update(update_data)
+            return {
+                "message": "Profile updated successfully",
+                "profile_id": doc.id,
+                "email": doc_email,
+                "recommended_size": recommended_size,
+                "body_measurements": body_measurements,
+            }
         raise HTTPException(status_code=400, detail="Email already registered")
 
     if len(data.password) < 8:
@@ -70,7 +103,9 @@ def create_profile(data: ProfileCreateRequest):
 @router.post("/login")
 def login(data: LoginRequest):
     try:
-        docs = db.collection("profiles").where("email", "==", data.email).stream()
+        email_lower = data.email.lower()
+        email_variants = list(set([data.email, email_lower]))
+        docs = db.collection("profiles").where("email", "in", email_variants).stream()
 
         user_doc = None
         user_data = None
@@ -109,17 +144,28 @@ def login(data: LoginRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+ALLOWED_CLIENT_IDS = {
+    "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
+    "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com",  # iOS client
+    "171031337876-jfru9mjtq8ua2bqkhb7pplv0nf66b1i.apps.googleusercontent.com",   # iOS client variant
+    "171031337876-fjchepjlb2bafo89au0njerhr432gabh.apps.googleusercontent.com",  # Android client 1
+    "171031337876-lniv56nmin67quomilspharlvq242np8.apps.googleusercontent.com",  # Android client 2
+}
+
+
 @router.post("/google-login")
 def google_login(data: GoogleLoginRequest):
     try:
+        # Verify token against Google's public certificates
         decoded_token = id_token.verify_oauth2_token(
             data.id_token, 
-            requests.Request(),
-            audience=[
-                "171031337876-v1l7ha3nheuim0ijdh2f6paaqfkbdlie.apps.googleusercontent.com",  # Web client
-                "171031337876-jfru9mjtq8ua2bqkhb7pplv00nf66b1i.apps.googleusercontent.com",  # iOS client
-            ]
+            requests.Request()
         )
+        token_aud = decoded_token.get("aud", "")
+        # Accept if audience is in ALLOWED_CLIENT_IDS or matches project prefix 171031337876
+        if token_aud not in ALLOWED_CLIENT_IDS and not str(token_aud).startswith("171031337876"):
+            raise ValueError(f"Token audience {token_aud} does not match Google Project")
+
         email = decoded_token.get("email")
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid Google token: {e}")
@@ -127,13 +173,16 @@ def google_login(data: GoogleLoginRequest):
     if not email:
         raise HTTPException(status_code=400, detail="No email found in Google token")
 
-    docs = db.collection("profiles").where("email", "==", email).stream()
+    email_lower = email.lower()
+    email_variants = list(set([email, email_lower]))
+    docs = db.collection("profiles").where("email", "in", email_variants).stream()
     
     user_doc = None
     user_data = None
     for doc in docs:
+        d = doc.to_dict()
         user_doc = doc
-        user_data = doc.to_dict()
+        user_data = d
         break
 
     if not user_data:
@@ -145,8 +194,10 @@ def google_login(data: GoogleLoginRequest):
             "message": "Account verified via Google, but body measurements are missing."
         }
     
+    user_email = user_data.get("email") or email
+
     access_token = create_access_token({
-        "sub": user_data["email"],
+        "sub": user_email,
         "profile_id": user_doc.id,
     })
 
@@ -156,7 +207,7 @@ def google_login(data: GoogleLoginRequest):
         "access_token": access_token,
         "token_type": "bearer",
         "profile_id": user_doc.id,
-        "email": user_data["email"],
+        "email": user_email,
         "recommended_size": user_data.get("recommended_size"),
         "body_measurements": {
             "predicted_shoulder_width": user_data.get("predicted_shoulder_width"),

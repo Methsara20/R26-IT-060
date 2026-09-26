@@ -71,9 +71,9 @@ class _StylistChatSheetState extends State<StylistChatSheet> with TickerProvider
       setState(() {
         _messages.add({"sender": "ai", "text": responseText});
       });
-    } catch (e) {
+    } catch (_) {
       setState(() {
-        _messages.add({"sender": "ai", "text": "Oops, something went wrong. Please try again."});
+        _messages.add({"sender": "ai", "text": "I'm having a brief connection pause. Please tap your question again to retry!"});
       });
     } finally {
       setState(() {
