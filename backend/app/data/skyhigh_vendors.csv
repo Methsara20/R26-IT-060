@@ -1,0 +1,21 @@
+vendor_id,vendor_name,product_category,unit_cost_lkr,supply_frequency,lead_time_days,quality_score,contract_type
+VND_01,OceanBreeze Ltd,Apparel,4106,Monthly,14,4.3,Annual
+VND_02,UrbanWear Ltd,Apparel,7881,Bi-weekly,11,4.7,Quarterly
+VND_03,SilkRoute Ltd,Footwear,2912,Monthly,19,4.1,Consignment
+VND_04,PureCotton Ltd,Accessories,4046,Bi-weekly,18,4.8,Quarterly
+VND_05,VelvetTouch Ltd,Beauty,7233,Bi-weekly,4,4.1,Quarterly
+VND_06,UrbanWear Ltd,Accessories,1125,Monthly,14,4.3,Consignment
+VND_07,VelvetTouch Ltd,Footwear,3242,Bi-weekly,12,4.3,Annual
+VND_08,IslandGems Ltd,Beauty,5357,Weekly,4,4.2,Consignment
+VND_09,IslandGems Ltd,Apparel,5110,Bi-weekly,17,4.4,Annual
+VND_10,LankaStyles Ltd,Accessories,1592,Weekly,4,4.2,Annual
+VND_11,UrbanWear Ltd,Apparel,6526,Bi-weekly,6,3.9,Quarterly
+VND_12,IslandGems Ltd,Apparel,1017,Monthly,5,4.4,Annual
+VND_13,LankaStyles Ltd,Beauty,6634,Weekly,13,3.6,Quarterly
+VND_14,UrbanWear Ltd,Accessories,3896,Bi-weekly,9,4.7,Annual
+VND_15,VogueSriLanka Ltd,Footwear,1257,Weekly,16,4.5,Annual
+VND_16,VogueSriLanka Ltd,Apparel,1687,Monthly,10,4.3,Consignment
+VND_17,OceanBreeze Ltd,Apparel,4786,Bi-weekly,7,4.8,Annual
+VND_18,IslandGems Ltd,Footwear,2703,Bi-weekly,9,4.7,Quarterly
+VND_19,LankaStyles Ltd,Beauty,7620,Weekly,20,4.9,Consignment
+VND_20,VelvetTouch Ltd,Beauty,1652,Monthly,16,4.8,Annual

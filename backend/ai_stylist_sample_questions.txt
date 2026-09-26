@@ -1,0 +1,16 @@
+AI Stylist Sample Questions
+
+Personalized Fit & Sizing (Tests the ML Body Measurement System):
+* "I usually wear a medium, but what size should I get in shirts if I want a looser, relaxed fit?"
+* "Based on my height and weight, what kind of jeans would look most flattering on me?"
+* "Do your summer dresses run small? I want something comfortable for the beach."
+
+Outfit Recommendations & Styling (Tests the LangChain Catalog Search):
+* "I have a casual outdoor wedding to attend this weekend. Can you recommend a complete outfit?"
+* "What shoes do you have that would pair well with dark navy blue trousers?"
+* "Can you suggest a cozy but stylish winter outfit under LKR 10,000?"
+
+Trending & Inspiration:
+* "What styles or colors are trending right now for office wear?"
+* "Show me some minimalist, smart-casual pieces for everyday wear."
+* "What is the most popular activewear you have right now?"
