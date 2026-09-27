@@ -66,7 +66,7 @@ from langchain_chroma import Chroma
 from app.firebase_config import db
 from app.constants.collections import PRODUCTS_COLLECTION
 
-CHROMA_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chroma_db")
+CHROMA_DB_DIR = "/home/chroma_db"
 
 _embedding_model = None
 _vector_store = None
@@ -145,19 +145,9 @@ def ingest_products_to_chroma():
     if not documents:
         return {"status": "error", "message": "No products with descriptions found."}
         
-    print(f"Adding {len(documents)} documents to ChromaDB...")
-    
     try:
         vector_store = get_vector_store()
-        try:
-            vector_store.delete_collection()
-        except Exception:
-            pass
-            
-        global _vector_store
-        _vector_store = None
-        vector_store = get_vector_store()
-        
+        # Removed delete_collection() which causes "Chroma collection not initialized" error in langchain-chroma
         vector_store.add_documents(documents)
         return {"status": "success", "message": f"Successfully ingested {len(documents)} products."}
     except Exception as e:
