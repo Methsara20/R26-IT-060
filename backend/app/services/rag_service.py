@@ -74,8 +74,12 @@ _vector_store = None
 def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
-        print("Loading lightweight Gemini Embedding model...")
-        _embedding_model = GeminiEmbeddings()
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+        print("Loading lightweight HuggingFace Embedding model...")
+        _embedding_model = HuggingFaceEmbeddings(
+            model_name="all-MiniLM-L6-v2",
+            encode_kwargs={'normalize_embeddings': False}
+        )
     return _embedding_model
 
 def get_vector_store():
@@ -83,7 +87,7 @@ def get_vector_store():
     if _vector_store is None:
         print(f"Connecting to ChromaDB at {CHROMA_DB_DIR}")
         _vector_store = Chroma(
-            collection_name="products_gemini",
+            collection_name="products_huggingface",
             embedding_function=get_embedding_model(),
             persist_directory=CHROMA_DB_DIR
         )
