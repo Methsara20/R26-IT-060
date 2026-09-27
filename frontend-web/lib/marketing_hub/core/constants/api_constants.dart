@@ -1,1 +1,1 @@
-const String backendUrl = 'http://127.0.0.1:10000';
+const String backendUrl = 'https://smartomniretailr26-api.azurewebsites.net';
