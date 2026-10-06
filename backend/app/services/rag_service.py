@@ -66,7 +66,7 @@ from langchain_chroma import Chroma
 from app.firebase_config import db
 from app.constants.collections import PRODUCTS_COLLECTION
 
-CHROMA_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chroma_db")
+CHROMA_DB_DIR = "/home/chroma_db"
 
 _embedding_model = None
 _vector_store = None
@@ -74,8 +74,12 @@ _vector_store = None
 def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
-        print("Loading lightweight Gemini Embedding model...")
-        _embedding_model = GeminiEmbeddings()
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+        print("Loading lightweight HuggingFace Embedding model...")
+        _embedding_model = HuggingFaceEmbeddings(
+            model_name="all-MiniLM-L6-v2",
+            encode_kwargs={'normalize_embeddings': False}
+        )
     return _embedding_model
 
 def get_vector_store():
@@ -83,7 +87,7 @@ def get_vector_store():
     if _vector_store is None:
         print(f"Connecting to ChromaDB at {CHROMA_DB_DIR}")
         _vector_store = Chroma(
-            collection_name="products_gemini",
+            collection_name="products_huggingface",
             embedding_function=get_embedding_model(),
             persist_directory=CHROMA_DB_DIR
         )
@@ -141,19 +145,9 @@ def ingest_products_to_chroma():
     if not documents:
         return {"status": "error", "message": "No products with descriptions found."}
         
-    print(f"Adding {len(documents)} documents to ChromaDB...")
-    
     try:
         vector_store = get_vector_store()
-        try:
-            vector_store.delete_collection()
-        except Exception:
-            pass
-            
-        global _vector_store
-        _vector_store = None
-        vector_store = get_vector_store()
-        
+        # Removed delete_collection() which causes "Chroma collection not initialized" error in langchain-chroma
         vector_store.add_documents(documents)
         return {"status": "success", "message": f"Successfully ingested {len(documents)} products."}
     except Exception as e:

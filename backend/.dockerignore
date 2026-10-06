@@ -1,0 +1,11 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.git/
+.vscode/
+chroma_db/
+uploads/
+generated/
+.DS_Store

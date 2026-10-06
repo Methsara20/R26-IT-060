@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class PredictionService {
-  static const String baseUrl = "http://127.0.0.1:10000";
+  static const String baseUrl = "https://smartomniretailr26-api.azurewebsites.net";
 
   //  PREDICT
 
