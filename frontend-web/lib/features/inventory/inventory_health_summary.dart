@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
 import '../../models/inventory/inventory_record.dart';
 import 'inventory_current_health.dart';
 
@@ -23,9 +24,9 @@ class InventoryHealthSummary extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE1E7F0)),
+        color: ApplicationColors.panel(context),
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        border: Border.all(color: ApplicationColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,9 +95,13 @@ class _HealthCount extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(7),
+          ),
+          child: Icon(_healthIcon(health), color: color, size: 15),
         ),
         const SizedBox(width: 8),
         Text(
@@ -111,3 +116,10 @@ class _HealthCount extends StatelessWidget {
     ),
   );
 }
+
+IconData _healthIcon(InventoryCurrentHealth health) => switch (health) {
+  InventoryCurrentHealth.healthy => Icons.check_circle_outline,
+  InventoryCurrentHealth.stockout => Icons.remove_shopping_cart_outlined,
+  InventoryCurrentHealth.lowStock => Icons.trending_down_rounded,
+  InventoryCurrentHealth.overstock => Icons.inventory_outlined,
+};

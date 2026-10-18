@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'application_design_tokens.dart';
 
-
 abstract final class AppTheme {
   static const Color primary = ApplicationColors.coreAccent;
   static const Color navy = Color(0xFF12233F);
@@ -25,8 +24,13 @@ abstract final class AppTheme {
         ).copyWith(
           primary: primary,
           onPrimary: Colors.white,
+          secondary: ApplicationColors.indigo,
+          onSecondary: Colors.white,
           surface: ApplicationColors.lightPanel,
+          surfaceContainerLow: ApplicationColors.lightPanelMuted,
+          surfaceContainerHighest: const Color(0xFFEEF2F7),
           onSurface: ink,
+          onSurfaceVariant: ApplicationColors.lightTextSecondary,
           outline: ApplicationColors.lightBorderStrong,
           outlineVariant: border,
           error: danger,
@@ -45,7 +49,7 @@ abstract final class AppTheme {
           height: 1.2,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.6,
-          fontFamily: 'Space Grotesk',
+          fontFamily: ApplicationTypography.uiFontFamily,
           fontFamilyFallback: ApplicationTypography.uiFontFallbacks,
         ),
         headlineMedium: TextStyle(
@@ -54,7 +58,7 @@ abstract final class AppTheme {
           height: 1.25,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.4,
-          fontFamily: 'Space Grotesk',
+          fontFamily: ApplicationTypography.uiFontFamily,
           fontFamilyFallback: ApplicationTypography.uiFontFallbacks,
         ),
         headlineSmall: TextStyle(
@@ -62,7 +66,7 @@ abstract final class AppTheme {
           fontSize: 24,
           height: 1.3,
           fontWeight: FontWeight.w700,
-          fontFamily: 'Space Grotesk',
+          fontFamily: ApplicationTypography.uiFontFamily,
           fontFamilyFallback: ApplicationTypography.uiFontFallbacks,
         ),
         titleLarge: TextStyle(
@@ -70,7 +74,7 @@ abstract final class AppTheme {
           fontSize: 20,
           height: 1.3,
           fontWeight: FontWeight.w700,
-          fontFamily: 'Space Grotesk',
+          fontFamily: ApplicationTypography.uiFontFamily,
           fontFamilyFallback: ApplicationTypography.uiFontFallbacks,
         ),
         titleMedium: TextStyle(
@@ -78,18 +82,21 @@ abstract final class AppTheme {
           fontSize: 16,
           height: 1.35,
           fontWeight: FontWeight.w600,
-          fontFamily: 'Space Grotesk',
+          fontFamily: ApplicationTypography.uiFontFamily,
           fontFamilyFallback: ApplicationTypography.uiFontFallbacks,
         ),
-        bodyLarge: TextStyle(color: Color(0xFF475467), height: 1.5),
+        bodyLarge: TextStyle(
+          color: ApplicationColors.lightTextSecondary,
+          height: 1.5,
+        ),
         bodyMedium: TextStyle(color: mutedInk, height: 1.45),
         labelLarge: TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0),
       ),
       cardTheme: CardThemeData(
         color: ApplicationColors.lightPanel,
         surfaceTintColor: Colors.transparent,
-        shadowColor: const Color(0xFF101828).withValues(alpha: 0.06),
-        elevation: 0,
+        shadowColor: const Color(0xFF0F172A).withValues(alpha: 0.08),
+        elevation: 1,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ApplicationRadii.card),
@@ -181,7 +188,9 @@ abstract final class AppTheme {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 12,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ApplicationRadii.dialog),
+        ),
         titleTextStyle: const TextStyle(
           color: ink,
           fontSize: 20,
@@ -235,11 +244,16 @@ abstract final class AppTheme {
         ).copyWith(
           primary: ApplicationColors.coreAccentDark,
           onPrimary: Colors.white,
+          secondary: ApplicationColors.indigoDark,
+          onSecondary: Colors.white,
           surface: darkSurface,
+          surfaceContainerLow: ApplicationColors.darkPanelMuted,
+          surfaceContainerHighest: const Color(0xFF22304A),
           onSurface: darkText,
-          outline: const Color(0xFF64748B),
+          onSurfaceVariant: ApplicationColors.darkTextSecondary,
+          outline: ApplicationColors.darkBorderStrong,
           outlineVariant: darkBorder,
-          error: const Color(0xFFFF716A),
+          error: ApplicationColors.dangerDark,
         );
 
     return base.copyWith(
@@ -257,7 +271,7 @@ abstract final class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(ApplicationRadii.card),
           side: const BorderSide(color: darkBorder),
         ),
       ),

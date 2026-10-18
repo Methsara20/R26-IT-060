@@ -30,6 +30,7 @@ void main() {
             child: StockFlowDecisionWorkspace(
               overview: overview,
               analyzingId: null,
+              canAnalyze: (_) => true,
               onAnalyze: (_) {},
             ),
           ),
@@ -48,15 +49,117 @@ void main() {
     expect(find.text('Hustle Shirt'), findsNothing);
     expect(find.text('Emerald Skirt'), findsOneWidget);
     expect(find.text('1 decision shown in backend order.'), findsOneWidget);
+
+    expect(find.text('Filters active'), findsOneWidget);
+    await tester.ensureVisible(find.text('Clear filters'));
+    await tester.tap(find.text('Clear filters'));
+    await tester.pump();
+    expect(find.text('Hustle Shirt'), findsOneWidget);
+    expect(find.text('Emerald Skirt'), findsOneWidget);
+  });
+
+  testWidgets('restores authorized pending analysis and prevents duplicates', (
+    tester,
+  ) async {
+    var analyses = 0;
+    final pending = _candidate(
+      'C1',
+      'P1',
+      'Pending shirt',
+      15,
+      status: 'PENDING',
+      action: 'PENDING',
+    );
+
+    await tester.pumpWidget(
+      _host(
+        StockFlowDecisionWorkspace(
+          overview: _overview([pending]),
+          analyzingId: null,
+          canAnalyze: (_) => true,
+          onAnalyze: (_) => analyses++,
+        ),
+      ),
+    );
+
+    expect(find.text('Analyze candidate'), findsOneWidget);
+    await tester.ensureVisible(find.text('Analyze candidate'));
+    await tester.tap(find.text('Analyze candidate'));
+    expect(analyses, 1);
+
+    await tester.pumpWidget(
+      _host(
+        StockFlowDecisionWorkspace(
+          overview: _overview([pending]),
+          analyzingId: pending.id,
+          canAnalyze: (_) => true,
+          onAnalyze: (_) => analyses++,
+        ),
+      ),
+    );
+    expect(find.text('Analyzing…'), findsOneWidget);
+    await tester.ensureVisible(find.text('Analyzing…'));
+    await tester.tap(find.text('Analyzing…'));
+    expect(analyses, 1);
+  });
+
+  testWidgets('hides analysis when current permissions deny it', (
+    tester,
+  ) async {
+    final pending = _candidate(
+      'C1',
+      'P1',
+      'Pending shirt',
+      15,
+      status: 'PENDING',
+      action: 'PENDING',
+    );
+    await tester.pumpWidget(
+      _host(
+        StockFlowDecisionWorkspace(
+          overview: _overview([pending]),
+          analyzingId: null,
+          canAnalyze: (_) => false,
+          onAnalyze: (_) {},
+        ),
+      ),
+    );
+    expect(find.text('Analyze candidate'), findsNothing);
   });
 }
+
+Widget _host(Widget child) => MaterialApp(
+  home: Scaffold(body: SingleChildScrollView(child: child)),
+);
+
+OptimizationOverview _overview(List<OptimizationCandidate> candidates) =>
+    OptimizationOverview(
+      summary: OptimizationSummary(
+        total: candidates.length,
+        highPriority: candidates
+            .where((item) => item.priority == 'HIGH')
+            .length,
+        mediumPriority: candidates
+            .where((item) => item.priority == 'MEDIUM')
+            .length,
+        lowStock: candidates.where((item) => item.type == 'LOW_STOCK').length,
+        overstock: candidates.where((item) => item.type == 'OVERSTOCK').length,
+        pending: candidates.where((item) => item.status == 'PENDING').length,
+        recommended: candidates
+            .where((item) => item.status == 'RECOMMENDED')
+            .length,
+      ),
+      candidates: candidates,
+    );
 
 OptimizationCandidate _candidate(
   String id,
   String productId,
   String name,
-  int shortage,
-) => OptimizationCandidate(
+  int shortage, {
+  String status = 'RECOMMENDED',
+  String action = 'TRANSFER',
+}) => OptimizationCandidate(
   id: id,
   productId: productId,
   productName: name,
@@ -71,8 +174,8 @@ OptimizationCandidate _candidate(
   stockHealth: 'Low Stock',
   type: 'LOW_STOCK',
   priority: id == 'C1' ? 'HIGH' : 'MEDIUM',
-  status: 'RECOMMENDED',
-  recommendedAction: 'TRANSFER',
+  status: status,
+  recommendedAction: action,
   decisionReason: 'Backend recommendation.',
   decisionConfidence: 90,
   coverageRatio: 2,

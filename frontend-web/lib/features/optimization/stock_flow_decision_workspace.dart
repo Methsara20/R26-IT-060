@@ -1,6 +1,8 @@
 // Final-polish pass: standardizes optimization filters and panel surfaces.
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
+import '../../core/widgets/application_feedback_components.dart';
 import '../../core/widgets/application_ui_components.dart';
 
 import '../../models/optimization/optimization_candidate.dart';
@@ -14,12 +16,14 @@ class StockFlowDecisionWorkspace extends StatefulWidget {
   const StockFlowDecisionWorkspace({
     required this.overview,
     required this.analyzingId,
+    required this.canAnalyze,
     required this.onAnalyze,
     super.key,
   });
 
   final OptimizationOverview overview;
   final String? analyzingId;
+  final bool Function(OptimizationCandidate candidate) canAnalyze;
   final ValueChanged<OptimizationCandidate> onAnalyze;
 
   @override
@@ -73,6 +77,22 @@ class _StockFlowDecisionWorkspaceState
     return values;
   }
 
+  bool get _hasActiveFilters =>
+      _searchController.text.trim().isNotEmpty ||
+      _priority != 'ALL' ||
+      _action != 'ALL' ||
+      _showroom != 'ALL';
+
+  void _clearFilters() {
+    _searchController.clear();
+    setState(() {
+      _priority = 'ALL';
+      _action = 'ALL';
+      _showroom = 'ALL';
+      _currentPage = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final candidates = widget.overview.candidates;
@@ -119,6 +139,9 @@ class _StockFlowDecisionWorkspaceState
           showroom: _showroom,
           actions: _actions,
           showrooms: _showrooms,
+          resultCount: filtered.length,
+          hasActiveFilters: _hasActiveFilters,
+          onClear: _clearFilters,
           onSearchChanged: (_) => setState(() => _currentPage = 0),
           onPriorityChanged: (value) => setState(() {
             _priority = value;
@@ -142,13 +165,19 @@ class _StockFlowDecisionWorkspaceState
         ),
         const SizedBox(height: 12),
         if (filtered.isEmpty)
-          const _QueueEmpty()
+          _QueueEmpty(
+            message: _hasActiveFilters
+                ? 'No decisions match the selected filters.'
+                : 'No optimization decisions require attention.',
+            onReset: _hasActiveFilters ? _clearFilters : null,
+          )
         else ...[
           for (final candidate in paginated) ...[
             OptimizationRecommendationCard(
               candidate: candidate,
               analyzing: widget.analyzingId == candidate.id,
               analysisDisabled: widget.analyzingId != null,
+              analysisAllowed: widget.canAnalyze(candidate),
               onAnalyze: () => widget.onAnalyze(candidate),
             ),
             const SizedBox(height: 12),
@@ -211,8 +240,8 @@ class ActiveStockFlowDecisionWorkspace extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE1E7F0)),
+            borderRadius: BorderRadius.circular(ApplicationRadii.card),
+            border: Border.all(color: ApplicationColors.border(context)),
           ),
           child: WorkflowProgressIndicator(
             currentStage: workflowController.currentStage,
@@ -231,6 +260,7 @@ class ActiveStockFlowDecisionWorkspace extends StatelessWidget {
             movement: workflow.movement,
             analyzing: false,
             analysisDisabled: true,
+            analysisAllowed: false,
             onAnalyze: () {},
             onReviewTransfer: workflow.movement == null ? null : onOpenMovement,
           ),
@@ -253,30 +283,50 @@ class _DecisionSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final information = ApplicationColors.status(
+      context,
+      ApplicationStatusColor.information,
+    );
+    final danger = ApplicationColors.status(
+      context,
+      ApplicationStatusColor.danger,
+    );
+    final warning = ApplicationColors.status(
+      context,
+      ApplicationStatusColor.warning,
+    );
+    final success = ApplicationColors.status(
+      context,
+      ApplicationStatusColor.success,
+    );
     final values = [
       (
         'Action required',
         '$actionRequired',
         Icons.priority_high,
-        const Color(0xFF155EEF),
+        information,
+        'Open optimization decisions',
       ),
       (
         'High priority',
         '$highPriority',
         Icons.warning_amber_rounded,
-        const Color(0xFFD92D20),
+        danger,
+        'Decisions needing prompt review',
       ),
       (
         'Units required',
         '$unitsRequired',
         Icons.inventory_2_outlined,
-        const Color(0xFFDC6803),
+        warning,
+        'Total shortage across candidates',
       ),
       (
         'Recommended transfers',
         '$recommendedTransfers',
         Icons.swap_horiz,
-        const Color(0xFF17875D),
+        success,
+        'Backend-confirmed transfer options',
       ),
     ];
     return LayoutBuilder(
@@ -300,6 +350,7 @@ class _DecisionSummary extends StatelessWidget {
                   value: item.$2,
                   icon: item.$3,
                   color: item.$4,
+                  supportingText: item.$5,
                 ),
               ),
           ],
@@ -315,18 +366,21 @@ class _SummaryTile extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.color,
+    required this.supportingText,
   });
   final String label;
   final String value;
   final IconData icon;
   final Color color;
+  final String supportingText;
   @override
   Widget build(BuildContext context) => ApplicationStatCard(
     label: label,
     value: value,
     icon: icon,
     accentColor: color,
-    showAccentBar: false,
+    supportingText: supportingText,
+    showAccentBar: true,
   );
 }
 
@@ -338,6 +392,9 @@ class _FilterToolbar extends StatelessWidget {
     required this.showroom,
     required this.actions,
     required this.showrooms,
+    required this.resultCount,
+    required this.hasActiveFilters,
+    required this.onClear,
     required this.onSearchChanged,
     required this.onPriorityChanged,
     required this.onActionChanged,
@@ -349,74 +406,114 @@ class _FilterToolbar extends StatelessWidget {
   final String showroom;
   final List<String> actions;
   final List<String> showrooms;
+  final int resultCount;
+  final bool hasActiveFilters;
+  final VoidCallback onClear;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onPriorityChanged;
   final ValueChanged<String> onActionChanged;
   final ValueChanged<String> onShowroomChanged;
 
   @override
-  Widget build(BuildContext context) => ApplicationFilterBar(
-    children: [
-      SizedBox(
-        width: double.infinity,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 850
-                ? 4
-                : constraints.maxWidth >= 480
-                ? 2
-                : 1;
-            const gap = 10.0;
-            final width =
-                (constraints.maxWidth - gap * (columns - 1)) / columns;
-            return Wrap(
-              spacing: gap,
-              runSpacing: gap,
-              children: [
-                SizedBox(
-                  width: width,
-                  child: TextField(
-                    controller: searchController,
-                    onChanged: onSearchChanged,
-                    decoration: const InputDecoration(
-                      labelText: 'Search products',
-                      prefixIcon: Icon(Icons.search),
+  Widget build(BuildContext context) => ApplicationSurfaceCard(
+    padding: const EdgeInsets.all(ApplicationSpacing.medium),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: ApplicationSpacing.compact,
+          runSpacing: ApplicationSpacing.small,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              'Filter decision queue',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            ApplicationStatusBadge(
+              label: '$resultCount result${resultCount == 1 ? '' : 's'}',
+              tone: ApplicationStatusTone.info,
+            ),
+            if (hasActiveFilters)
+              const ApplicationStatusBadge(
+                label: 'Filters active',
+                tone: ApplicationStatusTone.warning,
+                icon: Icons.filter_alt_outlined,
+              ),
+          ],
+        ),
+        const SizedBox(height: ApplicationSpacing.compact),
+        SizedBox(
+          width: double.infinity,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 850
+                  ? 4
+                  : constraints.maxWidth >= 480
+                  ? 2
+                  : 1;
+              const gap = 10.0;
+              final width =
+                  (constraints.maxWidth - gap * (columns - 1)) / columns;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  SizedBox(
+                    width: width,
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: onSearchChanged,
+                      decoration: const InputDecoration(
+                        labelText: 'Search products',
+                        prefixIcon: Icon(Icons.search),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: _filter(
-                    label: 'Priority',
-                    value: priority,
-                    options: const ['ALL', 'HIGH', 'MEDIUM', 'LOW'],
-                    onChanged: onPriorityChanged,
+                  SizedBox(
+                    width: width,
+                    child: _filter(
+                      label: 'Priority',
+                      value: priority,
+                      options: const ['ALL', 'HIGH', 'MEDIUM', 'LOW'],
+                      onChanged: onPriorityChanged,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: _filter(
-                    label: 'Action',
-                    value: action,
-                    options: ['ALL', ...actions],
-                    onChanged: onActionChanged,
+                  SizedBox(
+                    width: width,
+                    child: _filter(
+                      label: 'Action',
+                      value: action,
+                      options: ['ALL', ...actions],
+                      onChanged: onActionChanged,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: _filter(
-                    label: 'Showroom',
-                    value: showroom,
-                    options: ['ALL', ...showrooms],
-                    onChanged: onShowroomChanged,
+                  SizedBox(
+                    width: width,
+                    child: _filter(
+                      label: 'Showroom',
+                      value: showroom,
+                      options: ['ALL', ...showrooms],
+                      onChanged: onShowroomChanged,
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                  if (hasActiveFilters)
+                    SizedBox(
+                      width: width,
+                      child: OutlinedButton.icon(
+                        onPressed: onClear,
+                        icon: const Icon(Icons.filter_alt_off_outlined),
+                        label: const Text('Clear filters'),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 
   Widget _filter({
@@ -451,6 +548,7 @@ class OptimizationRecommendationCard extends StatelessWidget {
     required this.candidate,
     required this.analyzing,
     required this.analysisDisabled,
+    required this.analysisAllowed,
     required this.onAnalyze,
     this.movement,
     this.onReviewTransfer,
@@ -461,6 +559,7 @@ class OptimizationRecommendationCard extends StatelessWidget {
   final StockMovement? movement;
   final bool analyzing;
   final bool analysisDisabled;
+  final bool analysisAllowed;
   final VoidCallback onAnalyze;
   final VoidCallback? onReviewTransfer;
 
@@ -473,16 +572,12 @@ class OptimizationRecommendationCard extends StatelessWidget {
         movement?.targetStockAfter ?? candidate.currentStock + transferQuantity;
     final canAnalyze = candidate.status == 'PENDING';
     final actionColor = candidate.priority == 'HIGH'
-        ? const Color(0xFFD92D20)
-        : const Color(0xFFDC6803);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE1E7F0)),
-      ),
+        ? ApplicationColors.status(context, ApplicationStatusColor.danger)
+        : candidate.priority == 'MEDIUM'
+        ? ApplicationColors.status(context, ApplicationStatusColor.warning)
+        : ApplicationColors.status(context, ApplicationStatusColor.information);
+    return ApplicationSurfaceCard(
+      padding: const EdgeInsets.all(ApplicationSpacing.comfortable),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -503,7 +598,11 @@ class OptimizationRecommendationCard extends StatelessWidget {
                         ),
                         _Badge(
                           label: _label(candidate.recommendedAction),
-                          color: const Color(0xFF155EEF),
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        _Badge(
+                          label: _label(candidate.status),
+                          color: _statusColor(context, candidate.status),
                         ),
                       ],
                     ),
@@ -512,9 +611,24 @@ class OptimizationRecommendationCard extends StatelessWidget {
                       candidate.productName,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    Text(
-                      '${candidate.productId} | ${candidate.storeId} | ${candidate.category}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    const SizedBox(height: 5),
+                    Wrap(
+                      spacing: ApplicationSpacing.medium,
+                      runSpacing: ApplicationSpacing.xSmall,
+                      children: [
+                        _IdentityLabel(
+                          icon: Icons.qr_code_2_outlined,
+                          label: candidate.productId,
+                        ),
+                        _IdentityLabel(
+                          icon: Icons.storefront_outlined,
+                          label: 'Destination ${candidate.storeId}',
+                        ),
+                        _IdentityLabel(
+                          icon: Icons.category_outlined,
+                          label: candidate.category,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -601,21 +715,64 @@ class OptimizationRecommendationCard extends StatelessWidget {
                 children: _alternativeWidgets(candidate, movement),
               ),
             ),
-          if (onReviewTransfer != null) ...[
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                onPressed: onReviewTransfer,
-                icon: const Icon(Icons.fact_check_outlined),
-                label: const Text('Review transfer'),
-              ),
+          if ((canAnalyze && analysisAllowed) || onReviewTransfer != null) ...[
+            const SizedBox(height: ApplicationSpacing.compact),
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: ApplicationSpacing.small,
+              runSpacing: ApplicationSpacing.small,
+              children: [
+                if (canAnalyze && analysisAllowed)
+                  FilledButton.icon(
+                    onPressed: analysisDisabled ? null : onAnalyze,
+                    icon: analyzing
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome_outlined),
+                    label: Text(analyzing ? 'Analyzing…' : 'Analyze candidate'),
+                  ),
+                if (onReviewTransfer != null)
+                  FilledButton.tonalIcon(
+                    onPressed: onReviewTransfer,
+                    icon: const Icon(Icons.fact_check_outlined),
+                    label: const Text('Review transfer'),
+                  ),
+              ],
             ),
           ],
         ],
       ),
     );
   }
+}
+
+class _IdentityLabel extends StatelessWidget {
+  const _IdentityLabel({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(
+        icon,
+        size: 16,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      const SizedBox(width: 5),
+      Flexible(
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _MovementPreview extends StatelessWidget {
@@ -641,8 +798,11 @@ class _MovementPreview extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6F9FF),
-        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .055),
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: .16),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -654,7 +814,7 @@ class _MovementPreview extends StatelessWidget {
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
-              final narrow = constraints.maxWidth < 560;
+              final narrow = constraints.maxWidth < 900;
               final children = [
                 _StorePosition(
                   label: 'FROM',
@@ -668,11 +828,14 @@ class _MovementPreview extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.arrow_forward, color: Color(0xFF155EEF)),
+                      Icon(
+                        narrow ? Icons.arrow_downward : Icons.arrow_forward,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       Text(
                         '$transferQuantity units',
-                        style: const TextStyle(
-                          color: Color(0xFF155EEF),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -708,8 +871,11 @@ class _MovementPreview extends StatelessWidget {
               if (movement != null)
                 Text(
                   '${movement!.coveragePercentage.toStringAsFixed(0)}% shortage covered',
-                  style: const TextStyle(
-                    color: Color(0xFF17875D),
+                  style: TextStyle(
+                    color: ApplicationColors.status(
+                      context,
+                      ApplicationStatusColor.success,
+                    ),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -833,8 +999,9 @@ class _AlternativeRow extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 8),
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      color: const Color(0xFFF8FAFC),
-      borderRadius: BorderRadius.circular(9),
+      color: ApplicationColors.panelMuted(context),
+      borderRadius: BorderRadius.circular(ApplicationRadii.control),
+      border: Border.all(color: ApplicationColors.border(context)),
     ),
     child: Wrap(
       spacing: 22,
@@ -883,45 +1050,51 @@ class _Value extends StatelessWidget {
 class _SafetyWarning extends StatelessWidget {
   const _SafetyWarning();
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(13),
-    decoration: BoxDecoration(
-      color: const Color(0xFFFFF1F0),
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: const Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.warning_amber_rounded, color: Color(0xFFD92D20)),
-        SizedBox(width: 9),
-        Expanded(
-          child: Text(
-            'This transfer decision has no positive shortage or safe transfer quantity. Review the backend result before proceeding.',
-          ),
-        ),
-      ],
-    ),
+  Widget build(BuildContext context) => const ApplicationInlineNotice(
+    title: 'Decision requires review',
+    message:
+        'This transfer decision has no positive shortage or safe transfer quantity. Review the backend result before proceeding.',
+    tone: ApplicationNoticeTone.danger,
   );
 }
 
 class _QueueEmpty extends StatelessWidget {
   const _QueueEmpty({
     this.message = 'No decisions match the selected filters.',
+    this.onReset,
   });
   final String message;
+  final VoidCallback? onReset;
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(34),
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: const Color(0xFFE1E7F0)),
-    ),
-    child: Center(child: Text(message)),
+  Widget build(BuildContext context) => ApplicationEmptyState(
+    icon: Icons.tune_outlined,
+    title: onReset == null ? 'Queue is clear' : 'No matching decisions',
+    message: message,
+    action: onReset == null
+        ? null
+        : OutlinedButton.icon(
+            onPressed: onReset,
+            icon: const Icon(Icons.filter_alt_off_outlined),
+            label: const Text('Reset filters'),
+          ),
   );
 }
+
+Color _statusColor(BuildContext context, String status) => switch (status) {
+  'RECOMMENDED' || 'COMPLETED' => ApplicationColors.status(
+    context,
+    ApplicationStatusColor.success,
+  ),
+  'PENDING' || 'PROCESSING' => ApplicationColors.status(
+    context,
+    ApplicationStatusColor.warning,
+  ),
+  'FAILED' || 'REJECTED' => ApplicationColors.status(
+    context,
+    ApplicationStatusColor.danger,
+  ),
+  _ => Theme.of(context).colorScheme.onSurfaceVariant,
+};
 
 String _label(String value) => value
     .toLowerCase()

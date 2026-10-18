@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.schemas.inventory_auth_schema import InventoryPrincipal
+from app.security.inventory_permissions import inventory_analysis_user, require_store_access
 
 from app.schemas.forecast_schema import DailyForecastRequest
 from app.schemas.forecast_schema import CustomForecastRequest
@@ -34,7 +36,8 @@ router = APIRouter(
 
 
 @router.post("/daily")
-def daily_forecast(data: DailyForecastRequest):
+def daily_forecast(data: DailyForecastRequest, user: InventoryPrincipal = Depends(inventory_analysis_user())):
+    require_store_access(user, data.store_id)
     payload = data.dict()
 
     result = predict_next_day(payload)
@@ -48,7 +51,8 @@ def daily_forecast(data: DailyForecastRequest):
 
 
 @router.post("/7-day")
-def seven_day_forecast(data: DailyForecastRequest):
+def seven_day_forecast(data: DailyForecastRequest, user: InventoryPrincipal = Depends(inventory_analysis_user())):
+    require_store_access(user, data.store_id)
     payload = data.dict()
 
     result = generate_7_day_forecast(payload)
@@ -61,7 +65,8 @@ def seven_day_forecast(data: DailyForecastRequest):
     }
 
 @router.post("/inventory/monthly")
-def monthly_inventory_forecast(data: InventoryForecastRequest):
+def monthly_inventory_forecast(data: InventoryForecastRequest, user: InventoryPrincipal = Depends(inventory_analysis_user())):
+    require_store_access(user, data.store_id)
     payload = data.dict()
 
     result = predict_monthly_inventory_demand(payload)
@@ -77,7 +82,8 @@ def monthly_inventory_forecast(data: InventoryForecastRequest):
 
 
 @router.post("/inventory/quarterly")
-def quarterly_inventory_forecast(data: InventoryForecastRequest):
+def quarterly_inventory_forecast(data: InventoryForecastRequest, user: InventoryPrincipal = Depends(inventory_analysis_user())):
+    require_store_access(user, data.store_id)
     payload = data.dict()
 
     result = predict_quarterly_inventory_demand(payload)
@@ -93,8 +99,10 @@ def quarterly_inventory_forecast(data: InventoryForecastRequest):
 
 @router.post("/custom")
 def custom_forecast(
-    data: CustomForecastRequest
+    data: CustomForecastRequest,
+    user: InventoryPrincipal = Depends(inventory_analysis_user()),
 ):
+    require_store_access(user, data.store_id)
     payload = data.model_dump(
         exclude={
             "start_date",
@@ -125,7 +133,8 @@ def custom_forecast(
     "/inventory/monthly/auto"
 )
 def automatic_monthly_inventory_forecast(
-    data: AutoMonthlyForecastRequest
+    data: AutoMonthlyForecastRequest,
+    user: InventoryPrincipal = Depends(inventory_analysis_user()),
 ):
     """
     Manager-facing monthly forecast.
@@ -135,6 +144,7 @@ def automatic_monthly_inventory_forecast(
     by the backend.
     """
 
+    require_store_access(user, data.store_id)
     try:
 
         weather_profile = (
@@ -242,7 +252,8 @@ def _quarter_months(
     "/inventory/quarterly/auto"
 )
 def automatic_quarterly_inventory_forecast(
-    data: AutoQuarterlyForecastRequest
+    data: AutoQuarterlyForecastRequest,
+    user: InventoryPrincipal = Depends(inventory_analysis_user()),
 ):
     """
     Generate three independently prepared monthly
@@ -255,6 +266,7 @@ def automatic_quarterly_inventory_forecast(
     - current inventory context
     """
 
+    require_store_access(user, data.store_id)
     try:
 
         monthly_forecasts = []

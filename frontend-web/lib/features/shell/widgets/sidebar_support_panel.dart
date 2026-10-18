@@ -1,17 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../core/theme/application_design_tokens.dart';
 
 class SidebarSupportPanel extends StatelessWidget {
   const SidebarSupportPanel({
     required this.themeMode,
     required this.onThemeModeChanged,
+    this.compact = false,
     super.key,
   });
 
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeModeChanged;
-
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -27,14 +29,14 @@ class SidebarSupportPanel extends StatelessWidget {
                 Icon(
                   dark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
                   size: 18,
-                  color: const Color(0xFFD5DEED),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
                     dark ? 'Dark Mode' : 'Light Mode',
-                    style: const TextStyle(
-                      color: Color(0xFFD5DEED),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -49,31 +51,33 @@ class SidebarSupportPanel extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 9),
-          const _SidebarSurface(
-            child: Row(
-              children: [
-                Icon(
-                  Icons.rocket_launch_outlined,
-                  size: 18,
-                  color: Color(0xFF7FA6FF),
-                ),
-                SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    'Optimize. Balance. Grow.',
-                    style: TextStyle(
-                      color: Color(0xFFD5DEED),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+          if (!compact) ...[
+            const SizedBox(height: 9),
+            _SidebarSurface(
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.rocket_launch_outlined,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      'Optimize. Balance. Grow.',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 9),
-          const SidebarClock(),
+            const SizedBox(height: 9),
+            const SidebarClock(),
+          ],
         ],
       ),
     );
@@ -110,7 +114,11 @@ class _SidebarClockState extends State<SidebarClock> {
   Widget build(BuildContext context) => _SidebarSurface(
     child: Row(
       children: [
-        const Icon(Icons.schedule_outlined, size: 18, color: Color(0xFF9FB0C8)),
+        Icon(
+          Icons.schedule_outlined,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 9),
         Expanded(
           child: Column(
@@ -118,13 +126,16 @@ class _SidebarClockState extends State<SidebarClock> {
             children: [
               Text(
                 _formatDate(_now),
-                style: const TextStyle(color: Color(0xFFAAB7CA), fontSize: 10),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 10,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 _formatTime(_now),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   letterSpacing: .2,
@@ -146,9 +157,9 @@ class _SidebarSurface extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
     decoration: BoxDecoration(
-      color: const Color(0xFF1A3155),
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: const Color(0xFF30496E)),
+      color: ApplicationColors.panelMuted(context),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: ApplicationColors.border(context)),
     ),
     child: child,
   );

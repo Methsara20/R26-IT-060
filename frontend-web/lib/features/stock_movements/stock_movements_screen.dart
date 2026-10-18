@@ -4,8 +4,13 @@
 // ignore_for_file: unused_element
 
 import 'package:flutter/material.dart';
+import '../../core/auth/inventory_api_client.dart';
+import '../../core/auth/inventory_auth_scope.dart';
+import '../../core/auth/inventory_ui_permissions.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/application_design_tokens.dart';
+import '../../core/widgets/application_feedback_components.dart';
 import '../../models/stock_movement/stock_movement.dart';
 import '../../services/stock_movement_api_service.dart';
 import '../../core/widgets/application_page_layout.dart';
@@ -32,7 +37,8 @@ class StockMovementsScreen extends StatefulWidget {
 }
 
 class _StockMovementsScreenState extends State<StockMovementsScreen> {
-  final _api = StockMovementApiService();
+  late final InventoryApiClient _inventoryClient;
+  late final StockMovementApiService _api;
   List<StockMovement> _movements = const [];
   String? _error;
   String? _busyMovementId;
@@ -40,10 +46,21 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
   bool _generatingReplacement = false;
   bool _loading = true;
   bool _showWorkflowMovement = false;
+  bool _confirmationOpen = false;
+
+  @override
+  void dispose() {
+    _inventoryClient.close();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    _inventoryClient = InventoryApiClient(
+      session: InventoryAuthScope.read(context),
+    );
+    _api = StockMovementApiService(client: _inventoryClient);
     // Stored movement records are always the page's default content.
     _load();
   }
@@ -77,58 +94,65 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
     StockMovement movement,
     _MovementAction action,
   ) async {
+    if (_confirmationOpen || _busyMovementId != null) return;
     final reasonController = TextEditingController();
     final needsReason =
         action == _MovementAction.reject || action == _MovementAction.cancel;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('${action.label} movement?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${movement.recommendedQuantity} units of '
-              '${movement.productName} will be affected.',
-            ),
-            if (action == _MovementAction.execute) ...[
-              const SizedBox(height: 12),
-              const Text(
-                'Execution updates source and target inventory. This action '
-                'should only be confirmed after operational review.',
+    _confirmationOpen = true;
+    bool? confirmed;
+    try {
+      confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text('${action.label} movement?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${movement.recommendedQuantity} units of '
+                '${movement.productName} will be affected.',
               ),
-            ],
-            if (needsReason) ...[
-              const SizedBox(height: 16),
-              TextField(
-                controller: reasonController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: action == _MovementAction.reject
-                      ? 'Rejection reason (optional)'
-                      : 'Cancellation reason (optional)',
-                  border: const OutlineInputBorder(),
+              if (action == _MovementAction.execute) ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'Execution updates source and target inventory. This action '
+                  'should only be confirmed after operational review.',
                 ),
-              ),
+              ],
+              if (needsReason) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: action == _MovementAction.reject
+                        ? 'Rejection reason (optional)'
+                        : 'Cancellation reason (optional)',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
             ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Go back'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text('Confirm ${action.label.toLowerCase()}'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Go back'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('Confirm ${action.label.toLowerCase()}'),
-          ),
-        ],
-      ),
-    );
+      );
+    } finally {
+      _confirmationOpen = false;
+    }
     final reason = reasonController.text.trim();
     reasonController.dispose();
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !mounted || _busyMovementId != null) return;
 
     setState(() => _busyMovementId = movement.movementId);
     try {
@@ -231,7 +255,7 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
 
   Future<void> _generateAnotherRecommendation(StockMovement rejected) async {
     final candidateId = rejected.candidateId;
-    if (_generatingReplacement || candidateId == null) {
+    if (_generatingReplacement || _confirmationOpen || candidateId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -243,29 +267,35 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Generate another recommendation?'),
-        content: const Text(
-          'The latest inventory and optimization data will be ranked again. '
-          'The result may remain unchanged when the underlying conditions '
-          'have not changed.',
+    _confirmationOpen = true;
+    bool? confirmed;
+    try {
+      confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Generate another recommendation?'),
+          content: const Text(
+            'The latest inventory and optimization data will be ranked again. '
+            'The result may remain unchanged when the underlying conditions '
+            'have not changed.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Not now'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('Generate'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Not now'),
-          ),
-          FilledButton.icon(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Generate'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
+      );
+    } finally {
+      _confirmationOpen = false;
+    }
+    if (confirmed != true || !mounted || _generatingReplacement) return;
 
     setState(() => _generatingReplacement = true);
     try {
@@ -319,6 +349,10 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = InventoryAuthScope.of(context).user;
+    final permissions = currentUser == null
+        ? null
+        : InventoryUiPermissions(currentUser);
     final workflow = widget.workflowController.current;
     final showFocusedWorkflow =
         workflow?.movement != null && _showWorkflowMovement;
@@ -335,9 +369,13 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
         children: [
           if (showFocusedWorkflow) ...[
             ApplicationPageHeader(
+              contextLabel: 'STOCK MOVEMENT CONTROL',
+              leadingIcon: Icons.swap_horiz_rounded,
+              premium: true,
               title: 'Stock Movements',
               subtitle: 'Review, approve and track inventory transfers',
               onRefresh: _load,
+              refreshing: _loading,
               refreshTooltip: 'Refresh stock movements',
             ),
             const SizedBox(height: 24),
@@ -372,6 +410,8 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
                 verificationPending:
                     _verificationPendingId == activeMovement.movementId,
                 onAction: (action) => _performAction(activeMovement, action),
+                canPerformAction: (action) =>
+                    _canPerformAction(permissions, activeMovement, action),
                 onCheckStatus: () => _verifyMovement(activeMovement.movementId),
                 onOpenAnalytics: widget.onOpenAnalytics,
                 onAskAssistant: widget.onAskAssistant,
@@ -379,6 +419,10 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
                 generatingReplacement: _generatingReplacement,
                 onGenerateAnother: () =>
                     _generateAnotherRecommendation(activeMovement),
+                canGenerateAnother: _canGenerateAnother(
+                  permissions,
+                  activeMovement,
+                ),
               ),
           ] else ...[
             if (workflow?.movement != null) ...[
@@ -389,13 +433,8 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
               ),
               const SizedBox(height: 18),
             ],
-            if (_loading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(64),
-                  child: CircularProgressIndicator(),
-                ),
-              )
+            if (_loading && _movements.isEmpty)
+              const _StockMovementLoading()
             else if (_error != null)
               _ErrorPanel(message: _error!, onRetry: _load)
             else
@@ -403,6 +442,7 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
                 movements: _movements,
                 busyMovementId: _busyMovementId,
                 generatingReplacement: _generatingReplacement,
+                refreshing: _loading,
                 onRefresh: _load,
                 onDetails: _showDetails,
                 onAction: (movement, action) =>
@@ -416,6 +456,19 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
                       StockMovementWorkspaceAction.execute =>
                         _MovementAction.execute,
                     }),
+                canPerformAction: (movement, action) =>
+                    _canPerformAction(permissions, movement, switch (action) {
+                      StockMovementWorkspaceAction.approve =>
+                        _MovementAction.approve,
+                      StockMovementWorkspaceAction.reject =>
+                        _MovementAction.reject,
+                      StockMovementWorkspaceAction.cancel =>
+                        _MovementAction.cancel,
+                      StockMovementWorkspaceAction.execute =>
+                        _MovementAction.execute,
+                    }),
+                canGenerateAnother: (movement) =>
+                    _canGenerateAnother(permissions, movement),
                 onGenerateAnother: _generateAnotherRecommendation,
                 onCheckStatus: (movement) =>
                     _verifyMovement(movement.movementId),
@@ -425,6 +478,34 @@ class _StockMovementsScreenState extends State<StockMovementsScreen> {
       ),
     );
   }
+
+  bool _canPerformAction(
+    InventoryUiPermissions? permissions,
+    StockMovement movement,
+    _MovementAction action,
+  ) {
+    if (permissions == null) return false;
+    final operation = switch (action) {
+      _MovementAction.approve => InventoryOperation.approveMovement,
+      _MovementAction.reject => InventoryOperation.rejectMovement,
+      _MovementAction.cancel => InventoryOperation.cancelMovement,
+      _MovementAction.execute => InventoryOperation.executeMovement,
+    };
+    return permissions.canForStores(operation, [
+      movement.fromStore,
+      movement.toStore,
+    ]);
+  }
+
+  bool _canGenerateAnother(
+    InventoryUiPermissions? permissions,
+    StockMovement movement,
+  ) =>
+      permissions?.canForStores(InventoryOperation.recommendMovement, [
+        movement.fromStore,
+        movement.toStore,
+      ]) ??
+      false;
 
   void _showDetails(StockMovement movement) {
     showDialog<void>(
@@ -491,6 +572,8 @@ class _FocusedMovementReview extends StatelessWidget {
     required this.onOpenHistory,
     required this.generatingReplacement,
     required this.onGenerateAnother,
+    required this.canPerformAction,
+    required this.canGenerateAnother,
   });
 
   final StockMovement movement;
@@ -503,6 +586,8 @@ class _FocusedMovementReview extends StatelessWidget {
   final VoidCallback onOpenHistory;
   final bool generatingReplacement;
   final VoidCallback onGenerateAnother;
+  final bool Function(_MovementAction) canPerformAction;
+  final bool canGenerateAnother;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -548,7 +633,7 @@ class _FocusedMovementReview extends StatelessWidget {
             const SizedBox(height: 18),
             _RejectedRecommendationPanel(
               generating: generatingReplacement,
-              onGenerateAnother: onGenerateAnother,
+              onGenerateAnother: canGenerateAnother ? onGenerateAnother : null,
             ),
           ],
           const Divider(height: 32),
@@ -582,25 +667,33 @@ class _FocusedMovementReview extends StatelessWidget {
                     icon: const Icon(Icons.refresh),
                     label: const Text('Check status'),
                   ),
-                if (!verificationPending && movement.canReject)
+                if (!verificationPending &&
+                    movement.canReject &&
+                    canPerformAction(_MovementAction.reject))
                   OutlinedButton.icon(
                     onPressed: () => onAction(_MovementAction.reject),
                     icon: const Icon(Icons.close),
                     label: const Text('Reject'),
                   ),
-                if (!verificationPending && movement.canCancel)
+                if (!verificationPending &&
+                    movement.canCancel &&
+                    canPerformAction(_MovementAction.cancel))
                   OutlinedButton.icon(
                     onPressed: () => onAction(_MovementAction.cancel),
                     icon: const Icon(Icons.block_outlined),
                     label: const Text('Cancel'),
                   ),
-                if (!verificationPending && movement.canApprove)
+                if (!verificationPending &&
+                    movement.canApprove &&
+                    canPerformAction(_MovementAction.approve))
                   FilledButton.icon(
                     onPressed: () => onAction(_MovementAction.approve),
                     icon: const Icon(Icons.check),
                     label: const Text('Approve'),
                   ),
-                if (!verificationPending && movement.canExecute)
+                if (!verificationPending &&
+                    movement.canExecute &&
+                    canPerformAction(_MovementAction.execute))
                   FilledButton.icon(
                     onPressed: () => onAction(_MovementAction.execute),
                     icon: const Icon(Icons.play_arrow),
@@ -959,7 +1052,7 @@ class _RejectedRecommendationPanel extends StatelessWidget {
   });
 
   final bool generating;
-  final VoidCallback onGenerateAnother;
+  final VoidCallback? onGenerateAnother;
 
   @override
   Widget build(BuildContext context) {
@@ -1121,15 +1214,67 @@ class _MovementDetails extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           for (final event in movement.statusHistory)
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.circle, size: 10),
-              title: Text(_label(event.status)),
-              subtitle: Text(_dateTime(event.time)),
-            ),
+            MovementHistoryEventTile(event: event),
         ],
       ],
+    );
+  }
+}
+
+/// Displays saved history only; never resolves actors from the current session.
+class MovementHistoryEventTile extends StatelessWidget {
+  const MovementHistoryEventTile({required this.event, super.key});
+  final MovementStatusEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    final actor = event.actorName;
+    final role = event.actorRoleSnapshot;
+    final knownRole = const {
+      'admin',
+      'manager',
+      'analyst',
+      'operator',
+      'viewer',
+    }.contains(role);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 6, right: 12),
+            child: Icon(Icons.circle, size: 10),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _label(event.status),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                Text(actor ?? 'Actor unavailable \u2014 Legacy record'),
+                if (actor != null)
+                  Text(
+                    knownRole ? 'Role: ${_label(role!)}' : 'Role unavailable',
+                  ),
+                const SizedBox(height: 4),
+                Text(
+                  _dateTime(event.time),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (event.remarks != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(event.remarks!),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1214,18 +1359,26 @@ class _ErrorPanel extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(28),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red),
-          const SizedBox(width: 12),
-          Expanded(child: Text(message)),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
-        ],
-      ),
-    ),
+  Widget build(BuildContext context) => ApplicationErrorState(
+    title: 'Stock movements could not be loaded',
+    message: message,
+    onRetry: onRetry,
+  );
+}
+
+class _StockMovementLoading extends StatelessWidget {
+  const _StockMovementLoading();
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      ApplicationLoadingSkeleton(height: 118),
+      SizedBox(height: ApplicationSpacing.medium),
+      ApplicationLoadingSkeleton(height: 92),
+      SizedBox(height: ApplicationSpacing.medium),
+      ApplicationLoadingSkeleton(height: 280),
+    ],
   );
 }
 

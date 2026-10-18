@@ -91,58 +91,62 @@ class InventoryAgentMessageBubble extends StatelessWidget {
         ],
       ],
     );
-    return Align(
-      alignment: user ? Alignment.centerRight : Alignment.centerLeft,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!user) ...[
-            const InventoryAgentIcon(size: 34),
-            const SizedBox(width: 10),
-          ],
-          Flexible(
-            child: user
-                ? Container(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 13,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(15),
-                        topRight: const Radius.circular(15),
-                        bottomLeft: Radius.circular(user ? 15 : 4),
-                        bottomRight: Radius.circular(user ? 4 : 15),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: .16),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: content,
-                  )
-                : Container(
-                    constraints: const BoxConstraints(maxWidth: 680),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: ApplicationAiPanel(
+    return Semantics(
+      container: true,
+      label: user ? 'Message from you' : 'Message from Inventory AI',
+      child: Align(
+        alignment: user ? Alignment.centerRight : Alignment.centerLeft,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!user) ...[
+              const InventoryAgentIcon(size: 34),
+              const SizedBox(width: 10),
+            ],
+            Flexible(
+              child: user
+                  ? Container(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 14,
+                        vertical: 13,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(15),
+                          topRight: const Radius.circular(15),
+                          bottomLeft: Radius.circular(user ? 15 : 4),
+                          bottomRight: Radius.circular(user ? 4 : 15),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: .16),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: content,
+                    )
+                  : Container(
+                      constraints: const BoxConstraints(maxWidth: 680),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: ApplicationAiPanel(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        child: content,
+                      ),
                     ),
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -220,12 +224,14 @@ class InventoryAgentComposer extends StatelessWidget {
     required this.controller,
     required this.sending,
     required this.onSend,
+    this.enabled = true,
     this.compact = false,
     super.key,
   });
   final TextEditingController controller;
   final bool sending;
   final VoidCallback onSend;
+  final bool enabled;
   final bool compact;
 
   @override
@@ -233,7 +239,7 @@ class InventoryAgentComposer extends StatelessWidget {
     padding: EdgeInsets.all(compact ? 10 : 12),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surface,
-      border: Border.all(color: const Color(0xFFD8DFEA)),
+      border: Border.all(color: Theme.of(context).dividerColor),
       borderRadius: BorderRadius.circular(16),
       boxShadow: const [
         BoxShadow(
@@ -243,39 +249,48 @@ class InventoryAgentComposer extends StatelessWidget {
         ),
       ],
     ),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: TextField(
-            controller: controller,
-            enabled: !sending,
-            minLines: 1,
-            maxLines: compact ? 3 : 5,
-            maxLength: 500,
-            textInputAction: TextInputAction.send,
-            decoration: const InputDecoration(
-              hintText: 'Ask Inventory AI...',
-              border: InputBorder.none,
-              counterText: '',
-              isDense: true,
+    child: AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) => Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              enabled: enabled && !sending,
+              minLines: 1,
+              maxLines: compact ? 3 : 5,
+              maxLength: 500,
+              textInputAction: TextInputAction.send,
+              decoration: const InputDecoration(
+                hintText: 'Ask Inventory AI...',
+                border: InputBorder.none,
+                counterText: '',
+                isDense: true,
+              ),
+              onSubmitted: (_) {
+                if (enabled && !sending && controller.text.trim().isNotEmpty) {
+                  onSend();
+                }
+              },
             ),
-            onSubmitted: (_) => onSend(),
           ),
-        ),
-        const SizedBox(width: 8),
-        IconButton.filled(
-          tooltip: 'Send message',
-          onPressed: sending ? null : onSend,
-          icon: sending
-              ? const SizedBox(
-                  width: 17,
-                  height: 17,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.arrow_upward, size: 19),
-        ),
-      ],
+          const SizedBox(width: 8),
+          IconButton.filled(
+            tooltip: 'Send message',
+            onPressed: enabled && !sending && controller.text.trim().isNotEmpty
+                ? onSend
+                : null,
+            icon: sending
+                ? const SizedBox(
+                    width: 17,
+                    height: 17,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.arrow_upward, size: 19),
+          ),
+        ],
+      ),
     ),
   );
 }

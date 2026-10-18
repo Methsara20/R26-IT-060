@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/auth/inventory_session_controller.dart';
+import '../../../models/workflow/decision_workflow.dart';
 
 import '../../../core/theme/application_design_tokens.dart';
 import '../models/marketing_opportunity.dart';
@@ -7,12 +9,18 @@ import '../services/marketing_opportunity_api_service.dart';
 class SendToMarketingCard extends StatefulWidget {
   const SendToMarketingCard({
     required this.opportunity,
-    this.service,
+    required this.service,
+    this.session,
+    this.showroomName,
+    this.forecastPreview,
     super.key,
   });
 
   final MarketingOpportunityRequest opportunity;
-  final MarketingOpportunityApiService? service;
+  final MarketingOpportunityApiService service;
+  final InventorySessionController? session;
+  final String? showroomName;
+  final ForecastSharePreview? forecastPreview;
 
   @override
   State<SendToMarketingCard> createState() => _SendToMarketingCardState();
@@ -21,18 +29,26 @@ class SendToMarketingCard extends StatefulWidget {
 class _SendToMarketingCardState extends State<SendToMarketingCard> {
   late final MarketingOpportunityApiService _service;
   bool _sending = false;
+  bool _reviewing = false;
+  final _revision = ValueNotifier<int>(0);
   MarketingOpportunityResponse? _response;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _service = widget.service ?? MarketingOpportunityApiService();
+    _service = widget.service;
   }
 
   @override
   void didUpdateWidget(covariant SendToMarketingCard oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final nextRevision = _revision.value + 1;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _revision.value < nextRevision) {
+        _revision.value = nextRevision;
+      }
+    });
     if (oldWidget.opportunity.workflowId != widget.opportunity.workflowId) {
       _sending = false;
       _response = null;
@@ -40,15 +56,62 @@ class _SendToMarketingCardState extends State<SendToMarketingCard> {
     }
   }
 
+  @override
+  void dispose() {
+    _revision.dispose();
+    super.dispose();
+  }
+
   Future<void> _confirmAndSend() async {
-    if (_sending || _response != null) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) =>
-          _MarketingConfirmationDialog(opportunity: widget.opportunity),
-    );
-    if (confirmed != true || !mounted) return;
-    await _send();
+    if (_reviewing || _sending || _response != null) return;
+    final opportunity = widget.opportunity;
+    final preview = widget.forecastPreview;
+    final showroom = widget.showroomName;
+    final session = widget.session;
+    final lease = session?.isAuthenticated == true ? session!.capture() : null;
+    final revision = _revision.value;
+    setState(() => _reviewing = true);
+    try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AnimatedBuilder(
+          animation: Listenable.merge([_revision, ?session]),
+          builder: (context, _) {
+            final stale =
+                !mounted ||
+                _revision.value != revision ||
+                (session != null &&
+                    (lease == null || !session.isCurrent(lease)));
+            if (stale) {
+              return AlertDialog(
+                title: const Text('Preview no longer current'),
+                content: const Text(
+                  'The workflow or session changed. Close this preview and select the opportunity again.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Close'),
+                  ),
+                ],
+              );
+            }
+            return _MarketingConfirmationDialog(
+              opportunity: opportunity,
+              preview: preview,
+              showroomName: showroom,
+            );
+          },
+        ),
+      );
+      if (confirmed != true || !mounted || _revision.value != revision) return;
+      if (session != null && (lease == null || !session.isCurrent(lease))) {
+        return;
+      }
+      await _send();
+    } finally {
+      if (mounted) setState(() => _reviewing = false);
+    }
   }
 
   Future<void> _send() async {
@@ -86,7 +149,7 @@ class _SendToMarketingCardState extends State<SendToMarketingCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(ApplicationSpacing.medium),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .045),
         borderRadius: BorderRadius.circular(ApplicationRadii.card),
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
@@ -96,19 +159,41 @@ class _SendToMarketingCardState extends State<SendToMarketingCard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                response == null
-                    ? Icons.campaign_outlined
-                    : Icons.check_circle_outline,
-                color: response == null
-                    ? Theme.of(context).colorScheme.primary
-                    : ApplicationColors.success,
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color:
+                      (response == null
+                              ? Theme.of(context).colorScheme.primary
+                              : ApplicationColors.success)
+                          .withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  response == null
+                      ? Icons.campaign_outlined
+                      : Icons.check_circle_outline,
+                  color: response == null
+                      ? Theme.of(context).colorScheme.primary
+                      : ApplicationColors.success,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      'OPTIONAL DOWNSTREAM ACTION',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: .7,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
                       response == null
                           ? 'Marketing Opportunity'
@@ -158,7 +243,7 @@ class _SendToMarketingCardState extends State<SendToMarketingCard> {
           if (response == null) ...[
             const SizedBox(height: 14),
             FilledButton.icon(
-              onPressed: _sending ? null : _confirmAndSend,
+              onPressed: _sending || _reviewing ? null : _confirmAndSend,
               icon: _sending
                   ? const SizedBox.square(
                       dimension: 16,
@@ -175,13 +260,19 @@ class _SendToMarketingCardState extends State<SendToMarketingCard> {
 }
 
 class _MarketingConfirmationDialog extends StatelessWidget {
-  const _MarketingConfirmationDialog({required this.opportunity});
+  const _MarketingConfirmationDialog({
+    required this.opportunity,
+    this.preview,
+    this.showroomName,
+  });
+  final ForecastSharePreview? preview;
+  final String? showroomName;
 
   final MarketingOpportunityRequest opportunity;
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Send to Marketing?'),
+    title: const Text('Review Marketing opportunity'),
     content: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 480),
       child: SingleChildScrollView(
@@ -190,19 +281,41 @@ class _MarketingConfirmationDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Share this inventory opportunity with the Personalized '
-              'Marketing component?',
+              'Share this Inventory opportunity with the Personalized Marketing component?',
             ),
             const SizedBox(height: 16),
             _SummaryRow(label: 'Product', value: opportunity.productName),
-            _SummaryRow(label: 'Store', value: opportunity.storeId),
+            _SummaryRow(
+              label: 'Showroom',
+              value: showroomName == null
+                  ? opportunity.storeId
+                  : '$showroomName (${opportunity.storeId})',
+            ),
+            _SummaryRow(
+              label: 'Forecast period',
+              value: preview?.hasPeriod == true
+                  ? '${_date(preview!.start!)} to ${_date(preview!.end!)}'
+                  : 'Unavailable',
+            ),
+            _SummaryRow(
+              label: 'Recommendation',
+              value: opportunity.recommendedAction,
+            ),
             _SummaryRow(
               label: 'Current Stock',
-              value: '${opportunity.currentStock} units',
+              value: preview == null
+                  ? '${opportunity.currentStock} units'
+                  : preview!.stock == null
+                  ? 'Unavailable'
+                  : '${preview!.stock} units',
             ),
             _SummaryRow(
               label: 'Forecast Demand',
-              value: '${opportunity.forecastDemand} units',
+              value: preview == null
+                  ? '${opportunity.forecastDemand} units'
+                  : preview!.demand == null
+                  ? 'Unavailable'
+                  : '${preview!.demand} units',
             ),
             _SummaryRow(label: 'Stock Health', value: opportunity.stockHealth),
             if (opportunity.promotionPercent != null)
@@ -212,7 +325,7 @@ class _MarketingConfirmationDialog extends StatelessWidget {
               ),
             const SizedBox(height: 14),
             Text(
-              'This sends the opportunity for marketing analysis only.\n'
+              'This opportunity is intended for marketing analysis only.\n'
               'No promotion or campaign will be created automatically.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
@@ -227,11 +340,14 @@ class _MarketingConfirmationDialog extends StatelessWidget {
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, true),
-        child: const Text('Send to Marketing'),
+        child: const Text('Confirm Send'),
       ),
     ],
   );
 }
+
+String _date(DateTime value) =>
+    '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
 String _percentage(double value) => value == value.roundToDouble()
     ? value.toStringAsFixed(0)

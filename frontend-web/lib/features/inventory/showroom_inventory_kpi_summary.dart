@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
 import '../../models/inventory/inventory_record.dart';
 
 /// Current-snapshot KPIs derived from the showroom inventory response already
@@ -117,14 +118,29 @@ class _KpiTile extends StatelessWidget {
   final _Kpi data;
 
   @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: ApplicationColors.panel(context),
+      borderRadius: BorderRadius.circular(ApplicationRadii.card),
+      border: Border.all(color: ApplicationColors.border(context)),
+      boxShadow: ApplicationElevation.forBrightness(
+        Theme.of(context).brightness,
+      ),
+    ),
     child: Padding(
       padding: const EdgeInsets.all(15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(data.icon, color: data.color, size: 21),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: data.color.withValues(alpha: .1),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(data.icon, color: data.color, size: 20),
+          ),
           const SizedBox(height: 12),
           Text(data.value, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 3),
