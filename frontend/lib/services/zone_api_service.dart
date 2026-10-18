@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ZoneApiService {
-  static const String baseUrl = "http://172.20.10.14:8000";
+  static const String baseUrl = "https://smartomniretailr26-api.azurewebsites.net";
 
   static Future<Map<String, dynamic>> createZone({
     required String zoneName,
@@ -11,10 +11,7 @@ class ZoneApiService {
     final response = await http.post(
       Uri.parse("$baseUrl/zone/create"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "zone_name": zoneName,
-        "points": points,
-      }),
+      body: jsonEncode({"zone_name": zoneName, "points": points}),
     );
 
     return jsonDecode(response.body);
@@ -39,8 +36,14 @@ class ZoneApiService {
   }
 
   static Future<Map<String, dynamic>> getAllZones() async {
-    final response = await http.get(Uri.parse("$baseUrl/zone/all"));
-    return jsonDecode(response.body);
+    try {
+      final response = await http
+          .get(Uri.parse("$baseUrl/zone/all"))
+          .timeout(const Duration(seconds: 15));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"zones": []};
+    }
   }
 
   static Future<Map<String, dynamic>> deleteZone(String zoneId) async {
