@@ -1,1 +1,3 @@
-const String backendUrl = 'https://smartomniretailr26-api.azurewebsites.net';
+import '../../../../core/constants/api_constants.dart';
+
+const String backendUrl = ApiConstants.baseUrl;
