@@ -31,6 +31,12 @@ from app.routes.chat_routes import router as chat_router
 from app.routes import weather_routes
 from app.routes import decision_workflow_routes
 from app.routes.marketing_opportunity_routes import router as marketing_opportunity_router
+from app.routes.inventory_auth_routes import router as inventory_auth_router
+from app.routes.inventory_user_management_routes import router as inventory_user_management_router
+from app.routes.inventory_profile_routes import router as inventory_profile_router
+from app.routes.inventory_marketing_planning_routes import router as inventory_marketing_planning_router
+from app.routes.marketing_inventory_analysis_routes import router as marketing_inventory_analysis_router
+from app.services.inventory_auth_dependencies import configure_inventory_auth_dependencies
 
 # Merged backend2 routes
 from app.routes import kpi_routes
@@ -42,6 +48,7 @@ from app.routes import upload_routes
 from app.routes import report_routes
 
 app = FastAPI()
+configure_inventory_auth_dependencies(app)
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -83,6 +90,11 @@ app.include_router(chat_router)
 app.include_router(weather_routes.router)
 app.include_router(decision_workflow_routes.router)
 app.include_router(marketing_opportunity_router)
+app.include_router(inventory_auth_router)
+app.include_router(inventory_user_management_router)
+app.include_router(inventory_profile_router)
+app.include_router(inventory_marketing_planning_router)
+app.include_router(marketing_inventory_analysis_router)
 
 # Merged backend2 routers
 app.include_router(kpi_routes.router)

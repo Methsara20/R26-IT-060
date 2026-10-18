@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../core/constants/api_constants.dart';
+import '../core/auth/inventory_api_client.dart';
+import 'inventory_auth_api_service.dart';
 import '../models/stock_movement/stock_movement.dart';
 
 class StockMovementApiException implements Exception {
@@ -21,10 +23,9 @@ class StockMovementOutcomeUnknownException extends StockMovementApiException {
     : super('The request is taking longer than expected.');
 }
 
-
 class StockMovementApiService {
-  StockMovementApiService({http.Client? client})
-    : _client = client ?? http.Client();
+  StockMovementApiService({required InventoryApiClient client})
+    : _client = client;
 
   final http.Client _client;
 
@@ -108,6 +109,15 @@ class StockMovementApiService {
                   : _client.get(uri))
               .timeout(ApiConstants.requestTimeout);
 
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        throw StockMovementApiException(
+          InventoryAuthException(
+            response.statusCode == 401
+                ? InventoryAuthFailure.invalidSession
+                : InventoryAuthFailure.forbidden,
+          ).toString(),
+        );
+      }
       Map<String, dynamic>? body;
       try {
         final decoded = jsonDecode(response.body);
@@ -131,6 +141,12 @@ class StockMovementApiService {
         );
       }
       return body;
+    } on InventoryAuthException catch (error) {
+      throw StockMovementApiException(
+        error.failure == InventoryAuthFailure.network
+            ? 'Cannot connect to the stock movement service.'
+            : error.toString(),
+      );
     } on StockMovementApiException {
       rethrow;
     } on TimeoutException {

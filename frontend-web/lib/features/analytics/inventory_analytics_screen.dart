@@ -12,20 +12,21 @@ import '../../core/theme/app_theme.dart';
 import '../../models/analytics/analytics_overview.dart';
 import '../../services/analytics_api_service.dart';
 import '../../core/widgets/application_page_layout.dart';
+import '../../core/widgets/application_feedback_components.dart';
+import '../../core/theme/application_design_tokens.dart';
 import 'analytics_decision_dashboard.dart';
 
 class InventoryAnalyticsScreen extends StatefulWidget {
   const InventoryAnalyticsScreen({
     required this.workflowController,
     this.onOpenInventoryIntelligence,
+    this.api,
     super.key,
   });
 
-
-
-
   final InventoryDecisionWorkflowController workflowController;
   final VoidCallback? onOpenInventoryIntelligence;
+  final AnalyticsApiService? api;
 
   @override
   State<InventoryAnalyticsScreen> createState() =>
@@ -33,27 +34,41 @@ class InventoryAnalyticsScreen extends StatefulWidget {
 }
 
 class _InventoryAnalyticsScreenState extends State<InventoryAnalyticsScreen> {
-  final _api = AnalyticsApiService();
+  late final AnalyticsApiService _api;
   AnalyticsOverview? _overview;
   String? _error;
+  bool _refreshing = false;
   final bool _showWorkflowContext = false;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _api = widget.api ?? AnalyticsApiService();
+    _load(initial: true);
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool initial = false}) async {
+    if (_refreshing) return;
     setState(() {
-      _overview = null;
+      if (initial) _overview = null;
       _error = null;
+      _refreshing = true;
     });
     try {
       final overview = await _api.getOverview();
-      if (mounted) setState(() => _overview = overview);
+      if (mounted) {
+        setState(() {
+          _overview = overview;
+          _refreshing = false;
+        });
+      }
     } on AnalyticsApiException catch (error) {
-      if (mounted) setState(() => _error = error.message);
+      if (mounted) {
+        setState(() {
+          _error = error.message;
+          _refreshing = false;
+        });
+      }
     }
   }
 
@@ -67,6 +82,9 @@ class _InventoryAnalyticsScreenState extends State<InventoryAnalyticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ApplicationPageHeader(
+            contextLabel: 'INVENTORY ANALYTICS',
+            leadingIcon: Icons.analytics_outlined,
+            premium: true,
             title: 'Analytics',
             subtitle:
                 'Analyze inventory performance, stock health and business opportunities',
@@ -74,6 +92,7 @@ class _InventoryAnalyticsScreenState extends State<InventoryAnalyticsScreen> {
                 ? null
                 : 'Updated ${_analyticsUpdatedLabel(lastUpdated)}',
             onRefresh: _overview == null ? null : _load,
+            refreshing: _refreshing,
             refreshTooltip: 'Refresh analytics',
           ),
           const SizedBox(height: 24),
@@ -109,27 +128,53 @@ class _InventoryAnalyticsScreenState extends State<InventoryAnalyticsScreen> {
             ],
             const SizedBox(height: 16),
           ],
-          if (_error != null)
-            _ErrorPanel(
-              message: 'Analytics data could not be loaded. Please try again.',
-              onRetry: _load,
+          if (_overview == null && _error != null)
+            ApplicationErrorState(
+              title: 'Analytics could not be loaded',
+              message: _error!,
+              onRetry: () => _load(initial: true),
             )
           else if (_overview == null)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(72),
-                child: CircularProgressIndicator(),
+            const _AnalyticsLoadingState()
+          else ...[
+            if (_error != null) ...[
+              ApplicationInlineNotice(
+                title: 'Refresh failed',
+                message:
+                    'Showing the last successful analytics snapshot. ${_error!}',
+                tone: ApplicationNoticeTone.warning,
+                action: TextButton(
+                  onPressed: _refreshing ? null : _load,
+                  child: const Text('Try again'),
+                ),
               ),
-            )
-          else
+              const SizedBox(height: ApplicationSpacing.medium),
+            ],
             AnalyticsDecisionDashboard(
               overview: _overview!,
               onOpenInventoryIntelligence: widget.onOpenInventoryIntelligence,
             ),
+          ],
         ],
       ),
     );
   }
+}
+
+class _AnalyticsLoadingState extends StatelessWidget {
+  const _AnalyticsLoadingState();
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      ApplicationLoadingSkeleton(height: 112),
+      SizedBox(height: ApplicationSpacing.medium),
+      ApplicationLoadingSkeleton(height: 112),
+      SizedBox(height: ApplicationSpacing.medium),
+      ApplicationLoadingSkeleton(height: 320),
+    ],
+  );
 }
 
 String _analyticsUpdatedLabel(DateTime value) =>

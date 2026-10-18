@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../core/constants/api_constants.dart';
+import '../core/auth/inventory_api_client.dart';
+import 'inventory_auth_api_service.dart';
 import '../models/optimization/optimization_candidate.dart';
 
 class OptimizationApiException implements Exception {
@@ -11,10 +13,9 @@ class OptimizationApiException implements Exception {
   String toString() => message;
 }
 
-
 class OptimizationApiService {
-  OptimizationApiService({http.Client? client})
-    : _client = client ?? http.Client();
+  OptimizationApiService({required InventoryApiClient client})
+    : _client = client;
   final http.Client _client;
 
   Future<OptimizationOverview> getOverview() async {
@@ -65,6 +66,15 @@ class OptimizationApiService {
       final response =
           await (method == 'POST' ? _client.post(uri) : _client.get(uri))
               .timeout(ApiConstants.requestTimeout);
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        throw OptimizationApiException(
+          InventoryAuthException(
+            response.statusCode == 401
+                ? InventoryAuthFailure.invalidSession
+                : InventoryAuthFailure.forbidden,
+          ).toString(),
+        );
+      }
       Map<String, dynamic>? body;
       try {
         final decoded = jsonDecode(response.body);
@@ -86,6 +96,12 @@ class OptimizationApiService {
         );
       }
       return body;
+    } on InventoryAuthException catch (error) {
+      throw OptimizationApiException(
+        error.failure == InventoryAuthFailure.network
+            ? 'Cannot connect to the optimization service.'
+            : error.toString(),
+      );
     } on OptimizationApiException {
       rethrow;
     } on TimeoutException {

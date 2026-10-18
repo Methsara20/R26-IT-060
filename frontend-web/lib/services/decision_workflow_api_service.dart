@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../core/constants/api_constants.dart';
+import '../core/auth/inventory_api_client.dart';
+import 'inventory_auth_api_service.dart';
 import '../models/workflow/decision_workflow.dart';
 
 class DecisionWorkflowApiException implements Exception {
@@ -14,9 +16,9 @@ class DecisionWorkflowApiException implements Exception {
 }
 
 class DecisionWorkflowApiService {
-  DecisionWorkflowApiService({http.Client? client})
-    : _client = client ?? http.Client();
-  final http.Client _client;
+  DecisionWorkflowApiService({required InventoryApiClient inventoryClient})
+    : _client = inventoryClient;
+  final InventoryApiClient _client;
 
   Future<DecisionWorkflow> analyze({
     required String forecastType,
@@ -44,8 +46,21 @@ class DecisionWorkflowApiService {
   Future<DecisionWorkflow> getWorkflow(String workflowId) async =>
       _parse(await _request('GET', '/decision-workflow/$workflowId'));
 
-  DecisionWorkflow _parse(Map<String, dynamic> response) {
+  Future<List<DecisionWorkflow>> getHistory({int limit = 20}) async {
+    final response = await _request('GET', '/decision-workflow/?limit=$limit');
+    if (response is! List) {
+      throw const DecisionWorkflowApiException(
+        'The workflow service returned an unexpected response.',
+      );
+    }
+    return response.map((item) => _parse(item)).toList();
+  }
+
+  DecisionWorkflow _parse(dynamic response) {
     try {
+      if (response is! Map<String, dynamic>) {
+        throw const FormatException('Invalid workflow response.');
+      }
       return DecisionWorkflow.fromJson(response);
     } on FormatException {
       throw const DecisionWorkflowApiException(
@@ -54,7 +69,7 @@ class DecisionWorkflowApiService {
     }
   }
 
-  Future<Map<String, dynamic>> _request(
+  Future<dynamic> _request(
     String method,
     String path, [
     Map<String, dynamic>? payload,
@@ -70,16 +85,17 @@ class DecisionWorkflowApiService {
                     )
                   : _client.get(uri))
               .timeout(const Duration(seconds: 90));
-      Map<String, dynamic>? body;
+      dynamic body;
       try {
         final decoded = jsonDecode(response.body);
         if (decoded is Map) body = Map<String, dynamic>.from(decoded);
+        if (decoded is List) body = decoded;
       } on FormatException {
         // FastAPI may return plain text for an unhandled upstream error.
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw DecisionWorkflowApiException(
-          body?['detail']?.toString() ??
+          (body is Map ? body['detail']?.toString() : null) ??
               'Workflow request failed (${response.statusCode}).',
         );
       }
@@ -91,6 +107,12 @@ class DecisionWorkflowApiService {
       return body;
     } on DecisionWorkflowApiException {
       rethrow;
+    } on InventoryAuthException catch (error) {
+      throw DecisionWorkflowApiException(
+        error.failure == InventoryAuthFailure.network
+            ? 'Cannot connect to the decision workflow service.'
+            : error.toString(),
+      );
     } on TimeoutException {
       throw const DecisionWorkflowApiException(
         'The connected forecast is taking too long. Please try again.',

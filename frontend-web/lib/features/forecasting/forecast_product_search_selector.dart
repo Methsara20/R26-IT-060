@@ -200,7 +200,7 @@ class _ForecastProductSearchSelectorState
               style: TextStyle(
                 color: _filteredProductCount == 0
                     ? Theme.of(context).colorScheme.error
-                    : const Color(0xFF667085),
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 12,
                 fontWeight: _filteredProductCount == 0
                     ? FontWeight.w600
@@ -382,12 +382,17 @@ class _ForecastProductSearchSelectorState
                                     width: 42,
                                     height: 42,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFEDF4FF),
+                                      color: Theme.of(dialogContext)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: .09),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.checkroom_outlined,
-                                      color: Color(0xFF155EEF),
+                                      color: Theme.of(
+                                        dialogContext,
+                                      ).colorScheme.primary,
                                     ),
                                   ),
                                   title: Text(product.name),

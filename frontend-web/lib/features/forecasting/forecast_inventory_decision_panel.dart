@@ -55,9 +55,12 @@ class ForecastInventoryDecisionPanel extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE1E7F0)),
+            color: ApplicationColors.panel(context),
+            borderRadius: BorderRadius.circular(ApplicationRadii.dialog),
+            border: Border.all(color: ApplicationColors.border(context)),
+            boxShadow: ApplicationElevation.forBrightness(
+              Theme.of(context).brightness,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,8 +238,9 @@ class _OptimizationSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
+        color: ApplicationColors.panelMuted(context),
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        border: Border.all(color: ApplicationColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

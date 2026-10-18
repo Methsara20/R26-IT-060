@@ -61,4 +61,65 @@ void main() {
     expect(find.text('Showing 1-1 of 1'), findsOneWidget);
     expect(find.text('Product 3'), findsOneWidget);
   });
+
+  testWidgets('uses mobile cards and preserves product forecast handoff', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(375, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    String? forecastStore;
+    String? forecastProduct;
+    const record = InventoryRecord(
+      inventoryId: 'I1',
+      storeId: 'S1',
+      productId: 'P001',
+      currentStock: 4,
+      reorderLevel: 10,
+      maxStock: 100,
+      supplierLeadTime: 2,
+    );
+    const product = ForecastProductOption(
+      id: 'P001',
+      name: 'Long premium inventory product name',
+      sellingPrice: 100,
+      category: 'Shirts',
+      brand: 'Hustle',
+      gender: 'Men',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: InventoryExplorer(
+              store: const ForecastStoreOption(id: 'S1', name: 'Showroom'),
+              records: const [record],
+              products: const {'P001': product},
+              workflow: null,
+              onBack: () {},
+              onRunForecast: (store, product) {
+                forecastStore = store;
+                forecastProduct = product;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(DataTable), findsNothing);
+    expect(find.text('Long premium inventory product name'), findsOneWidget);
+    await tester.ensureVisible(find.text('View intelligence'));
+    await tester.tap(find.text('View intelligence'));
+    await tester.pumpAndSettle();
+    expect(find.text('Run forecast'), findsOneWidget);
+    await tester.ensureVisible(find.text('Run forecast'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Run forecast'));
+    expect(forecastStore, 'S1');
+    expect(forecastProduct, 'P001');
+    expect(tester.takeException(), isNull);
+  });
 }

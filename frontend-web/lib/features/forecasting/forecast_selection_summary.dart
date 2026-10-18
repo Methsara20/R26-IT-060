@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
+
 class ForecastSelectionSummary extends StatelessWidget {
   const ForecastSelectionSummary({
     required this.showroom,
@@ -27,8 +29,8 @@ class ForecastSelectionSummary extends StatelessWidget {
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0xFFE1E6EF)),
+      borderRadius: BorderRadius.circular(ApplicationRadii.card),
+      border: Border.all(color: ApplicationColors.border(context)),
     ),
     child: LayoutBuilder(
       builder: (context, constraints) {
@@ -73,11 +75,14 @@ class ForecastSelectionSummary extends StatelessWidget {
             const SizedBox(height: 16),
             details,
             const SizedBox(height: 18),
-            Align(
-              alignment: constraints.maxWidth < 520
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: button,
+            SizedBox(
+              width: constraints.maxWidth < 520 ? double.infinity : null,
+              child: Align(
+                alignment: constraints.maxWidth < 520
+                    ? Alignment.center
+                    : Alignment.centerRight,
+                child: button,
+              ),
             ),
           ],
         );

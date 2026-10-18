@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
 import '../../models/forecast/short_range_forecast.dart';
 
 /// Progressive daily detail: three rows first, with an explicit expansion.
@@ -20,9 +21,9 @@ class _ForecastDailyBreakdownState extends State<ForecastDailyBreakdown> {
     final visible = _expanded ? widget.days : widget.days.take(3);
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE1E7F0)),
+        color: ApplicationColors.panel(context),
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        border: Border.all(color: ApplicationColors.border(context)),
       ),
       child: Column(
         children: [
@@ -121,7 +122,9 @@ class _Value extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     text,
     style: TextStyle(
-      color: secondary ? const Color(0xFF667085) : const Color(0xFF344054),
+      color: secondary
+          ? Theme.of(context).colorScheme.onSurfaceVariant
+          : Theme.of(context).colorScheme.onSurface,
       fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
     ),
   );

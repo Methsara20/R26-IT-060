@@ -6,9 +6,10 @@ import '../../models/analytics/dashboard_summary.dart';
 import '../../services/analytics_api_service.dart';
 import '../../core/widgets/application_page_layout.dart';
 import 'widgets/attention_required_panel.dart';
-import 'widgets/dashboard_decision_banner.dart';
-import 'widgets/dashboard_kpi_card.dart';
-import 'widgets/inventory_attention_overview.dart';
+import 'widgets/premium_dashboard_components.dart';
+import '../../core/theme/application_design_tokens.dart';
+import '../../core/widgets/application_ui_components.dart';
+import '../../core/widgets/application_feedback_components.dart';
 
 /// Inventory decision command center backed by targeted aggregate documents.
 class InventoryDecisionDashboardScreen extends StatefulWidget {
@@ -74,6 +75,7 @@ class _InventoryDecisionDashboardScreenState
 
   @override
   Widget build(BuildContext context) => ApplicationPageContainer(
+    maxWidth: 1400,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -120,6 +122,9 @@ class _DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ApplicationPageHeader(
+    premium: true,
+    contextLabel: 'Inventory workspace',
+    leadingIcon: Icons.dashboard_outlined,
     title: 'Dashboard',
     subtitle: 'Monitor inventory health, demand risk and stock-flow decisions',
     updatedText: 'Updated ${_updatedLabel(lastUpdated)}',
@@ -149,7 +154,7 @@ class _DashboardContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DashboardDecisionBanner(
+        ExecutiveInventoryOverview(
           lowStockCount: summary.lowStockItems,
           overstockCount: summary.overstockItems,
           onViewInventory: onOpenInventoryIntelligence,
@@ -173,11 +178,13 @@ class _DashboardContent extends StatelessWidget {
         const SizedBox(height: 28),
         LayoutBuilder(
           builder: (context, constraints) {
-            final attention = AttentionRequiredPanel(
-              lowStockItems: data.lowStockItems,
-              overstockItems: data.overstockItems,
-              onViewAll: onOpenInventoryIntelligence,
-              onReview: onOpenInventoryIntelligence,
+            final attention = _DashboardAlertSurface(
+              child: AttentionRequiredPanel(
+                lowStockItems: data.lowStockItems,
+                overstockItems: data.overstockItems,
+                onViewAll: onOpenInventoryIntelligence,
+                onReview: onOpenInventoryIntelligence,
+              ),
             );
             final decisions = _DecisionNavigationPanel(
               onOpenOptimization: onOpenOptimization,
@@ -216,33 +223,39 @@ class _PrimaryKpis extends StatelessWidget {
   Widget build(BuildContext context) => _ResponsiveGrid(
     largeColumns: 4,
     children: [
-      DashboardKpiCard(
+      PremiumDashboardMetric(
         label: 'Total products',
         value: _number(summary.totalProducts),
         caption: 'Active catalog items',
         icon: Icons.sell_outlined,
-        color: const Color(0xFF155EEF),
+        color: Theme.of(context).colorScheme.primary,
       ),
-      DashboardKpiCard(
+      PremiumDashboardMetric(
         label: 'Showrooms',
         value: _number(summary.totalStores),
         caption: 'Retail locations',
         icon: Icons.storefront_outlined,
-        color: const Color(0xFF7A5AF8),
+        color: ApplicationColors.ai(context),
       ),
-      DashboardKpiCard(
+      PremiumDashboardMetric(
         label: 'Closing inventory',
         value: _compactNumber(summary.totalInventoryQuantity),
         caption: 'Across ${_number(summary.totalInventoryRecords)} records',
         icon: Icons.inventory_2_outlined,
-        color: const Color(0xFF0E9384),
+        color: ApplicationColors.status(
+          context,
+          ApplicationStatusColor.success,
+        ),
       ),
-      DashboardKpiCard(
+      PremiumDashboardMetric(
         label: 'Closing inventory value',
         value: _compactMoney(summary.totalInventoryValue),
         caption: _money(summary.totalInventoryValue),
         icon: Icons.account_balance_wallet_outlined,
-        color: const Color(0xFF344054),
+        color: ApplicationColors.status(
+          context,
+          ApplicationStatusColor.warning,
+        ),
       ),
     ],
   );
@@ -255,34 +268,35 @@ class _HealthSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final cards = _ResponsiveGrid(
-        largeColumns: 2,
+      final cards = Column(
+        spacing: 16,
         children: [
-          DashboardKpiCard(
+          PremiumDashboardMetric(
             label: 'Low-stock records',
             value: _number(summary.lowStockItems),
             caption: 'At or below reorder level',
             icon: Icons.trending_down_rounded,
-            color: const Color(0xFFD92D20),
+            color: ApplicationColors.status(
+              context,
+              ApplicationStatusColor.danger,
+            ),
           ),
-          DashboardKpiCard(
+          PremiumDashboardMetric(
             label: 'Overstock records',
             value: _number(summary.overstockItems),
             caption: 'At or above the configured threshold',
             icon: Icons.inventory_outlined,
-            color: const Color(0xFFF79009),
+            color: ApplicationColors.status(
+              context,
+              ApplicationStatusColor.warning,
+            ),
           ),
         ],
       );
-      final profile = SizedBox(
-        // Allow enough vertical space for both radial indicators and their
-        // explanatory note at desktop and browser text-scale settings.
-        height: 276,
-        child: InventoryAttentionOverview(
-          totalRecords: summary.totalInventoryRecords,
-          lowStock: summary.lowStockItems,
-          overstock: summary.overstockItems,
-        ),
+      final profile = DashboardAttentionProfile(
+        totalRecords: summary.totalInventoryRecords,
+        lowStock: summary.lowStockItems,
+        overstock: summary.overstockItems,
       );
       if (constraints.maxWidth < 820) {
         return Column(children: [cards, const SizedBox(height: 16), profile]);
@@ -310,7 +324,7 @@ class _DecisionNavigationPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -359,12 +373,12 @@ class _DecisionLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: Theme.of(context).colorScheme.surfaceContainerLow,
-    borderRadius: BorderRadius.circular(11),
+    borderRadius: BorderRadius.circular(ApplicationRadii.card),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(11),
+      borderRadius: BorderRadius.circular(ApplicationRadii.card),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(24),
         child: Row(
           children: [
             Icon(icon, color: Theme.of(context).colorScheme.primary),
@@ -401,7 +415,7 @@ class _FinancialOpportunityPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -440,26 +454,32 @@ class _FinancialOpportunityPanel extends StatelessWidget {
           _ResponsiveGrid(
             largeColumns: 3,
             children: [
-              DashboardKpiCard(
+              PremiumDashboardMetric(
                 label: 'Inventory value',
                 value: _compactMoney(summary.totalInventoryValue),
                 caption: _money(summary.totalInventoryValue),
                 icon: Icons.account_balance_wallet_outlined,
-                color: const Color(0xFF155EEF),
+                color: Theme.of(context).colorScheme.primary,
               ),
-              DashboardKpiCard(
+              PremiumDashboardMetric(
                 label: 'Potential revenue',
                 value: _compactMoney(summary.totalPotentialRevenue),
                 caption: _money(summary.totalPotentialRevenue),
                 icon: Icons.trending_up,
-                color: const Color(0xFF0E9384),
+                color: ApplicationColors.status(
+                  context,
+                  ApplicationStatusColor.success,
+                ),
               ),
-              DashboardKpiCard(
+              PremiumDashboardMetric(
                 label: 'Potential profit',
                 value: _compactMoney(summary.totalPotentialProfit),
                 caption: _money(summary.totalPotentialProfit),
                 icon: Icons.payments_outlined,
-                color: const Color(0xFF079455),
+                color: ApplicationColors.status(
+                  context,
+                  ApplicationStatusColor.success,
+                ),
               ),
             ],
           ),
@@ -507,22 +527,26 @@ class _SectionHeading extends StatelessWidget {
 
 class _DashboardLoadingState extends StatelessWidget {
   const _DashboardLoadingState();
-
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      _ResponsiveGrid(
-        largeColumns: 4,
+      const ApplicationLoadingSkeleton(height: 220),
+      const SizedBox(height: 24),
+      ApplicationResponsiveGrid(
         children: List.generate(
           4,
-          (_) => const Card(child: SizedBox(height: 96)),
-        ),
-      ),
-      const SizedBox(height: 18),
-      const Card(
-        child: SizedBox(
-          height: 220,
-          child: Center(child: CircularProgressIndicator()),
+          (_) => const ApplicationSurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ApplicationLoadingSkeleton(height: 20, width: 120),
+                SizedBox(height: 20),
+                ApplicationLoadingSkeleton(height: 36),
+                SizedBox(height: 12),
+                ApplicationLoadingSkeleton(height: 14),
+              ],
+            ),
+          ),
         ),
       ),
     ],
@@ -533,36 +557,11 @@ class _DashboardErrorState extends StatelessWidget {
   const _DashboardErrorState({required this.message, required this.onRetry});
   final String message;
   final VoidCallback onRetry;
-
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 52),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.cloud_off_outlined,
-              size: 42,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Dashboard unavailable',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try again'),
-            ),
-          ],
-        ),
-      ),
-    ),
+  Widget build(BuildContext context) => ApplicationErrorState(
+    title: 'Dashboard unavailable',
+    message: message,
+    onRetry: onRetry,
   );
 }
 
@@ -570,18 +569,12 @@ class _RefreshWarning extends StatelessWidget {
   const _RefreshWarning({required this.message, required this.onRetry});
   final String message;
   final VoidCallback onRetry;
-
   @override
-  Widget build(BuildContext context) => Card(
-    child: ListTile(
-      leading: Icon(
-        Icons.warning_amber,
-        color: Theme.of(context).colorScheme.error,
-      ),
-      title: const Text('Dashboard refresh was unsuccessful'),
-      subtitle: Text('$message The last successful data remains visible.'),
-      trailing: TextButton(onPressed: onRetry, child: const Text('Retry')),
-    ),
+  Widget build(BuildContext context) => ApplicationInlineNotice(
+    title: 'Dashboard refresh was unsuccessful',
+    message: '$message The last successful data remains visible.',
+    tone: ApplicationNoticeTone.warning,
+    action: TextButton(onPressed: onRetry, child: const Text('Retry')),
   );
 }
 
@@ -624,4 +617,30 @@ String _updatedLabel(DateTime? value) {
   String two(int number) => number.toString().padLeft(2, '0');
   return '${local.year}-${two(local.month)}-${two(local.day)} '
       '${two(local.hour)}:${two(local.minute)}';
+}
+
+class _DashboardAlertSurface extends StatelessWidget {
+  const _DashboardAlertSurface({required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(ApplicationRadii.card),
+      boxShadow: ApplicationElevation.forBrightness(
+        Theme.of(context).brightness,
+      ),
+    ),
+    child: Theme(
+      data: Theme.of(context).copyWith(
+        cardTheme: Theme.of(context).cardTheme.copyWith(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ApplicationRadii.card),
+            side: BorderSide(color: ApplicationColors.border(context)),
+          ),
+        ),
+      ),
+      child: child,
+    ),
+  );
 }

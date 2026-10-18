@@ -7,7 +7,8 @@ import 'hub_screen.dart';
 import 'upload_screen.dart';
 import 'recommender_screen.dart';
 import 'poster_screen.dart';
-import 'inventory_screen.dart';
+import 'inventory_marketing_screen.dart';
+import '../core/auth/marketing_auth_scope.dart';
 import 'calendar_screen.dart';
 import 'customer_intelligence_screen.dart';
 
@@ -34,9 +35,15 @@ class _RootNavState extends State<RootNav> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? AppColors.textPrimary : const Color(0xFF1E293B);
     final mutedColor = isDark ? AppColors.textMuted : const Color(0xFF64748B);
-    final navBgColor = isDark ? const Color(0x22FFFFFF) : const Color(0xBBFFFFFF);
-    final navBorderColor = isDark ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.6);
-    final navShadowColor = isDark ? Colors.black.withOpacity(0.3) : const Color(0xFF6366F1).withOpacity(0.1);
+    final navBgColor = isDark
+        ? const Color(0x22FFFFFF)
+        : const Color(0xBBFFFFFF);
+    final navBorderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.white.withValues(alpha: 0.6);
+    final navShadowColor = isDark
+        ? Colors.black.withValues(alpha: 0.3)
+        : const Color(0xFF6366F1).withValues(alpha: 0.1);
 
     final screens = [
       const HubScreen(),
@@ -46,7 +53,7 @@ class _RootNavState extends State<RootNav> {
         key: ValueKey(selectedInventoryOpportunity?['opportunity_id']),
         inventoryOpportunity: selectedInventoryOpportunity,
       ),
-      InventoryInsightsScreen(onCreatePoster: createPosterFromInventory),
+      InventoryMarketingScreen(onCreatePoster: createPosterFromInventory),
       const PromotionCalendarScreen(),
       const CustomerIntelligenceScreen(),
     ];
@@ -75,7 +82,11 @@ class _RootNavState extends State<RootNav> {
               const SizedBox(width: 10),
               Text(
                 'Marketing Intelligence',
-                style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 17),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                  fontSize: 17,
+                ),
               ),
             ],
           ),
@@ -87,14 +98,22 @@ class _RootNavState extends State<RootNav> {
                 return Container(
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: IconButton(
-                    tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+                    tooltip: isDark
+                        ? 'Switch to Light Mode'
+                        : 'Switch to Dark Mode',
                     icon: Icon(
-                      isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                      color: isDark ? AppColors.goldAccent : const Color(0xFF6366F1),
+                      isDark
+                          ? Icons.light_mode_rounded
+                          : Icons.dark_mode_rounded,
+                      color: isDark
+                          ? AppColors.goldAccent
+                          : const Color(0xFF6366F1),
                     ),
                     onPressed: ThemeNotifier.instance.toggle,
                   ),
@@ -105,13 +124,18 @@ class _RootNavState extends State<RootNav> {
             Container(
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
                 tooltip: 'Log out',
                 icon: Icon(Icons.logout_rounded, color: mutedColor),
-                onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                onPressed: () {
+                  MarketingAuthScope.read(context).logout();
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
               ),
             ),
           ],
@@ -143,16 +167,28 @@ class _RootNavState extends State<RootNav> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
                   child: NavigationBarTheme(
                     data: NavigationBarThemeData(
-                      indicatorColor: AppColors.primaryBlue.withOpacity(isDark ? 0.3 : 0.15),
+                      indicatorColor: AppColors.primaryBlue.withValues(
+                        alpha: isDark ? 0.3 : 0.15,
+                      ),
                       labelTextStyle: WidgetStateProperty.all(
-                        TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: textColor),
+                        TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: textColor,
+                        ),
                       ),
                       iconTheme: WidgetStateProperty.resolveWith((states) {
                         if (states.contains(WidgetState.selected)) {
-                          return IconThemeData(color: AppColors.primaryBlue, size: 22);
+                          return IconThemeData(
+                            color: AppColors.primaryBlue,
+                            size: 22,
+                          );
                         }
                         return IconThemeData(color: mutedColor, size: 22);
                       }),
@@ -162,15 +198,44 @@ class _RootNavState extends State<RootNav> {
                       backgroundColor: Colors.transparent,
                       elevation: 0,
                       selectedIndex: currentIndex,
-                      onDestinationSelected: (index) => setState(() => currentIndex = index),
+                      onDestinationSelected: (index) =>
+                          setState(() => currentIndex = index),
                       destinations: const [
-                        NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Hub'),
-                        NavigationDestination(icon: Icon(Icons.upload_outlined), selectedIcon: Icon(Icons.upload_rounded), label: 'Upload'),
-                        NavigationDestination(icon: Icon(Icons.psychology_outlined), selectedIcon: Icon(Icons.psychology_rounded), label: 'AI'),
-                        NavigationDestination(icon: Icon(Icons.image_outlined), selectedIcon: Icon(Icons.image_rounded), label: 'Poster'),
-                        NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2_rounded), label: 'Inventory'),
-                        NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month_rounded), label: 'Calendar'),
-                        NavigationDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people_rounded), label: 'Customers'),
+                        NavigationDestination(
+                          icon: Icon(Icons.home_outlined),
+                          selectedIcon: Icon(Icons.home_rounded),
+                          label: 'Hub',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.upload_outlined),
+                          selectedIcon: Icon(Icons.upload_rounded),
+                          label: 'Upload',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.psychology_outlined),
+                          selectedIcon: Icon(Icons.psychology_rounded),
+                          label: 'AI',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.image_outlined),
+                          selectedIcon: Icon(Icons.image_rounded),
+                          label: 'Poster',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.inventory_2_outlined),
+                          selectedIcon: Icon(Icons.inventory_2_rounded),
+                          label: 'Inventory',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.calendar_month_outlined),
+                          selectedIcon: Icon(Icons.calendar_month_rounded),
+                          label: 'Calendar',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.people_outline),
+                          selectedIcon: Icon(Icons.people_rounded),
+                          label: 'Customers',
+                        ),
                       ],
                     ),
                   ),

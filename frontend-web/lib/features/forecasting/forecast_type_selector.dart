@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
+
 enum ForecastMode { daily, sevenDay, custom, monthly, quarterly }
 
 class ForecastTypeSelector extends StatelessWidget {
@@ -52,21 +54,37 @@ class ForecastTypeSelector extends StatelessWidget {
           : 1;
       const spacing = 10.0;
       final width = (constraints.maxWidth - spacing * (columns - 1)) / columns;
-      return Wrap(
-        spacing: spacing,
-        runSpacing: spacing,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final option in _options)
-            SizedBox(
-              width: width,
-              child: _ForecastTypeOption(
-                title: option.$2,
-                description: option.$3,
-                icon: option.$4,
-                selected: option.$1 == selectedMode,
-                onTap: () => onChanged(option.$1),
-              ),
-            ),
+          Text(
+            'Choose forecast horizon',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Operational forecasts support connected decisions. Strategic forecasts support longer-range planning.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (var index = 0; index < _options.length; index++)
+                SizedBox(
+                  width: width,
+                  child: _ForecastTypeOption(
+                    title: _options[index].$2,
+                    description: _options[index].$3,
+                    icon: _options[index].$4,
+                    category: index < 3 ? 'OPERATIONAL' : 'STRATEGIC',
+                    selected: _options[index].$1 == selectedMode,
+                    onTap: () => onChanged(_options[index].$1),
+                  ),
+                ),
+            ],
+          ),
         ],
       );
     },
@@ -78,58 +96,87 @@ class _ForecastTypeOption extends StatelessWidget {
     required this.title,
     required this.description,
     required this.icon,
+    required this.category,
     required this.selected,
     required this.onTap,
   });
   final String title;
   final String description;
   final IconData icon;
+  final String category;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-    return Material(
-      color: selected ? const Color(0xFFEDF4FF) : Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? primary : const Color(0xFFE1E6EF),
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: selected ? primary : const Color(0xFF667085)),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      description,
-                      maxLines: 2,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: '$title $category forecast',
+      child: Material(
+        color: selected
+            ? scheme.primary.withValues(alpha: .09)
+            : ApplicationColors.panel(context),
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(ApplicationRadii.card),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(ApplicationRadii.card),
+              border: Border.all(
+                color: selected ? primary : ApplicationColors.border(context),
+                width: selected ? 1.5 : 1,
               ),
-              if (selected) Icon(Icons.check_circle, color: primary, size: 18),
-            ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: selected ? .14 : .07),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: selected ? primary : scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: selected ? primary : scheme.onSurfaceVariant,
+                          letterSpacing: .7,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        description,
+                        maxLines: 2,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                if (selected)
+                  Icon(Icons.check_circle, color: primary, size: 18),
+              ],
+            ),
           ),
         ),
       ),

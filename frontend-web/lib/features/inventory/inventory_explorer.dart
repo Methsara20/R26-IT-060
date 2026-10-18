@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
 import '../../models/forecast/forecast_catalog_option.dart';
 import '../../models/inventory/inventory_record.dart';
 import '../../models/workflow/decision_workflow.dart';
@@ -135,26 +136,33 @@ class _InventoryExplorerState extends State<InventoryExplorer> {
         const SizedBox(height: 20),
         _filters(),
         const SizedBox(height: 14),
-        Row(
+        Wrap(
+          spacing: 14,
+          runSpacing: 8,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Expanded(
-              child: Text(
-                filtered.isEmpty
-                    ? 'No matching inventory records'
-                    : 'Showing ${start + 1}-$end of ${filtered.length}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+            Text(
+              filtered.isEmpty
+                  ? 'No matching inventory records'
+                  : 'Showing ${start + 1}-$end of ${filtered.length}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            const Text('Rows: '),
-            DropdownButton<int>(
-              value: _pageSize,
-              items: const [
-                DropdownMenuItem(value: 25, child: Text('25')),
-                DropdownMenuItem(value: 50, child: Text('50')),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Rows: '),
+                DropdownButton<int>(
+                  value: _pageSize,
+                  items: const [
+                    DropdownMenuItem(value: 25, child: Text('25')),
+                    DropdownMenuItem(value: 50, child: Text('50')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) _change(() => _pageSize = value);
+                  },
+                ),
               ],
-              onChanged: (value) {
-                if (value != null) _change(() => _pageSize = value);
-              },
             ),
           ],
         ),
@@ -165,17 +173,17 @@ class _InventoryExplorerState extends State<InventoryExplorer> {
           onOpen: _openProduct,
         ),
         const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             OutlinedButton(
               onPressed: _page > 0 ? () => setState(() => _page--) : null,
               child: const Text('Previous'),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Text('${_page + 1} of $pageCount'),
-            ),
+            Text('${_page + 1} of $pageCount'),
             OutlinedButton(
               onPressed: _page + 1 < pageCount
                   ? () => setState(() => _page++)
@@ -191,9 +199,9 @@ class _InventoryExplorerState extends State<InventoryExplorer> {
   Widget _filters() => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: const Color(0xFFE1E7F0)),
+      color: ApplicationColors.panel(context),
+      borderRadius: BorderRadius.circular(ApplicationRadii.card),
+      border: Border.all(color: ApplicationColors.border(context)),
     ),
     child: LayoutBuilder(
       builder: (context, constraints) {
@@ -329,41 +337,124 @@ class _InventoryExplorerTable extends StatelessWidget {
   final ValueChanged<InventoryRecord> onOpen;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: const Color(0xFFE1E7F0)),
-    ),
-    child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        showCheckboxColumn: false,
-        columns: const [
-          DataColumn(label: Text('Product')),
-          DataColumn(label: Text('Current stock'), numeric: true),
-          DataColumn(label: Text('Reorder level'), numeric: true),
-          DataColumn(label: Text('Maximum stock'), numeric: true),
-          DataColumn(label: Text('Lead time')),
-          DataColumn(label: Text('Health')),
-        ],
-        rows: [
-          for (final record in records)
-            DataRow(
-              onSelectChanged: (_) => onOpen(record),
-              cells: [
-                DataCell(
-                  SizedBox(
-                    width: 250,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      if (constraints.maxWidth < 700) {
+        return Column(
+          children: [
+            for (final record in records)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _InventoryRecordCard(
+                  record: record,
+                  product: products[record.productId],
+                  onOpen: () => onOpen(record),
+                ),
+              ),
+          ],
+        );
+      }
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: ApplicationColors.panel(context),
+          borderRadius: BorderRadius.circular(ApplicationRadii.card),
+          border: Border.all(color: ApplicationColors.border(context)),
+        ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            showCheckboxColumn: false,
+            columns: const [
+              DataColumn(label: Text('Product')),
+              DataColumn(label: Text('Current stock'), numeric: true),
+              DataColumn(label: Text('Reorder level'), numeric: true),
+              DataColumn(label: Text('Maximum stock'), numeric: true),
+              DataColumn(label: Text('Lead time')),
+              DataColumn(label: Text('Health')),
+            ],
+            rows: [
+              for (final record in records)
+                DataRow(
+                  onSelectChanged: (_) => onOpen(record),
+                  cells: [
+                    DataCell(
+                      SizedBox(
+                        width: 250,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              products[record.productId]?.name ??
+                                  record.productId,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              record.productId,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    DataCell(Text('${record.currentStock}')),
+                    DataCell(Text('${record.reorderLevel}')),
+                    DataCell(Text('${record.maxStock}')),
+                    DataCell(Text('${record.supplierLeadTime} days')),
+                    DataCell(
+                      _HealthBadge(health: inventoryCurrentHealth(record)),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _InventoryRecordCard extends StatelessWidget {
+  const _InventoryRecordCard({
+    required this.record,
+    required this.product,
+    required this.onOpen,
+  });
+
+  final InventoryRecord record;
+  final ForecastProductOption? product;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final health = inventoryCurrentHealth(record);
+    return Material(
+      color: ApplicationColors.panel(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        side: BorderSide(color: ApplicationColors.border(context)),
+      ),
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          products[record.productId]?.name ?? record.productId,
-                          overflow: TextOverflow.ellipsis,
+                          product?.name ?? record.productId,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           record.productId,
                           style: Theme.of(context).textTheme.bodySmall,
@@ -371,18 +462,36 @@ class _InventoryExplorerTable extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  _HealthBadge(health: health),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 22,
+                runSpacing: 10,
+                children: [
+                  _DetailValue('Current', '${record.currentStock} units'),
+                  _DetailValue('Reorder', '${record.reorderLevel} units'),
+                  _DetailValue('Maximum', '${record.maxStock} units'),
+                  _DetailValue('Lead time', '${record.supplierLeadTime} days'),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: onOpen,
+                  icon: const Icon(Icons.open_in_new, size: 18),
+                  label: const Text('View intelligence'),
                 ),
-                DataCell(Text('${record.currentStock}')),
-                DataCell(Text('${record.reorderLevel}')),
-                DataCell(Text('${record.maxStock}')),
-                DataCell(Text('${record.supplierLeadTime} days')),
-                DataCell(_HealthBadge(health: inventoryCurrentHealth(record))),
-              ],
-            ),
-        ],
+              ),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _HealthBadge extends StatelessWidget {
@@ -471,11 +580,11 @@ Future<void> showInventoryProductDetail({
                 ],
               ),
               const Divider(height: 30),
-              const Text(
+              Text(
                 'CURRENT INVENTORY',
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF475467),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 12),
@@ -494,11 +603,11 @@ Future<void> showInventoryProductDetail({
                 ],
               ),
               const SizedBox(height: 22),
-              const Text(
+              Text(
                 'INVENTORY HEALTH',
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF475467),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -506,11 +615,11 @@ Future<void> showInventoryProductDetail({
               const SizedBox(height: 8),
               Text(explanation),
               const Divider(height: 32),
-              const Text(
+              Text(
                 'FORECAST INTELLIGENCE',
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF475467),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -551,9 +660,11 @@ Future<void> showInventoryProductDetail({
                   'No forecast-backed analysis is available for this product yet.',
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Run a forecast to evaluate future demand, projected inventory and stock risk.',
-                  style: TextStyle(color: Color(0xFF667085)),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
               const SizedBox(height: 20),

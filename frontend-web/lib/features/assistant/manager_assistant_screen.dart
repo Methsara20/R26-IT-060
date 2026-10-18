@@ -1,5 +1,7 @@
 // Final-polish pass: aligns assistant chrome and panels with the shared system.
 import 'package:flutter/material.dart';
+import '../../core/auth/inventory_api_client.dart';
+import '../../core/auth/inventory_auth_scope.dart';
 
 import '../../core/theme/application_design_tokens.dart';
 import '../../models/assistant/manager_chat.dart';
@@ -8,6 +10,7 @@ import '../../services/manager_assistant_api_service.dart';
 import '../../services/stock_movement_api_service.dart';
 import '../../core/widgets/application_page_layout.dart';
 import '../../core/widgets/application_ui_components.dart';
+import '../../core/widgets/application_feedback_components.dart';
 import '../workflow/inventory_decision_workflow_controller.dart';
 import '../workflow/active_workflow_banner.dart';
 import 'widgets/inventory_agent_components.dart';
@@ -17,19 +20,24 @@ class ManagerAssistantScreen extends StatefulWidget {
   const ManagerAssistantScreen({
     required this.workflowController,
     this.initialMovementId,
+    this.api,
+    this.movementApi,
     super.key,
   });
 
   final InventoryDecisionWorkflowController workflowController;
   final String? initialMovementId;
+  final ManagerAssistantApiService? api;
+  final StockMovementApiService? movementApi;
 
   @override
   State<ManagerAssistantScreen> createState() => _ManagerAssistantScreenState();
 }
 
 class _ManagerAssistantScreenState extends State<ManagerAssistantScreen> {
-  final _api = ManagerAssistantApiService();
-  final _movementApi = StockMovementApiService();
+  late final ManagerAssistantApiService _api;
+  InventoryApiClient? _inventoryClient;
+  late final StockMovementApiService _movementApi;
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
 
@@ -40,13 +48,23 @@ class _ManagerAssistantScreenState extends State<ManagerAssistantScreen> {
   String? _movementId;
   String? _error;
   String? _failedQuestion;
-  bool _loading = true;
+  bool _loading = false;
   bool _sending = false;
+  bool _refreshing = false;
   late bool _restoreSession;
 
   @override
   void initState() {
     super.initState();
+    _api = widget.api ?? ManagerAssistantApiService();
+    if (widget.movementApi case final movementApi?) {
+      _movementApi = movementApi;
+    } else {
+      _inventoryClient = InventoryApiClient(
+        session: InventoryAuthScope.read(context),
+      );
+      _movementApi = StockMovementApiService(client: _inventoryClient!);
+    }
     final storedSessionId = widget.workflowController.assistantSessionId;
     _restoreSession = storedSessionId != null;
     _sessionId = storedSessionId ?? _newSessionId();
@@ -56,14 +74,20 @@ class _ManagerAssistantScreenState extends State<ManagerAssistantScreen> {
 
   @override
   void dispose() {
+    _inventoryClient?.close();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadInitialData() async {
+  Future<void> _loadInitialData({bool refresh = false}) async {
+    if (_loading || _refreshing) return;
     setState(() {
-      _loading = true;
+      if (refresh) {
+        _refreshing = true;
+      } else {
+        _loading = true;
+      }
       _error = null;
     });
     try {
@@ -89,12 +113,14 @@ class _ManagerAssistantScreenState extends State<ManagerAssistantScreen> {
           _messages = history.messages;
         }
         _loading = false;
+        _refreshing = false;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error.toString();
         _loading = false;
+        _refreshing = false;
       });
     }
   }
@@ -210,11 +236,15 @@ class _ManagerAssistantScreenState extends State<ManagerAssistantScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ApplicationPageHeader(
+            contextLabel: 'INVENTORY AI',
+            leadingIcon: Icons.auto_awesome_outlined,
+            premium: true,
             title: 'Manager Assistant',
             subtitle:
                 'Ask Inventory AI for decision support across your inventory network',
             contextual: const InventoryAgentStatus(compact: true),
-            onRefresh: _loading ? null : _loadInitialData,
+            onRefresh: _loading ? null : () => _loadInitialData(refresh: true),
+            refreshing: _refreshing,
             refreshTooltip: 'Refresh assistant context',
           ),
           const SizedBox(height: 24),
@@ -223,7 +253,10 @@ class _ManagerAssistantScreenState extends State<ManagerAssistantScreen> {
             const SizedBox(height: 14),
           ],
           SizedBox(
-            height: 690,
+            height: (MediaQuery.sizeOf(context).height - 220).clamp(
+              560.0,
+              820.0,
+            ),
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final showHistory = constraints.maxWidth >= 820;
@@ -250,6 +283,7 @@ class _ManagerAssistantScreenState extends State<ManagerAssistantScreen> {
                         controller: _messageController,
                         scrollController: _scrollController,
                         loading: _loading,
+                        refreshing: _refreshing,
                         sending: _sending,
                         error: _error,
                         suggestedQuestions: inventoryAssistantSuggestions(
@@ -264,7 +298,9 @@ class _ManagerAssistantScreenState extends State<ManagerAssistantScreen> {
                         },
                         onSend: _send,
                         onRetry: _failedQuestion == null
-                            ? _loadInitialData
+                            ? () => _loadInitialData(
+                                refresh: _messages.isNotEmpty,
+                              )
                             : _retryFailedQuestion,
                         onShowHistory: () => _showMobileHistory(),
                       ),
@@ -356,19 +392,40 @@ class _HistoryPanel extends StatelessWidget {
                   itemCount: sessions.length,
                   itemBuilder: (context, index) {
                     final session = sessions[index];
-                    return ListTile(
-                      selected: session.sessionId == selectedSessionId,
-                      leading: const Icon(Icons.chat_bubble_outline, size: 20),
-                      title: Text(
-                        session.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    final selected = session.sessionId == selectedSessionId;
+                    final metadata = [
+                      '${session.messageCount} messages',
+                      if (session.mode != null) session.mode!,
+                    ].join(' · ');
+                    return Semantics(
+                      selected: selected,
+                      button: true,
+                      child: Tooltip(
+                        message: session.title,
+                        child: ListTile(
+                          selected: selected,
+                          selectedColor: Theme.of(context).colorScheme.primary,
+                          selectedTileColor: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: .08),
+                          leading: Icon(
+                            selected
+                                ? Icons.chat_bubble
+                                : Icons.chat_bubble_outline,
+                            size: 20,
+                          ),
+                          title: Text(
+                            session.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(metadata),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          onTap: () => onSelected(session),
+                        ),
                       ),
-                      subtitle: Text('${session.messageCount} messages'),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      onTap: () => onSelected(session),
                     );
                   },
                 ),
@@ -386,6 +443,7 @@ class _ChatPanel extends StatelessWidget {
     required this.controller,
     required this.scrollController,
     required this.loading,
+    required this.refreshing,
     required this.sending,
     required this.error,
     required this.suggestedQuestions,
@@ -402,6 +460,7 @@ class _ChatPanel extends StatelessWidget {
   final TextEditingController controller;
   final ScrollController scrollController;
   final bool loading;
+  final bool refreshing;
   final bool sending;
   final String? error;
   final List<String> suggestedQuestions;
@@ -419,75 +478,89 @@ class _ChatPanel extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              if (showHistoryButton)
-                IconButton(
-                  onPressed: onShowHistory,
-                  icon: const Icon(Icons.history),
-                ),
-              CircleAvatar(
-                backgroundColor: ApplicationColors.ai(
-                  context,
-                ).withValues(alpha: .12),
-                foregroundColor: ApplicationColors.ai(context),
-                child: const Icon(Icons.auto_awesome),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Inventory AI Agent',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 680;
+              final identity = Row(
+                children: [
+                  if (showHistoryButton)
+                    IconButton(
+                      tooltip: 'Open conversation history',
+                      onPressed: onShowHistory,
+                      icon: const Icon(Icons.history),
                     ),
-                    Text(
-                      'Grounded in verified inventory data',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF68758C)),
-                    ),
-                    SizedBox(height: 3),
-                    InventoryAgentStatus(compact: true),
-                  ],
-                ),
-              ),
-              SizedBox(
-                width: 260,
-                child: DropdownButtonFormField<String?>(
-                  initialValue:
-                      movements.any((item) => item.movementId == movementId)
-                      ? movementId
-                      : null,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Movement context',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                  CircleAvatar(
+                    backgroundColor: ApplicationColors.ai(
+                      context,
+                    ).withValues(alpha: .12),
+                    foregroundColor: ApplicationColors.ai(context),
+                    child: const Icon(Icons.auto_awesome),
                   ),
-                  items: [
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('General questions'),
-                    ),
-                    for (final movement in movements)
-                      DropdownMenuItem<String?>(
-                        value: movement.movementId,
-                        child: Text(
-                          '${movement.productName} • ${movement.status}',
-                          overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Inventory AI Agent',
+                          style: TextStyle(fontWeight: FontWeight.w700),
                         ),
-                      ),
-                  ],
-                  onChanged: sending ? null : onMovementChanged,
+                        Text('Grounded in verified inventory data'),
+                        SizedBox(height: 3),
+                        InventoryAgentStatus(compact: true),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+              final selector = DropdownButtonFormField<String?>(
+                initialValue:
+                    movements.any((item) => item.movementId == movementId)
+                    ? movementId
+                    : null,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Movement context',
+                  border: OutlineInputBorder(),
+                  isDense: true,
                 ),
-              ),
-            ],
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('General questions'),
+                  ),
+                  for (final movement in movements)
+                    DropdownMenuItem<String?>(
+                      value: movement.movementId,
+                      child: Text(
+                        '${movement.productName} • ${movement.status}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+                onChanged: sending ? null : onMovementChanged,
+              );
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [identity, const SizedBox(height: 12), selector],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: identity),
+                  const SizedBox(width: 16),
+                  SizedBox(width: 280, child: selector),
+                ],
+              );
+            },
           ),
         ),
+        if (refreshing) const LinearProgressIndicator(minHeight: 2),
         const Divider(height: 1),
         Expanded(
           child: loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const _AssistantLoadingState()
               : messages.isEmpty
               ? _WelcomePanel(
                   suggestedQuestions: suggestedQuestions,
@@ -502,19 +575,16 @@ class _ChatPanel extends StatelessWidget {
                 ),
         ),
         if (error != null)
-          Container(
-            width: double.infinity,
-            color: const Color(0xFFFFECEC),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                const Icon(Icons.error_outline, size: 18, color: Colors.red),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(error ?? 'Inventory AI is temporarily unavailable.'),
-                ),
-                TextButton(onPressed: onRetry, child: const Text('Retry')),
-              ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+            child: ApplicationInlineNotice(
+              title: 'Inventory AI is temporarily unavailable',
+              message: error,
+              tone: ApplicationNoticeTone.danger,
+              action: TextButton(
+                onPressed: onRetry,
+                child: const Text('Try again'),
+              ),
             ),
           ),
         if (messages.isNotEmpty && suggestedQuestions.isNotEmpty)
@@ -528,39 +598,35 @@ class _ChatPanel extends StatelessWidget {
         const Divider(height: 1),
         Padding(
           padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  enabled: !loading && !sending,
-                  minLines: 1,
-                  maxLines: 4,
-                  maxLength: 500,
-                  decoration: const InputDecoration(
-                    hintText: 'Ask Inventory AI...',
-                    border: OutlineInputBorder(),
-                    counterText: '',
-                  ),
-                  onSubmitted: (_) => onSend(),
-                ),
-              ),
-              const SizedBox(width: 10),
-              IconButton.filled(
-                tooltip: 'Send message',
-                onPressed: loading || sending ? null : onSend,
-                icon: sending
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.send),
-              ),
-            ],
+          child: InventoryAgentComposer(
+            controller: controller,
+            sending: sending,
+            enabled: !loading,
+            onSend: onSend,
           ),
         ),
+      ],
+    ),
+  );
+}
+
+class _AssistantLoadingState extends StatelessWidget {
+  const _AssistantLoadingState();
+
+  @override
+  Widget build(BuildContext context) => const Padding(
+    padding: EdgeInsets.all(24),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ApplicationLoadingSkeleton(height: 70, width: 360),
+        SizedBox(height: 18),
+        Align(
+          alignment: Alignment.centerRight,
+          child: ApplicationLoadingSkeleton(height: 54, width: 260),
+        ),
+        SizedBox(height: 18),
+        ApplicationLoadingSkeleton(height: 96, width: 480),
       ],
     ),
   );
@@ -577,7 +643,7 @@ class _WelcomePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-    child: Padding(
+    child: SingleChildScrollView(
       padding: const EdgeInsets.all(30),
       child: Column(
         mainAxisSize: MainAxisSize.min,

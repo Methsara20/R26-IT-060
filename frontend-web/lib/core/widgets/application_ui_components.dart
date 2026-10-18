@@ -1,6 +1,7 @@
 // Shared presentation primitives standardize recurring cards, filters, empty
 // states, and semantic badges across the seven primary application modules.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/application_design_tokens.dart';
 
@@ -14,7 +15,6 @@ class ApplicationStatCard extends StatelessWidget {
     this.showAccentBar = true,
     super.key,
   });
-
 
   final String label;
   final String value;
@@ -231,8 +231,14 @@ class ApplicationStatusBadge extends StatelessWidget {
             context,
           ).colorScheme.onSurfaceVariant,
           ApplicationStatusTone.info => Theme.of(context).colorScheme.primary,
-          ApplicationStatusTone.success => ApplicationColors.success,
-          ApplicationStatusTone.warning => ApplicationColors.warning,
+          ApplicationStatusTone.success => ApplicationColors.status(
+            context,
+            ApplicationStatusColor.success,
+          ),
+          ApplicationStatusTone.warning => ApplicationColors.status(
+            context,
+            ApplicationStatusColor.warning,
+          ),
           ApplicationStatusTone.danger => Theme.of(context).colorScheme.error,
         };
     return Container(
@@ -384,5 +390,189 @@ class _ApplicationLivePulseState extends State<ApplicationLivePulse>
         ],
       ),
     ),
+  );
+}
+
+/// A premium semantic surface for reusable, presentation-only content.
+class ApplicationSurfaceCard extends StatelessWidget {
+  const ApplicationSurfaceCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(ApplicationSpacing.comfortable),
+    this.muted = false,
+    this.borderRadius = ApplicationRadii.card,
+    super.key,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final bool muted;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: padding,
+    decoration: BoxDecoration(
+      color: muted
+          ? ApplicationColors.panelMuted(context)
+          : ApplicationColors.panel(context),
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(color: ApplicationColors.border(context)),
+      boxShadow: ApplicationElevation.forBrightness(
+        Theme.of(context).brightness,
+      ),
+    ),
+    child: child,
+  );
+}
+
+/// Keyboard- and pointer-accessible card without owning navigation logic.
+class ApplicationInteractiveCard extends StatefulWidget {
+  const ApplicationInteractiveCard({
+    required this.child,
+    required this.onPressed,
+    this.semanticLabel,
+    this.padding = const EdgeInsets.all(ApplicationSpacing.comfortable),
+    super.key,
+  });
+
+  final Widget child;
+  final VoidCallback? onPressed;
+  final String? semanticLabel;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  State<ApplicationInteractiveCard> createState() =>
+      _ApplicationInteractiveCardState();
+}
+
+class _ApplicationInteractiveCardState
+    extends State<ApplicationInteractiveCard> {
+  bool hovered = false;
+  bool focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onPressed != null;
+    final accent = Theme.of(context).colorScheme.primary;
+    return Semantics(
+      button: enabled,
+      enabled: enabled,
+      label: widget.semanticLabel,
+      child: FocusableActionDetector(
+        enabled: enabled,
+        mouseCursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
+        onShowHoverHighlight: (value) => setState(() => hovered = value),
+        onShowFocusHighlight: (value) => setState(() => focused = value),
+        shortcuts: {
+          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+        },
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) {
+              widget.onPressed?.call();
+              return null;
+            },
+          ),
+        },
+        child: AnimatedContainer(
+          duration: ApplicationMotion.fast,
+          curve: ApplicationMotion.curve,
+          transform: Matrix4.translationValues(0, hovered ? -2 : 0, 0),
+          decoration: BoxDecoration(
+            color: ApplicationColors.panel(context),
+            borderRadius: BorderRadius.circular(ApplicationRadii.card),
+            border: Border.all(
+              color: focused ? accent : ApplicationColors.border(context),
+              width: focused ? 2 : 1,
+            ),
+            boxShadow: ApplicationElevation.forBrightness(
+              Theme.of(context).brightness,
+              raised: hovered,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(ApplicationRadii.card),
+            child: InkWell(
+              onTap: widget.onPressed,
+              borderRadius: BorderRadius.circular(ApplicationRadii.card),
+              child: Padding(padding: widget.padding, child: widget.child),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ApplicationResponsiveGrid extends StatelessWidget {
+  const ApplicationResponsiveGrid({
+    required this.children,
+    this.maxColumns = 4,
+    this.minItemWidth = 240,
+    this.spacing = ApplicationSpacing.medium,
+    super.key,
+  });
+
+  final List<Widget> children;
+  final int maxColumns;
+  final double minItemWidth;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final columns =
+          ((constraints.maxWidth + spacing) / (minItemWidth + spacing))
+              .floor()
+              .clamp(1, maxColumns);
+      final width = (constraints.maxWidth - spacing * (columns - 1)) / columns;
+      return Wrap(
+        spacing: spacing,
+        runSpacing: spacing,
+        children: [
+          for (final child in children) SizedBox(width: width, child: child),
+        ],
+      );
+    },
+  );
+}
+
+class ApplicationMetadataRow extends StatelessWidget {
+  const ApplicationMetadataRow({
+    required this.label,
+    required this.value,
+    this.icon,
+    super.key,
+  });
+
+  final String label;
+  final String value;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (icon != null) ...[
+        Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: ApplicationSpacing.small),
+      ],
+      Expanded(
+        child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+      ),
+      const SizedBox(width: ApplicationSpacing.compact),
+      Flexible(
+        child: Text(
+          value,
+          textAlign: TextAlign.end,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    ],
   );
 }

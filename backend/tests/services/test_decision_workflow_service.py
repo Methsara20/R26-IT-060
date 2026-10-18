@@ -4,10 +4,14 @@ from unittest.mock import patch
 
 from app.schemas.forecast_schema import CustomForecastRequest, DailyForecastRequest
 from app.schemas.decision_workflow_schema import DecisionWorkflowRequest
-from app.services import decision_workflow_service as service
+from tests.inventory_auth.test_decision_workflow_authorization import load_workflow_modules, verified_user
+service, _ = load_workflow_modules()
 
 
 class DecisionWorkflowServiceTests(unittest.TestCase):
+    def setUp(self):
+        self.user = verified_user(stores=("CP001",))
+
     def request(self, **overrides):
         values = {
             "forecast_type": "DAILY",
@@ -29,7 +33,7 @@ class DecisionWorkflowServiceTests(unittest.TestCase):
         )
 
         with self.assertRaises(service.DecisionWorkflowValidationError):
-            service.analyze_decision_workflow(request)
+            service.analyze_decision_workflow(request, user=self.user)
 
     def test_daily_payload_matches_established_forecast_defaults(self):
         request = self.request()
@@ -146,7 +150,7 @@ class DecisionWorkflowServiceTests(unittest.TestCase):
 
         self.assertEqual(result["forecast_details"], raw)
 
-    @patch.object(service, "get_document_by_id")
+    @patch.object(service, "_read_resource")
     def test_reused_idempotency_key_with_different_inputs_is_rejected(
         self,
         get_document,
@@ -156,13 +160,14 @@ class DecisionWorkflowServiceTests(unittest.TestCase):
             **service._request_identity(self.request(product_id="P0001")),
             "workflow_id": service._workflow_id(request.idempotency_key),
             "workflow_status": "NO_ACTION_REQUIRED",
+            "actor_id": self.user.principal.user_id,
         }
 
         with self.assertRaisesRegex(
             service.DecisionWorkflowValidationError,
             "different request data",
         ):
-            service._claim_workflow(request)
+            service._claim_workflow(request, self.user.principal)
 
     @patch.object(service, "_save_workflow")
     @patch.object(service, "generate_inventory_intelligence")
@@ -211,7 +216,7 @@ class DecisionWorkflowServiceTests(unittest.TestCase):
         save_workflow.side_effect = lambda _, item: item
 
         with patch.object(service, "create_or_update_document") as save_document:
-            result = service.analyze_decision_workflow(request)
+            result = service.analyze_decision_workflow(request, user=self.user)
 
         self.assertEqual(result["workflow_status"], "NO_ACTION_REQUIRED")
         self.assertIsNone(result["candidate_id"])
@@ -234,7 +239,7 @@ class DecisionWorkflowServiceTests(unittest.TestCase):
         hydrate_workflow.return_value = existing
 
         with patch.object(service, "_run_forecast") as run_forecast:
-            result = service.analyze_decision_workflow(request)
+            result = service.analyze_decision_workflow(request, user=self.user)
 
         self.assertEqual(result, existing)
         run_forecast.assert_not_called()
@@ -309,12 +314,12 @@ class DecisionWorkflowServiceTests(unittest.TestCase):
         }
         save_workflow.side_effect = lambda _, item: service._with_next_action(item)
 
-        result = service.analyze_decision_workflow(request)
+        result = service.analyze_decision_workflow(request, user=self.user)
 
         self.assertEqual(candidate_id, f"FW-{workflow_id}")
         self.assertEqual(result["workflow_status"], "MOVEMENT_RECOMMENDED")
         self.assertEqual(result["movement_id"], "MOV-1")
-        recommend_transfer.assert_called_once_with(candidate_id)
+        recommend_transfer.assert_called_once_with(candidate_id, user=self.user.principal)
         saved_candidate = save_document.call_args.args[2]
         self.assertEqual(saved_candidate["candidate_origin"], "FORECAST_WORKFLOW")
         self.assertEqual(saved_candidate["workflow_id"], workflow_id)
