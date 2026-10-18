@@ -1,8 +1,8 @@
 import os
 import subprocess
 
-env_path = "/Users/thedas/Desktop/Projects/R26-IT-060/backend/.env"
-settings = []
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+settings = ["WEBSITES_PORT=80"]
 with open(env_path, "r") as f:
     for line in f:
         line = line.strip()
@@ -16,6 +16,8 @@ with open(env_path, "r") as f:
                 val = val[1:-1]
             if val.startswith("'") and val.endswith("'"):
                 val = val[1:-1]
+            if key == "MARKETING_INVENTORY_PLANNING_BASE_URL" and "8000" in val:
+                val = val.replace("8000", "80")
             settings.append(f"{key}={val}")
 
 cmd = ["az", "webapp", "config", "appsettings", "set", "-g", "SmartOmniRetail-RG", "-n", "smartomniretailr26-api", "--settings"] + settings
