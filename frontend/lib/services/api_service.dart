@@ -1,9 +1,10 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 class ApiService {
-  static const String baseUrl = "http://127.0.0.1:8000";
+  static const String baseUrl = "https://smartomniretailr26-api.azurewebsites.net";
 
   static Future<Map<String, dynamic>> createProfile({
     required String email,
@@ -34,10 +35,17 @@ class ApiService {
     final response = await http.post(
       Uri.parse("$baseUrl/profile/login"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "email": email,
-        "password": password,
-      }),
+      body: jsonEncode({"email": email, "password": password}),
+    );
+
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> googleLogin(String idToken) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/google-login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"id_token": idToken}),
     );
 
     return _handleResponse(response);
@@ -77,7 +85,8 @@ class ApiService {
 
   static Future<Map<String, dynamic>> generateTryOn({
     required XFile humanImage,
-    required XFile clothImage,
+    XFile? clothImage,
+    Uint8List? clothBytes,
   }) async {
     final request = http.MultipartRequest(
       "POST",
@@ -85,7 +94,6 @@ class ApiService {
     );
 
     final humanBytes = await humanImage.readAsBytes();
-    final clothBytes = await clothImage.readAsBytes();
 
     request.files.add(
       http.MultipartFile.fromBytes(
@@ -95,13 +103,26 @@ class ApiService {
       ),
     );
 
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        "cloth_image",
-        clothBytes,
-        filename: clothImage.name,
-      ),
-    );
+    if (clothImage != null) {
+      final bytes = await clothImage.readAsBytes();
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          "cloth_image",
+          bytes,
+          filename: clothImage.name,
+        ),
+      );
+    } else if (clothBytes != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          "cloth_image",
+          clothBytes,
+          filename: "product.png",
+        ),
+      );
+    } else {
+      throw Exception("No clothing image or product bytes provided");
+    }
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
@@ -109,8 +130,49 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  static Future<List<dynamic>> getProducts({
+    int page = 1,
+    int limit = 50,
+    String? category,
+  }) async {
+    try {
+      String url = "$baseUrl/products?page=$page&limit=$limit";
+      if (category != null && category.isNotEmpty && category != "All") {
+        url += "&category=$category";
+      }
+
+      final response = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 15));
+      final decoded = _handleResponse(response);
+      return decoded["products"] ?? [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<String> predictBrandSize({
+    required String standardSize,
+    required String brand,
+    required String category,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/profile/predict_brand_size"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "standard_size": standardSize,
+        "brand": brand,
+        "category": category,
+      }),
+    );
+
+    final decoded = _handleResponse(response);
+    return decoded["brand_specific_size"] ?? standardSize;
+  }
+
   static Map<String, dynamic> _handleResponse(http.Response response) {
-    final decoded = response.body.isNotEmpty &&
+    final decoded =
+        response.body.isNotEmpty &&
             response.headers["content-type"]?.contains("application/json") ==
                 true
         ? jsonDecode(response.body)

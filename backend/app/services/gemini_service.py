@@ -6,7 +6,7 @@ from google.genai import types
 # Initialize the client
 client = genai.Client(
     vertexai=True,
-    project="divine-clone-495811-e4",
+    project="project-fa2ab2fb-9a94-4d15-b6c",
     location="us-central1"
 )
 
