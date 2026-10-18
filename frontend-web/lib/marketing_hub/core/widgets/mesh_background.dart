@@ -41,8 +41,8 @@ class MeshBackground extends StatelessWidget {
                 gradient: RadialGradient(
                   colors: [
                     isDark
-                        ? const Color(0xFF3B82F6).withOpacity(0.18)
-                        : const Color(0xFF6366F1).withOpacity(0.12),
+                        ? const Color(0xFF3B82F6).withValues(alpha: 0.18)
+                        : const Color(0xFF6366F1).withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -61,8 +61,8 @@ class MeshBackground extends StatelessWidget {
                 gradient: RadialGradient(
                   colors: [
                     isDark
-                        ? const Color(0xFF8B5CF6).withOpacity(0.15)
-                        : const Color(0xFF3B82F6).withOpacity(0.1),
+                        ? const Color(0xFF8B5CF6).withValues(alpha: 0.15)
+                        : const Color(0xFF3B82F6).withValues(alpha: 0.1),
                     Colors.transparent,
                   ],
                 ),
@@ -81,8 +81,8 @@ class MeshBackground extends StatelessWidget {
                 gradient: RadialGradient(
                   colors: [
                     isDark
-                        ? const Color(0xFFEAB308).withOpacity(0.05)
-                        : const Color(0xFFEAB308).withOpacity(0.06),
+                        ? const Color(0xFFEAB308).withValues(alpha: 0.05)
+                        : const Color(0xFFEAB308).withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),

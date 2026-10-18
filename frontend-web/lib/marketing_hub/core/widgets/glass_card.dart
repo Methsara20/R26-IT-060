@@ -29,11 +29,11 @@ class GlassCard extends StatelessWidget {
         ? const Color(0x08FFFFFF) // 3% white on dark
         : const Color(0xAAFFFFFF); // 67% white on light
     final borderColor = isDark
-        ? Colors.white.withOpacity(0.12)
-        : Colors.white.withOpacity(0.7);
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.7);
     final shadowColor = isDark
-        ? Colors.black.withOpacity(0.15)
-        : const Color(0xFF6366F1).withOpacity(0.06);
+        ? Colors.black.withValues(alpha: 0.15)
+        : const Color(0xFF6366F1).withValues(alpha: 0.06);
 
     final cardContent = ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),

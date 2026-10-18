@@ -352,14 +352,14 @@ class _RecommenderScreenState extends State<RecommenderScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.goldAccent.withOpacity(0.2),
-                AppColors.goldAccent.withOpacity(0.05),
+                AppColors.goldAccent.withValues(alpha: 0.2),
+                AppColors.goldAccent.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.goldAccent.withOpacity(0.5), width: 1.5),
+            border: Border.all(color: AppColors.goldAccent.withValues(alpha: 0.5), width: 1.5),
             boxShadow: [
-              BoxShadow(color: AppColors.goldAccent.withOpacity(0.15), blurRadius: 20, spreadRadius: -4, offset: const Offset(0, 6)),
+              BoxShadow(color: AppColors.goldAccent.withValues(alpha: 0.15), blurRadius: 20, spreadRadius: -4, offset: const Offset(0, 6)),
             ],
           ),
           child: Column(
@@ -370,9 +370,9 @@ class _RecommenderScreenState extends State<RecommenderScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.goldAccent.withOpacity(0.2),
+                      color: AppColors.goldAccent.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.goldAccent.withOpacity(0.4)),
+                      border: Border.all(color: AppColors.goldAccent.withValues(alpha: 0.4)),
                     ),
                     child: const Text('RECOMMENDED', style: TextStyle(color: AppColors.goldAccent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                   ),
@@ -386,7 +386,7 @@ class _RecommenderScreenState extends State<RecommenderScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.greenAccent.withOpacity(0.15),
+                  color: AppColors.greenAccent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -438,7 +438,7 @@ class _RecommenderScreenState extends State<RecommenderScreen> {
                   child: LinearProgressIndicator(
                     value: pct / 100,
                     minHeight: 6,
-                    backgroundColor: Colors.white.withOpacity(0.07),
+                    backgroundColor: Colors.white.withValues(alpha: 0.07),
                     valueColor: AlwaysStoppedAnimation(barColor),
                   ),
                 ),
