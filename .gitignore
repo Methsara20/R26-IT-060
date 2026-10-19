@@ -285,7 +285,4 @@ backend/app/chroma_db/
 **/windows/flutter/generated_*
 
 .png
-
-
-
-
+*
