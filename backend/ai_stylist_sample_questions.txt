@@ -15,5 +15,4 @@ Trending & Inspiration:
 * "Show me some minimalist, smart-casual pieces for everyday wear."
 * "What is the most popular activewear you have right now?"
 
-
-flutter run -d chrome --web-port 5174**
+flutter run -d chrome --web-port 5174

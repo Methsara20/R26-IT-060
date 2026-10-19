@@ -39,7 +39,9 @@ class MarketingServiceSettings:
     global_access: bool = False
 
     def __post_init__(self):
-        key = load_pem_public_key(self.verification_key.encode())
+        clean_key = self.verification_key.replace("\\n", "\n").strip("\"'")
+        object.__setattr__(self, "verification_key", clean_key)
+        key = load_pem_public_key(clean_key.encode())
         if not isinstance(key, RSAPublicKey) or key.key_size < 2048:
             raise ValueError("Invalid service verification key")
         if type(self.global_access) is not bool or not isinstance(self.store_ids, tuple):

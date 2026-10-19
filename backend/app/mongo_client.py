@@ -6,6 +6,7 @@ from bson import ObjectId
 class MongoDocumentSnapshot:
     def __init__(self, doc, collection=None):
         self.collection = collection
+        self._collection = collection
         self.exists = doc is not None
         if doc:
             # We treat the string version of _id as the Firestore document id
@@ -20,8 +21,9 @@ class MongoDocumentSnapshot:
 
     @property
     def reference(self):
-        if self._collection is not None and self.id is not None:
-            return MongoDocumentReference(self._collection, self.id)
+        col = self._collection if self._collection is not None else self.collection
+        if col is not None and self.id is not None:
+            return MongoDocumentReference(col, self.id)
         return None
 
 class MongoDocumentReference:
