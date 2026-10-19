@@ -14,17 +14,21 @@ class StockMovementWorkspace extends StatefulWidget {
     required this.movements,
     required this.busyMovementId,
     required this.generatingReplacement,
+    required this.refreshing,
     required this.onRefresh,
     required this.onDetails,
     required this.onAction,
     required this.onGenerateAnother,
     required this.onCheckStatus,
+    required this.canPerformAction,
+    required this.canGenerateAnother,
     super.key,
   });
 
   final List<StockMovement> movements;
   final String? busyMovementId;
   final bool generatingReplacement;
+  final bool refreshing;
   final VoidCallback onRefresh;
   final ValueChanged<StockMovement> onDetails;
   final void Function(
@@ -34,6 +38,9 @@ class StockMovementWorkspace extends StatefulWidget {
   onAction;
   final ValueChanged<StockMovement> onGenerateAnother;
   final ValueChanged<StockMovement> onCheckStatus;
+  final bool Function(StockMovement, StockMovementWorkspaceAction)
+  canPerformAction;
+  final bool Function(StockMovement) canGenerateAnother;
 
   @override
   State<StockMovementWorkspace> createState() => _StockMovementWorkspaceState();
@@ -75,7 +82,10 @@ class _StockMovementWorkspaceState extends State<StockMovementWorkspace> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _WorkspaceHeader(onRefresh: widget.onRefresh),
+        _WorkspaceHeader(
+          onRefresh: widget.onRefresh,
+          refreshing: widget.refreshing,
+        ),
         const SizedBox(height: 22),
         _LifecycleStrip(movements: movements),
         const SizedBox(height: 18),
@@ -101,16 +111,23 @@ class _StockMovementWorkspaceState extends State<StockMovementWorkspace> {
           onFromChanged: (value) => setState(() => _fromStore = value),
           onToChanged: (value) => setState(() => _toStore = value),
           onClear: _clearFilters,
+          resultCount: visible.length,
+          hasActiveFilters: _hasFilters,
         ),
         const SizedBox(height: 16),
         if (visible.isEmpty)
-          _EmptyQueue(showHistory: _showHistory, hasFilters: _hasFilters)
+          _EmptyQueue(
+            showHistory: _showHistory,
+            hasFilters: _hasFilters,
+            onReset: _clearFilters,
+          )
         else if (_showHistory)
           _HistoryList(
             movements: visible,
             generatingReplacement: widget.generatingReplacement,
             onDetails: widget.onDetails,
             onGenerateAnother: widget.onGenerateAnother,
+            canGenerateAnother: widget.canGenerateAnother,
           )
         else
           Column(
@@ -125,6 +142,9 @@ class _StockMovementWorkspaceState extends State<StockMovementWorkspace> {
                   onGenerateAnother: () =>
                       widget.onGenerateAnother(visible[index]),
                   onCheckStatus: () => widget.onCheckStatus(visible[index]),
+                  canPerformAction: (action) =>
+                      widget.canPerformAction(visible[index], action),
+                  canGenerateAnother: widget.canGenerateAnother(visible[index]),
                 ),
                 if (index != visible.length - 1) const SizedBox(height: 14),
               ],
@@ -169,15 +189,20 @@ class _StockMovementWorkspaceState extends State<StockMovementWorkspace> {
 }
 
 class _WorkspaceHeader extends StatelessWidget {
-  const _WorkspaceHeader({required this.onRefresh});
+  const _WorkspaceHeader({required this.onRefresh, required this.refreshing});
 
   final VoidCallback onRefresh;
+  final bool refreshing;
 
   @override
   Widget build(BuildContext context) => ApplicationPageHeader(
+    contextLabel: 'STOCK MOVEMENT CONTROL',
+    leadingIcon: Icons.swap_horiz_rounded,
+    premium: true,
     title: 'Stock Movements',
     subtitle: 'Review, approve and track inventory transfers',
     onRefresh: onRefresh,
+    refreshing: refreshing,
     refreshTooltip: 'Refresh movements',
   );
 }
@@ -356,7 +381,9 @@ class _WorkspaceTabs extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
     children: [
       _TabButton(
         selected: !showHistory,
@@ -364,7 +391,6 @@ class _WorkspaceTabs extends StatelessWidget {
         count: activeCount,
         onTap: () => onChanged(false),
       ),
-      const SizedBox(width: 8),
       _TabButton(
         selected: showHistory,
         label: 'History',
@@ -408,6 +434,8 @@ class _FilterBar extends StatelessWidget {
     required this.onFromChanged,
     required this.onToChanged,
     required this.onClear,
+    required this.resultCount,
+    required this.hasActiveFilters,
   });
 
   final TextEditingController controller;
@@ -422,6 +450,8 @@ class _FilterBar extends StatelessWidget {
   final ValueChanged<String> onFromChanged;
   final ValueChanged<String> onToChanged;
   final VoidCallback onClear;
+  final int resultCount;
+  final bool hasActiveFilters;
 
   @override
   Widget build(BuildContext context) {
@@ -474,10 +504,17 @@ class _FilterBar extends StatelessWidget {
                     values: toStores,
                     onChanged: onToChanged,
                   ),
-                  TextButton.icon(
-                    onPressed: onClear,
-                    icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-                    label: const Text('Clear'),
+                  if (hasActiveFilters)
+                    TextButton.icon(
+                      onPressed: onClear,
+                      icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                      label: const Text('Reset filters'),
+                    ),
+                  Chip(
+                    avatar: const Icon(Icons.filter_list_rounded, size: 16),
+                    label: Text(
+                      '$resultCount ${resultCount == 1 ? 'result' : 'results'}',
+                    ),
                   ),
                 ],
               );
@@ -541,6 +578,8 @@ class _ActiveMovementCard extends StatelessWidget {
     required this.onAction,
     required this.onGenerateAnother,
     required this.onCheckStatus,
+    required this.canPerformAction,
+    required this.canGenerateAnother,
   });
 
   final StockMovement movement;
@@ -550,6 +589,8 @@ class _ActiveMovementCard extends StatelessWidget {
   final ValueChanged<StockMovementWorkspaceAction> onAction;
   final VoidCallback onGenerateAnother;
   final VoidCallback onCheckStatus;
+  final bool Function(StockMovementWorkspaceAction) canPerformAction;
+  final bool canGenerateAnother;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -605,18 +646,19 @@ class _ActiveMovementCard extends StatelessWidget {
           },
         ),
         const SizedBox(height: 16),
-        Row(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             _MetadataChip(
               icon: Icons.flag_outlined,
               label: _label(movement.priority),
             ),
-            const SizedBox(width: 8),
             _MetadataChip(
               icon: Icons.speed,
               label: '${movement.confidence.toStringAsFixed(0)}% confidence',
             ),
-            const Spacer(),
             TextButton.icon(
               onPressed: onDetails,
               icon: const Icon(Icons.visibility_outlined, size: 18),
@@ -632,6 +674,8 @@ class _ActiveMovementCard extends StatelessWidget {
           onAction: onAction,
           onGenerateAnother: onGenerateAnother,
           onCheckStatus: onCheckStatus,
+          canPerformAction: canPerformAction,
+          canGenerateAnother: canGenerateAnother,
         ),
       ],
     ),
@@ -787,21 +831,19 @@ class _MetadataChip extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Flexible(
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: const Color(0xFF68758D)),
-          const SizedBox(width: 5),
-          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
-        ],
-      ),
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: const Color(0xFF68758D)),
+        const SizedBox(width: 5),
+        Text(label),
+      ],
     ),
   );
 }
@@ -814,6 +856,8 @@ class _ActionRow extends StatelessWidget {
     required this.onAction,
     required this.onGenerateAnother,
     required this.onCheckStatus,
+    required this.canPerformAction,
+    required this.canGenerateAnother,
   });
 
   final StockMovement movement;
@@ -822,6 +866,8 @@ class _ActionRow extends StatelessWidget {
   final ValueChanged<StockMovementWorkspaceAction> onAction;
   final VoidCallback onGenerateAnother;
   final VoidCallback onCheckStatus;
+  final bool Function(StockMovementWorkspaceAction) canPerformAction;
+  final bool canGenerateAnother;
 
   @override
   Widget build(BuildContext context) {
@@ -843,23 +889,27 @@ class _ActionRow extends StatelessWidget {
       runSpacing: 9,
       alignment: WrapAlignment.end,
       children: [
-        if (movement.canReject)
+        if (movement.canReject &&
+            canPerformAction(StockMovementWorkspaceAction.reject))
           OutlinedButton(
             onPressed: () => onAction(StockMovementWorkspaceAction.reject),
             child: const Text('Reject'),
           ),
-        if (movement.canCancel)
+        if (movement.canCancel &&
+            canPerformAction(StockMovementWorkspaceAction.cancel))
           TextButton(
             onPressed: () => onAction(StockMovementWorkspaceAction.cancel),
             child: const Text('Cancel'),
           ),
-        if (movement.canApprove)
+        if (movement.canApprove &&
+            canPerformAction(StockMovementWorkspaceAction.approve))
           FilledButton.icon(
             onPressed: () => onAction(StockMovementWorkspaceAction.approve),
             icon: const Icon(Icons.check, size: 18),
             label: const Text('Approve transfer'),
           ),
-        if (movement.canExecute)
+        if (movement.canExecute &&
+            canPerformAction(StockMovementWorkspaceAction.execute))
           FilledButton.icon(
             onPressed: () => onAction(StockMovementWorkspaceAction.execute),
             icon: const Icon(Icons.play_arrow, size: 18),
@@ -871,7 +921,9 @@ class _ActionRow extends StatelessWidget {
             icon: const Icon(Icons.sync, size: 18),
             label: const Text('Check status'),
           ),
-        if (movement.status == 'REJECTED' && movement.candidateId != null)
+        if (movement.status == 'REJECTED' &&
+            movement.candidateId != null &&
+            canGenerateAnother)
           FilledButton.tonalIcon(
             onPressed: generatingReplacement ? null : onGenerateAnother,
             icon: const Icon(Icons.auto_awesome, size: 18),
@@ -888,12 +940,14 @@ class _HistoryList extends StatelessWidget {
     required this.generatingReplacement,
     required this.onDetails,
     required this.onGenerateAnother,
+    required this.canGenerateAnother,
   });
 
   final List<StockMovement> movements;
   final bool generatingReplacement;
   final ValueChanged<StockMovement> onDetails;
   final ValueChanged<StockMovement> onGenerateAnother;
+  final bool Function(StockMovement) canGenerateAnother;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -907,6 +961,7 @@ class _HistoryList extends StatelessWidget {
             generatingReplacement: generatingReplacement,
             onDetails: () => onDetails(movements[index]),
             onGenerateAnother: () => onGenerateAnother(movements[index]),
+            canGenerateAnother: canGenerateAnother(movements[index]),
           ),
           if (index != movements.length - 1) const Divider(height: 1),
         ],
@@ -921,12 +976,14 @@ class _HistoryRow extends StatelessWidget {
     required this.generatingReplacement,
     required this.onDetails,
     required this.onGenerateAnother,
+    required this.canGenerateAnother,
   });
 
   final StockMovement movement;
   final bool generatingReplacement;
   final VoidCallback onDetails;
   final VoidCallback onGenerateAnother;
+  final bool canGenerateAnother;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -965,7 +1022,8 @@ class _HistoryRow extends StatelessWidget {
                 Text('${movement.recommendedQuantity} units'),
                 _StatusPill(status: movement.status),
                 if (movement.status == 'REJECTED' &&
-                    movement.candidateId != null)
+                    movement.candidateId != null &&
+                    canGenerateAnother)
                   TextButton.icon(
                     onPressed: generatingReplacement ? null : onGenerateAnother,
                     icon: const Icon(Icons.auto_awesome, size: 16),
@@ -1017,10 +1075,15 @@ class _StatusPill extends StatelessWidget {
 }
 
 class _EmptyQueue extends StatelessWidget {
-  const _EmptyQueue({required this.showHistory, required this.hasFilters});
+  const _EmptyQueue({
+    required this.showHistory,
+    required this.hasFilters,
+    required this.onReset,
+  });
 
   final bool showHistory;
   final bool hasFilters;
+  final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -1053,6 +1116,14 @@ class _EmptyQueue extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(color: Color(0xFF68758D)),
         ),
+        if (hasFilters) ...[
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: onReset,
+            icon: const Icon(Icons.filter_alt_off_outlined),
+            label: const Text('Reset filters'),
+          ),
+        ],
       ],
     ),
   );

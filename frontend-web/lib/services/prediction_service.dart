@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../core/constants/api_constants.dart';
+
 class PredictionService {
-  static const String baseUrl = "http://127.0.0.1:10000";
+  static const String baseUrl = ApiConstants.baseUrl;
 
   //  PREDICT
-
 
   static Future<Map<String, dynamic>> predict({
     required String productId,

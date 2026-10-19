@@ -1,1 +1,3 @@
-const String backendUrl = 'http://127.0.0.1:10000';
+import '../../../../core/constants/api_constants.dart';
+
+const String backendUrl = ApiConstants.baseUrl;

@@ -20,11 +20,11 @@ if not firebase_admin._apps:
     except Exception as e:
         print(f"Warning: Firebase init failed - {e}")
 
-db_type = os.environ.get("DB_TYPE", "firebase").lower()
+db_type = os.environ.get("DB_TYPE", "firebase").strip("\"'").lower()
 
 if db_type == "mongodb":
     from app.mongo_client import MongoFirestoreClient
-    mongo_uri = os.environ.get("MONGODB_URI")
+    mongo_uri = os.environ.get("MONGODB_URI", "").strip("\"'")
     db = MongoFirestoreClient(mongo_uri)
     print("Database Initialized: MONGODB")
 else:

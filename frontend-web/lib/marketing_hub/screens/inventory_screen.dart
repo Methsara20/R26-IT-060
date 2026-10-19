@@ -11,11 +11,19 @@ class InventoryInsightsScreen extends StatefulWidget {
   const InventoryInsightsScreen({super.key, this.onCreatePoster});
 
   @override
-  State<InventoryInsightsScreen> createState() => _InventoryInsightsScreenState();
+  State<InventoryInsightsScreen> createState() =>
+      _InventoryInsightsScreenState();
 }
 
 class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
-  final categories = const ['All', 'Women', 'Men', 'Kids', 'Footwear', 'Accessories'];
+  final categories = const [
+    'All',
+    'Women',
+    'Men',
+    'Kids',
+    'Footwear',
+    'Accessories',
+  ];
   String selectedCategory = 'All';
 
   bool loading = true;
@@ -50,7 +58,9 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
         } else {
           setState(() {
             suggestions = data['opportunities'];
-            lastUpdated = suggestions!.isEmpty ? null : suggestions!.first['created_at'];
+            lastUpdated = suggestions!.isEmpty
+                ? null
+                : suggestions!.first['created_at'];
             loading = false;
           });
         }
@@ -77,20 +87,32 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
         foregroundColor: AppColors.textPrimary,
         title: Row(
           children: [
-            Container(width: 3, height: 20,
+            Container(
+              width: 3,
+              height: 20,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                  colors: [AppColors.greenAccent, AppColors.goldAccent]),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.greenAccent, AppColors.goldAccent],
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(width: 10),
-            const Text('Inventory Insights', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Inventory Insights',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: fetchSuggestions, tooltip: 'Refresh',
-            style: IconButton.styleFrom(foregroundColor: AppColors.textMuted)),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: fetchSuggestions,
+            tooltip: 'Refresh',
+            style: IconButton.styleFrom(foregroundColor: AppColors.textMuted),
+          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -104,20 +126,33 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColors.goldAccent.withOpacity(0.12), AppColors.greenAccent.withOpacity(0.05)],
-                  begin: Alignment.centerLeft, end: Alignment.centerRight,
+                  colors: [
+                    AppColors.goldAccent.withValues(alpha: 0.12),
+                    AppColors.greenAccent.withValues(alpha: 0.05),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
                 ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.goldAccent.withOpacity(0.3)),
+                border: Border.all(
+                  color: AppColors.goldAccent.withValues(alpha: 0.3),
+                ),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.inventory_2_rounded, size: 18, color: AppColors.goldAccent),
+                  Icon(
+                    Icons.inventory_2_rounded,
+                    size: 18,
+                    color: AppColors.goldAccent,
+                  ),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Live marketing opportunities from the Inventory component — read-only. Consider featuring these in your next promotion.',
-                      style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ),
                 ],
@@ -128,7 +163,15 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Filter by Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted, letterSpacing: 0.5)),
+                const Text(
+                  'Filter by Category',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -138,31 +181,61 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       child: GestureDetector(
-                        onTap: () { setState(() => selectedCategory = c); fetchSuggestions(); },
+                        onTap: () {
+                          setState(() => selectedCategory = c);
+                          fetchSuggestions();
+                        },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                          decoration: BoxDecoration(
-                            gradient: isSelected ? LinearGradient(
-                              colors: [AppColors.goldAccent, AppColors.goldAccent.withOpacity(0.7)],
-                            ) : null,
-                            color: isSelected ? null : Colors.white.withOpacity(0.06),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: isSelected ? AppColors.goldAccent : Colors.white.withOpacity(0.12)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
                           ),
-                          child: Text(c, style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected ? AppColors.scaffoldBackground : AppColors.textMuted,
-                          )),
+                          decoration: BoxDecoration(
+                            gradient: isSelected
+                                ? LinearGradient(
+                                    colors: [
+                                      AppColors.goldAccent,
+                                      AppColors.goldAccent.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                    ],
+                                  )
+                                : null,
+                            color: isSelected
+                                ? null
+                                : Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.goldAccent
+                                  : Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          child: Text(
+                            c,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? AppColors.scaffoldBackground
+                                  : AppColors.textMuted,
+                            ),
+                          ),
                         ),
                       ),
                     );
                   }).toList(),
                 ),
-                if (loading) const Padding(
-                  padding: EdgeInsets.only(top: 12),
-                  child: LinearProgressIndicator(backgroundColor: Colors.transparent, valueColor: AlwaysStoppedAnimation(AppColors.goldAccent)),
-                ),
+                if (loading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: LinearProgressIndicator(
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation(AppColors.goldAccent),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 16),
@@ -172,13 +245,24 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.errorBackground,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.urgentAccent.withOpacity(0.3)),
+                  border: Border.all(
+                    color: AppColors.urgentAccent.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: AppColors.errorText, size: 18),
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.errorText,
+                      size: 18,
+                    ),
                     const SizedBox(width: 10),
-                    Expanded(child: Text(errorMessage!, style: TextStyle(color: AppColors.errorText))),
+                    Expanded(
+                      child: Text(
+                        errorMessage!,
+                        style: TextStyle(color: AppColors.errorText),
+                      ),
+                    ),
                   ],
                 ),
               )
@@ -188,9 +272,19 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
                     children: [
-                      const Icon(Icons.schedule_rounded, size: 12, color: AppColors.textMuted),
+                      const Icon(
+                        Icons.schedule_rounded,
+                        size: 12,
+                        color: AppColors.textMuted,
+                      ),
                       const SizedBox(width: 4),
-                      Text('Last updated: $lastUpdated', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                      Text(
+                        'Last updated: $lastUpdated',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -201,10 +295,17 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Column(
                     children: [
-                      const Icon(Icons.inbox_rounded, size: 40, color: AppColors.textMuted),
+                      const Icon(
+                        Icons.inbox_rounded,
+                        size: 40,
+                        color: AppColors.textMuted,
+                      ),
                       const SizedBox(height: 12),
-                      const Text('No marketing opportunities found for this category.',
-                        style: TextStyle(color: AppColors.textMuted), textAlign: TextAlign.center),
+                      const Text(
+                        'No marketing opportunities found for this category.',
+                        style: TextStyle(color: AppColors.textMuted),
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
                 ),
@@ -219,21 +320,38 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassCard(
-        onTap: widget.onCreatePoster == null ? null : () => widget.onCreatePoster!(Map<String, dynamic>.from(item as Map)),
+        onTap: widget.onCreatePoster == null
+            ? null
+            : () => widget.onCreatePoster!(
+                Map<String, dynamic>.from(item as Map),
+              ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColors.goldAccent.withOpacity(0.3), AppColors.goldAccent.withOpacity(0.1)],
+                  colors: [
+                    AppColors.goldAccent.withValues(alpha: 0.3),
+                    AppColors.goldAccent.withValues(alpha: 0.1),
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
                 children: [
-                  Text('+${item['excess_quantity']}', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.goldAccent, fontSize: 16)),
-                  const Text('excess', style: TextStyle(fontSize: 9, color: AppColors.textMuted)),
+                  Text(
+                    '+${item['excess_quantity']}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.goldAccent,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const Text(
+                    'excess',
+                    style: TextStyle(fontSize: 9, color: AppColors.textMuted),
+                  ),
                 ],
               ),
             ),
@@ -245,9 +363,26 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Flexible(child: Text(item['product_name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis)),
+                      Flexible(
+                        child: Text(
+                          item['product_name'] ?? '',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      if (item['product_id'] != null) Text('#${item['product_id']}', style: const TextStyle(fontSize: 11, color: AppColors.textMuted, fontFamily: 'monospace')),
+                      if (item['product_id'] != null)
+                        Text(
+                          '#${item['product_id']}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 3),
@@ -265,21 +400,46 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('${item['current_stock']} units', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                Text('LKR ${item['selling_price']}', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                Text(
+                  '${item['current_stock']} units',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'LKR ${item['selling_price']}',
+                  style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.primaryBlue, AppColors.primaryBlue.withOpacity(0.7)]),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primaryBlue,
+                        AppColors.primaryBlue.withValues(alpha: 0.7),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.campaign_rounded, size: 12, color: Colors.white),
+                      Icon(
+                        Icons.campaign_rounded,
+                        size: 12,
+                        color: Colors.white,
+                      ),
                       SizedBox(width: 4),
-                      Text('Create Poster', style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Create Poster',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -295,11 +455,18 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 }

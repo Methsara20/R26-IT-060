@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from app.schemas.inventory_auth_schema import InventoryPrincipal
+from app.security.inventory_permissions import inventory_analysis_user
 
 from app.schemas.intelligence_schema import InventoryIntelligenceRequest
 from app.services.intelligence_service import generate_inventory_intelligence
@@ -10,7 +12,7 @@ router = APIRouter(
 
 
 @router.post("/analyze")
-def analyze_inventory(data: InventoryIntelligenceRequest):
+def analyze_inventory(data: InventoryIntelligenceRequest, user: InventoryPrincipal = Depends(inventory_analysis_user())):
     result = generate_inventory_intelligence(
         current_stock=data.current_stock,
         reorder_level=data.reorder_level,

@@ -1,5 +1,10 @@
 // Final-polish pass: standardizes the page header and waiting-state treatment.
+import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../core/auth/inventory_session_controller.dart';
+import '../../core/auth/inventory_api_client.dart';
+import '../../core/auth/inventory_auth_scope.dart';
 
 import '../../models/forecast/forecast_catalog_option.dart';
 import '../../models/forecast/short_range_forecast.dart';
@@ -10,6 +15,7 @@ import '../../core/widgets/application_page_layout.dart';
 import '../../core/widgets/application_ui_components.dart';
 import '../workflow/inventory_decision_workflow_controller.dart';
 import '../marketing_integration/models/marketing_opportunity.dart';
+import '../marketing_integration/services/marketing_opportunity_api_service.dart';
 import '../marketing_integration/widgets/send_to_marketing_card.dart';
 import 'forecast_daily_breakdown.dart';
 import 'forecast_product_search_selector.dart';
@@ -47,8 +53,13 @@ class ForecastingOverviewScreen extends StatefulWidget {
 }
 
 class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
-  final _service = ForecastApiService();
-  final _workflowService = DecisionWorkflowApiService();
+  late final InventoryApiClient _inventoryClient;
+  late final ForecastApiService _service;
+  late final DecisionWorkflowApiService _workflowService;
+  late final InventorySessionController _session;
+  InventorySessionLease? _workflowLease;
+  String? _submissionKey;
+  String? _submissionInputs;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -79,6 +90,13 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
   @override
   void initState() {
     super.initState();
+    _session = InventoryAuthScope.read(context);
+    _session.addListener(_sessionChanged);
+    _inventoryClient = InventoryApiClient(session: _session);
+    _workflowService = DecisionWorkflowApiService(
+      inventoryClient: _inventoryClient,
+    );
+    _service = ForecastApiService(inventoryClient: _inventoryClient);
 
     // ForecastApiService maintains a shared session-level cache.
     //
@@ -90,10 +108,30 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
 
   @override
   void dispose() {
+    _session.removeListener(_sessionChanged);
+    _inventoryClient.close();
     _priceController.dispose();
     _promotionController.dispose();
 
     super.dispose();
+  }
+
+  void _sessionChanged() {
+    final lease = _workflowLease;
+    if (lease == null || _session.isCurrent(lease)) return;
+    _workflowLease = null;
+    _submissionKey = null;
+    _submissionInputs = null;
+    widget.workflowController.clear();
+    if (!mounted) return;
+    setState(() {
+      _submitting = false;
+      _workflow = null;
+      _result = null;
+      _requestError = null;
+      _submittedSellingPrice = null;
+      _submittedPromotionPercent = null;
+    });
   }
 
   void _refreshCatalog() {
@@ -108,7 +146,7 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
   // SUBMIT CONNECTED WORKFLOW
   // =========================================================
 
-  Future<void> _submit() async {
+  Future<void> _submit({bool retry = false}) async {
     if (_submitting || !(_formKey.currentState?.validate() ?? false)) {
       return;
     }
@@ -151,6 +189,41 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
         ? enteredPromotionPercent
         : null;
 
+    final inputs = jsonEncode([
+      _mode.name,
+      _store!.id,
+      _product!.id,
+      submittedSellingPrice,
+      enteredPromotionPercent,
+      if (_mode == ForecastMode.custom) ...[
+        _startDate!.toIso8601String(),
+        _endDate!.toIso8601String(),
+      ],
+    ]);
+    if (retry && (_submissionKey == null || _submissionInputs != inputs)) {
+      setState(
+        () => _requestError =
+            'The selection has changed. Use Generate forecast to start a new workflow.',
+      );
+      return;
+    }
+    InventorySessionLease lease;
+    try {
+      lease = _session.capture();
+    } catch (error) {
+      setState(() => _requestError = error.toString());
+      return;
+    }
+    // Generate explicitly starts a new workflow; Retry preserves its key and
+    // requires the exact same inputs. Both are bound to this session lease.
+    if (!retry) {
+      final random = Random.secure();
+      _submissionKey =
+          'WEB-${List.generate(16, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join()}';
+      _submissionInputs = inputs;
+    }
+    _workflowLease = lease;
+
     setState(() {
       _submitting = true;
       _requestError = null;
@@ -186,14 +259,10 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
         promotionPercent: enteredPromotionPercent,
         startDate: _mode == ForecastMode.custom ? _startDate : null,
         endDate: _mode == ForecastMode.custom ? _endDate : null,
-        idempotencyKey:
-            'WEB-'
-            '${DateTime.now().microsecondsSinceEpoch}-'
-            '${_product!.id}-'
-            '${_store!.id}',
+        idempotencyKey: _submissionKey!,
       );
 
-      if (!mounted) {
+      if (!mounted || !_session.isCurrent(lease)) {
         return;
       }
 
@@ -206,13 +275,13 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
         _submittedPromotionPercent = submittedPromotionPercent;
       });
     } catch (error) {
-      if (!mounted) {
+      if (!mounted || !_session.isCurrent(lease)) {
         return;
       }
 
       setState(() => _requestError = error.toString());
     } finally {
-      if (mounted) {
+      if (mounted && _session.isCurrent(lease)) {
         setState(() => _submitting = false);
       }
     }
@@ -229,6 +298,9 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ApplicationPageHeader(
+            premium: true,
+            contextLabel: 'Demand planning',
+            leadingIcon: Icons.auto_graph_rounded,
             title: 'Forecasting',
             subtitle:
                 'Predict product demand using weather, historical patterns and inventory context',
@@ -306,7 +378,10 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
           if (_requestError != null) ...[
             const SizedBox(height: 20),
 
-            _InlineError(message: _requestError!, onRetry: _submit),
+            _InlineError(
+              message: _requestError!,
+              onRetry: () => _submit(retry: true),
+            ),
           ],
 
           if (_result == null &&
@@ -340,6 +415,12 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
                 'PROMOTE') ...[
               const SizedBox(height: 14),
               SendToMarketingCard(
+                session: _session,
+                showroomName: _store?.name,
+                forecastPreview: _workflow!.sharePreview,
+                service: MarketingOpportunityApiService(
+                  client: _inventoryClient,
+                ),
                 opportunity: MarketingOpportunityRequest(
                   workflowId: _workflow!.id,
                   productId: _workflow!.productId,
@@ -392,7 +473,21 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
       );
     }
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        boxShadow: Theme.of(context).brightness == Brightness.light
+            ? const [
+                BoxShadow(
+                  color: Color(0x0D0F172A),
+                  blurRadius: 18,
+                  offset: Offset(0, 6),
+                ),
+              ]
+            : const [],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(22),
         child: Form(
@@ -400,17 +495,38 @@ class _ForecastingOverviewScreenState extends State<ForecastingOverviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(switch (_mode) {
-                ForecastMode.daily => 'Generate daily forecast',
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: .1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.tune_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(switch (_mode) {
+                      ForecastMode.daily => 'Generate daily forecast',
 
-                ForecastMode.sevenDay => 'Generate 7-day forecast',
+                      ForecastMode.sevenDay => 'Generate 7-day forecast',
 
-                ForecastMode.custom => 'Generate custom forecast',
+                      ForecastMode.custom => 'Generate custom forecast',
 
-                ForecastMode.monthly => 'Generate monthly forecast',
+                      ForecastMode.monthly => 'Generate monthly forecast',
 
-                ForecastMode.quarterly => 'Generate quarterly forecast',
-              }, style: Theme.of(context).textTheme.titleLarge),
+                      ForecastMode.quarterly => 'Generate quarterly forecast',
+                    }, style: Theme.of(context).textTheme.titleLarge),
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 6),
 
@@ -760,7 +876,7 @@ class _GuidedStep extends StatelessWidget {
         height: 30,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: const Color(0xFFEDF4FF),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: .1),
           borderRadius: BorderRadius.circular(9),
         ),
         child: Text(
@@ -1071,7 +1187,11 @@ class _DayValue extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Icon(icon, size: 18, color: const Color(0xFF667085)),
+      Icon(
+        icon,
+        size: 18,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
 
       const SizedBox(width: 6),
 
@@ -1088,10 +1208,21 @@ class _CatalogLoadingState extends StatelessWidget {
   const _CatalogLoadingState();
 
   @override
-  Widget build(BuildContext context) => const Card(
-    child: Padding(
-      padding: EdgeInsets.symmetric(vertical: 64),
-      child: Center(child: CircularProgressIndicator()),
+  Widget build(BuildContext context) => Card(
+    child: const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 52),
+      child: Column(
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 18),
+          Text(
+            'Loading forecast catalog',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          SizedBox(height: 5),
+          Text('Preparing products and authorized showrooms…'),
+        ],
+      ),
     ),
   );
 }
@@ -1125,20 +1256,40 @@ class _InlineError extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: Padding(
       padding: const EdgeInsets.all(24),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
-
-          const SizedBox(width: 12),
-
-          Expanded(child: Text(message)),
-
-          TextButton.icon(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final messageWidget = Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(message)),
+            ],
+          );
+          final retry = TextButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
-          ),
-        ],
+          );
+          return constraints.maxWidth < 560
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    messageWidget,
+                    const SizedBox(height: 12),
+                    Align(alignment: Alignment.centerRight, child: retry),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(child: messageWidget),
+                    retry,
+                  ],
+                );
+        },
       ),
     ),
   );

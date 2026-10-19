@@ -9,7 +9,9 @@ import '../../models/forecast/forecast_catalog_option.dart';
 import '../../models/inventory/inventory_record.dart';
 import '../../services/forecast_api_service.dart';
 import '../../services/inventory_api_service.dart';
+import '../../core/theme/application_design_tokens.dart';
 import '../../core/widgets/application_page_layout.dart';
+import '../../core/widgets/application_feedback_components.dart';
 import '../../core/widgets/application_ui_components.dart';
 import 'inventory_attention_section.dart';
 import 'inventory_explorer.dart';
@@ -73,6 +75,9 @@ class _InventoryIntelligenceScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ApplicationPageHeader(
+            premium: true,
+            contextLabel: 'Inventory operations',
+            leadingIcon: Icons.inventory_2_outlined,
             title: 'Inventory Intelligence',
             subtitle:
                 'Inspect inventory health and stock conditions across showrooms',
@@ -125,27 +130,96 @@ class _InventoryIntelligenceScreenState
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Card(
+                    Container(
+                      decoration: BoxDecoration(
+                        color: ApplicationColors.panel(context),
+                        borderRadius: BorderRadius.circular(
+                          ApplicationRadii.dialog,
+                        ),
+                        border: Border.all(
+                          color: ApplicationColors.border(context),
+                        ),
+                        boxShadow: ApplicationElevation.forBrightness(
+                          Theme.of(context).brightness,
+                        ),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(20),
-                        child: DropdownButtonFormField<ForecastStoreOption>(
-                          initialValue: _store,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Showroom',
-                          ),
-                          items: [
-                            for (final store in catalog.stores)
-                              DropdownMenuItem(
-                                value: store,
-                                child: Text('${store.name} (${store.id})'),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withValues(alpha: .1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.storefront_outlined,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Showroom inventory workspace',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleLarge,
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        'Choose an authorized showroom to inspect its latest inventory snapshot.',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            DropdownButtonFormField<ForecastStoreOption>(
+                              initialValue: _store,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Showroom',
+                                prefixIcon: Icon(Icons.store_outlined),
                               ),
+                              items: [
+                                for (final store in catalog.stores)
+                                  DropdownMenuItem(
+                                    value: store,
+                                    child: Text('${store.name} (${store.id})'),
+                                  ),
+                              ],
+                              onChanged: (store) {
+                                if (store != null) {
+                                  _loadInventory(store);
+                                }
+                              },
+                            ),
+                            if (_store != null) ...[
+                              const SizedBox(height: 12),
+                              Text(
+                                'Selected: ${_store!.name} • ${_store!.id}',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ],
                           ],
-                          onChanged: (store) {
-                            if (store != null) {
-                              _loadInventory(store);
-                            }
-                          },
                         ),
                       ),
                     ),
@@ -332,7 +406,9 @@ class _ActiveWorkflowIntelligence extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 18),
-                _IntelligenceMetricGrid(
+                _IntelligenceMetricSection(
+                  title: 'Inventory position',
+                  icon: Icons.inventory_2_outlined,
                   metrics: [
                     ('Current stock', '${workflow.currentStock} units'),
                     ('Forecast demand', '${intelligence.forecastDemand} units'),
@@ -353,9 +429,23 @@ class _ActiveWorkflowIntelligence extends StatelessWidget {
                       'Days on hand',
                       intelligence.daysOnHand.toStringAsFixed(1),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                _IntelligenceMetricSection(
+                  title: 'Risk & health',
+                  icon: Icons.health_and_safety_outlined,
+                  metrics: [
                     ('Stock health', _label(intelligence.stockHealth)),
                     ('Stockout risk', _label(intelligence.stockoutRisk)),
                     ('Overstock risk', _label(intelligence.overstockRisk)),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                _IntelligenceMetricSection(
+                  title: 'Financial context',
+                  icon: Icons.payments_outlined,
+                  metrics: [
                     ('Inventory value', _currency(intelligence.inventoryValue)),
                     (
                       'Potential revenue',
@@ -413,9 +503,9 @@ class _IntelligenceMetricGrid extends StatelessWidget {
               width: itemWidth,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F9FC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE4E8F0)),
+                  color: ApplicationColors.panelMuted(context),
+                  borderRadius: BorderRadius.circular(ApplicationRadii.control),
+                  border: Border.all(color: ApplicationColors.border(context)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(14),
@@ -439,6 +529,34 @@ class _IntelligenceMetricGrid extends StatelessWidget {
         ],
       );
     },
+  );
+}
+
+class _IntelligenceMetricSection extends StatelessWidget {
+  const _IntelligenceMetricSection({
+    required this.title,
+    required this.icon,
+    required this.metrics,
+  });
+
+  final String title;
+  final IconData icon;
+  final List<(String, String)> metrics;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Icon(icon, size: 19, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+        ],
+      ),
+      const SizedBox(height: 10),
+      _IntelligenceMetricGrid(metrics: metrics),
+    ],
   );
 }
 
@@ -489,7 +607,20 @@ class _DecisionInterpretation extends StatelessWidget {
         ),
         if (operationalReason.isNotEmpty) ...[
           const SizedBox(height: 10),
-          Text(operationalReason),
+          ApplicationAiPanel(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 19,
+                  color: ApplicationColors.ai(context),
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(operationalReason)),
+              ],
+            ),
+          ),
         ],
         if (showCommercialGuidance) ...[
           const SizedBox(height: 16),
@@ -611,13 +742,16 @@ class _BrowseAllInventory extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: const Color(0xFFE1E7F0)),
+      color: ApplicationColors.panel(context),
+      borderRadius: BorderRadius.circular(ApplicationRadii.card),
+      border: Border.all(color: ApplicationColors.border(context)),
     ),
     child: Row(
       children: [
-        const Icon(Icons.view_list_outlined, color: Color(0xFF155EEF)),
+        Icon(
+          Icons.view_list_outlined,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -660,15 +794,18 @@ class _InventoryLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 56),
-      child: Center(
-        child: Column(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 14),
-            Text(label),
-          ],
-        ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 18),
+          const ApplicationLoadingSkeleton(height: 72),
+          const SizedBox(height: 12),
+          const ApplicationLoadingSkeleton(height: 72),
+          const SizedBox(height: 12),
+          const ApplicationLoadingSkeleton(height: 72),
+        ],
       ),
     ),
   );
@@ -693,21 +830,10 @@ class _InventoryError extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(22),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
-          const SizedBox(width: 12),
-          Expanded(child: Text(message)),
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
-    ),
+  Widget build(BuildContext context) => ApplicationErrorState(
+    title: 'Inventory data unavailable',
+    message: message,
+    onRetry: onRetry,
+    retryLabel: 'Retry',
   );
 }

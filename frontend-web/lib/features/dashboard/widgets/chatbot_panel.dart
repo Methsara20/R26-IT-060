@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/constants/api_constants.dart';
+
 class ChatbotPanel extends StatefulWidget {
   final Map<String, dynamic>? context;
 
@@ -61,7 +63,7 @@ class _ChatbotPanelState extends State<ChatbotPanel> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:10000/chat"),
+        Uri.parse("${ApiConstants.baseUrl}/chat"),
 
         headers: {"Content-Type": "application/json"},
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ZoneApiService {
-  static const String baseUrl = "https://r26-it-060.onrender.com";
+  static const String baseUrl = "https://smartomniretailr26-api.azurewebsites.net";
 
   static Future<Map<String, dynamic>> createZone({
     required String zoneName,

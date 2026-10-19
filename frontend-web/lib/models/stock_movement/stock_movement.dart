@@ -47,8 +47,8 @@ class StockMovement {
       productName: json['product_name']?.toString() ?? 'Unnamed product',
       movementType: json['movement_type']?.toString() ?? 'UNKNOWN',
       status: json['movement_status']?.toString() ?? 'UNKNOWN',
-      fromStore: json['from_store']?.toString() ?? '—',
-      toStore: json['to_store']?.toString() ?? '—',
+      fromStore: json['from_store']?.toString() ?? 'â€”',
+      toStore: json['to_store']?.toString() ?? 'â€”',
       recommendedQuantity: _asInt(json['recommended_qty']),
       coveragePercentage: _asDouble(json['coverage_percentage']),
       confidence: _asDouble(
@@ -198,14 +198,44 @@ class MovementSourceAlternative {
 }
 
 class MovementStatusEvent {
-  const MovementStatusEvent({required this.status, required this.time});
+  const MovementStatusEvent({
+    required this.status,
+    required this.time,
+    this.actorId,
+    this.actorUsernameSnapshot,
+    this.actorDisplayNameSnapshot,
+    this.actorRoleSnapshot,
+    this.remarks,
+  });
+
+  static String? _text(dynamic value) =>
+      value is String && value.trim().isNotEmpty ? value.trim() : null;
 
   factory MovementStatusEvent.fromJson(Map<String, dynamic> json) =>
       MovementStatusEvent(
         status: json['status']?.toString() ?? 'UNKNOWN',
         time: DateTime.tryParse(json['time']?.toString() ?? ''),
+        actorId: _text(json['actor_id']),
+        actorUsernameSnapshot: _text(json['actor_username_snapshot']),
+        actorDisplayNameSnapshot: _text(json['actor_display_name_snapshot']),
+        actorRoleSnapshot: _text(json['actor_role_snapshot']),
+        remarks:
+            _text(json['remarks']) ??
+            _text(json['reason']) ??
+            _text(json['rejection_reason']) ??
+            _text(json['cancel_reason']),
       );
 
   final String status;
   final DateTime? time;
+  final String? actorId;
+  final String? actorUsernameSnapshot;
+  final String? actorDisplayNameSnapshot;
+  final String? actorRoleSnapshot;
+  final String? remarks;
+
+  String? get actorName =>
+      actorId != null && RegExp(r'^oid:[0-9a-f]{24}$').hasMatch(actorId!)
+      ? actorDisplayNameSnapshot ?? actorUsernameSnapshot
+      : null;
 }

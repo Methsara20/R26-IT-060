@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../core/constants/api_constants.dart';
+import '../core/auth/inventory_api_client.dart';
+import 'inventory_auth_api_service.dart';
 import '../models/forecast/forecast_catalog_option.dart';
 import '../models/forecast/inventory_period_forecast.dart';
 import '../models/forecast/short_range_forecast.dart';
@@ -17,9 +19,13 @@ class ForecastApiException implements Exception {
   String toString() => message;
 }
 
-
 class ForecastApiService {
-  ForecastApiService({http.Client? client}) : _client = client ?? http.Client();
+  ForecastApiService({http.Client? client, InventoryApiClient? inventoryClient})
+    : _client = client ?? http.Client(),
+      _inventoryClient = inventoryClient;
+
+  // Shared catalogs must never use the Inventory bearer transport.
+  final InventoryApiClient? _inventoryClient;
 
   final http.Client _client;
 
@@ -81,7 +87,10 @@ class ForecastApiService {
   /// This method should only run when the catalog cache is empty
   /// or when a deliberate force refresh is requested.
   Future<ForecastCatalog> _loadCatalog() async {
-    final responses = await Future.wait([_get('/products?all_products=true'), _get('/stores/')]);
+    final responses = await Future.wait([
+      _get('/products?all_products=true'),
+      _get('/stores/'),
+    ]);
 
     final productItems = responses[0]['products'];
     final storeItems = responses[1]['stores'];
@@ -270,7 +279,11 @@ class ForecastApiService {
     Map<String, dynamic> body,
   ) async {
     try {
-      final response = await _client
+      final inventoryClient = _inventoryClient;
+      if (inventoryClient == null) {
+        throw const InventoryAuthException(InventoryAuthFailure.invalidSession);
+      }
+      final response = await inventoryClient
           .post(
             Uri.parse('${ApiConstants.baseUrl}$path'),
             headers: {'Content-Type': 'application/json'},
@@ -279,6 +292,12 @@ class ForecastApiService {
           .timeout(ApiConstants.requestTimeout);
 
       return _decode(response);
+    } on InventoryAuthException catch (error) {
+      throw ForecastApiException(
+        error.failure == InventoryAuthFailure.network
+            ? 'Cannot connect to the forecasting service.'
+            : error.toString(),
+      );
     } on ForecastApiException {
       rethrow;
     } on TimeoutException {
@@ -297,6 +316,15 @@ class ForecastApiService {
   // =========================================================
 
   Map<String, dynamic> _decode(http.Response response) {
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw ForecastApiException(
+        InventoryAuthException(
+          response.statusCode == 401
+              ? InventoryAuthFailure.invalidSession
+              : InventoryAuthFailure.forbidden,
+        ).toString(),
+      );
+    }
     Map<String, dynamic>? decoded;
 
     try {

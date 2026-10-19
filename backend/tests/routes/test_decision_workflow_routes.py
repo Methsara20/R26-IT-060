@@ -3,15 +3,17 @@ from unittest.mock import patch
 
 from fastapi import HTTPException
 
-from app.routes import decision_workflow_routes as routes
+from tests.inventory_auth.test_decision_workflow_authorization import load_workflow_modules, verified_user
+service, routes = load_workflow_modules()
 from app.schemas.decision_workflow_schema import DecisionWorkflowRequest
-from app.services.decision_workflow_service import (
-    DecisionWorkflowNotFoundError,
-    DecisionWorkflowValidationError,
-)
+DecisionWorkflowNotFoundError = service.DecisionWorkflowNotFoundError
+DecisionWorkflowValidationError = service.DecisionWorkflowValidationError
 
 
 class DecisionWorkflowRouteTests(unittest.TestCase):
+    def setUp(self):
+        self.user = verified_user()
+
     def test_analyze_maps_business_validation_to_400(self):
         request = DecisionWorkflowRequest(
             forecast_type="DAILY",
@@ -26,7 +28,7 @@ class DecisionWorkflowRouteTests(unittest.TestCase):
             side_effect=DecisionWorkflowValidationError("Invalid request."),
         ):
             with self.assertRaises(HTTPException) as raised:
-                routes.analyze_workflow(request)
+                routes.analyze_workflow(request, user=self.user)
 
         self.assertEqual(raised.exception.status_code, 400)
         self.assertEqual(raised.exception.detail, "Invalid request.")
@@ -37,10 +39,10 @@ class DecisionWorkflowRouteTests(unittest.TestCase):
             "list_decision_workflows",
             return_value=[],
         ) as list_workflows:
-            result = routes.workflow_history(limit=20)
+            result = routes.workflow_history(limit=20, user=self.user)
 
         self.assertEqual(result, [])
-        list_workflows.assert_called_once_with(limit=20)
+        list_workflows.assert_called_once_with(limit=20, user=self.user)
 
     def test_missing_workflow_maps_to_404(self):
         with patch.object(
@@ -49,7 +51,7 @@ class DecisionWorkflowRouteTests(unittest.TestCase):
             side_effect=DecisionWorkflowNotFoundError("Not found."),
         ):
             with self.assertRaises(HTTPException) as raised:
-                routes.workflow_by_id("WF-MISSING")
+                routes.workflow_by_id("WF-MISSING", user=self.user)
 
         self.assertEqual(raised.exception.status_code, 404)
 

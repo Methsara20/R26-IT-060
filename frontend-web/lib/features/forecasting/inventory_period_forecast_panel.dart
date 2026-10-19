@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/auth/inventory_api_client.dart';
+import '../../core/auth/inventory_auth_scope.dart';
+import '../../core/theme/application_design_tokens.dart';
 
 import '../../models/forecast/forecast_catalog_option.dart';
 import '../../models/forecast/inventory_period_forecast.dart';
@@ -25,7 +28,8 @@ class InventoryPeriodForecastPanel extends StatefulWidget {
 
 class _InventoryPeriodForecastPanelState
     extends State<InventoryPeriodForecastPanel> {
-  final _service = ForecastApiService();
+  late final InventoryApiClient _inventoryClient;
+  late final ForecastApiService _service;
   final _formKey = GlobalKey<FormState>();
   ForecastStoreOption? _store;
   String? _category;
@@ -54,8 +58,18 @@ class _InventoryPeriodForecastPanelState
   ];
 
   @override
+  void dispose() {
+    _inventoryClient.close();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
+    _inventoryClient = InventoryApiClient(
+      session: InventoryAuthScope.read(context),
+    );
+    _service = ForecastApiService(inventoryClient: _inventoryClient);
     final now = DateTime.now();
     _year = now.year;
     _period = widget.quarterly ? ((now.month - 1) ~/ 3) + 1 : now.month;
@@ -128,7 +142,15 @@ class _InventoryPeriodForecastPanelState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Card(
+        Container(
+          decoration: BoxDecoration(
+            color: ApplicationColors.panel(context),
+            borderRadius: BorderRadius.circular(ApplicationRadii.dialog),
+            border: Border.all(color: ApplicationColors.border(context)),
+            boxShadow: ApplicationElevation.forBrightness(
+              Theme.of(context).brightness,
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(22),
             child: Form(
@@ -487,7 +509,7 @@ class _StrategicInterpretation extends StatelessWidget {
               'This is aggregated category/brand/gender demand. It identifies '
               'a planning opportunity, but it cannot confirm a product-level '
               'stockout or safely create a transfer.',
-              style: TextStyle(color: Color(0xFF5D6B82), height: 1.45),
+              style: TextStyle(height: 1.45),
             ),
           ],
         ),
@@ -512,8 +534,8 @@ class _PlanningSignal extends StatelessWidget {
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: const Color(0xFFE4E8F0)),
+      borderRadius: BorderRadius.circular(ApplicationRadii.card),
+      border: Border.all(color: ApplicationColors.border(context)),
     ),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -719,7 +741,11 @@ class _PeriodValue extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Icon(icon, size: 18, color: const Color(0xFF667085)),
+      Icon(
+        icon,
+        size: 18,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
       const SizedBox(width: 6),
       Text(text),
     ],

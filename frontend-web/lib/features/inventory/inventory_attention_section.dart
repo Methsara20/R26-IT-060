@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
 import '../../models/forecast/forecast_catalog_option.dart';
 import '../../models/inventory/inventory_record.dart';
 import 'inventory_current_health.dart';
@@ -158,11 +159,15 @@ class _AttentionItem extends StatelessWidget {
       InventoryCurrentHealth.healthy =>
         'Stock is within the configured operating range.',
     };
-    return Card(
-      margin: EdgeInsets.zero,
+    return Container(
+      decoration: BoxDecoration(
+        color: ApplicationColors.panel(context),
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        border: Border.all(color: ApplicationColors.border(context)),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -254,14 +259,20 @@ class _NoAttentionItems extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      color: const Color(0xFFF0FAF5),
-      borderRadius: BorderRadius.circular(12),
+      color: ApplicationColors.success.withValues(alpha: .08),
+      borderRadius: BorderRadius.circular(ApplicationRadii.card),
+      border: Border.all(
+        color: ApplicationColors.success.withValues(alpha: .22),
+      ),
     ),
-    child: const Row(
+    child: Row(
       children: [
-        Icon(Icons.check_circle_outline, color: Color(0xFF17875D)),
-        SizedBox(width: 10),
-        Expanded(
+        const Icon(
+          Icons.check_circle_outline,
+          color: ApplicationColors.success,
+        ),
+        const SizedBox(width: 10),
+        const Expanded(
           child: Text('No inventory records match this attention filter.'),
         ),
       ],

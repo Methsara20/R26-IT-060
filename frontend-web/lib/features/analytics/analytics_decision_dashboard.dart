@@ -15,8 +15,6 @@ enum AnalyticsMetric {
   overstock,
 }
 
-
-
 class AnalyticsDecisionDashboard extends StatefulWidget {
   const AnalyticsDecisionDashboard({
     required this.overview,
@@ -74,28 +72,19 @@ class _AnalyticsDecisionDashboardState
         final bShortage = b.reorderLevel - b.currentStock;
         return bShortage.compareTo(aShortage);
       });
+    final activeFilterCount = [
+      _showroom,
+      _category,
+      _brand,
+    ].where((value) => value != 'ALL').length;
+    final filteredAttentionCount = lowStock.length + overstock.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _AnalyticsFilters(
-          overview: overview,
-          showroom: _showroom,
-          category: _category,
-          brand: _brand,
-          onShowroomChanged: (value) => setState(() => _showroom = value),
-          onCategoryChanged: (value) => setState(() => _category = value),
-          onBrandChanged: (value) => setState(() => _brand = value),
-          onClear: () => setState(() {
-            _showroom = 'ALL';
-            _category = 'ALL';
-            _brand = 'ALL';
-          }),
-        ),
-        const SizedBox(height: 22),
         const _SectionHeading(
-          title: 'Performance overview',
-          subtitle: 'Network totals from the current analytics snapshot',
+          title: 'Network overview',
+          subtitle: 'Network-wide inventory snapshot across all showrooms',
         ),
         const SizedBox(height: 12),
         _KpiGrid(
@@ -160,6 +149,29 @@ class _AnalyticsDecisionDashboardState
           onReview: _showBreakdownDetails,
         ),
         const SizedBox(height: 24),
+        const _SectionHeading(
+          title: 'Filtered inventory attention',
+          subtitle:
+              'These filters apply to attention records only. Network totals and performance comparisons remain unchanged.',
+        ),
+        const SizedBox(height: 12),
+        _AnalyticsFilters(
+          overview: overview,
+          showroom: _showroom,
+          category: _category,
+          brand: _brand,
+          activeFilterCount: activeFilterCount,
+          resultCount: filteredAttentionCount,
+          onShowroomChanged: (value) => setState(() => _showroom = value),
+          onCategoryChanged: (value) => setState(() => _category = value),
+          onBrandChanged: (value) => setState(() => _brand = value),
+          onClear: () => setState(() {
+            _showroom = 'ALL';
+            _category = 'ALL';
+            _brand = 'ALL';
+          }),
+        ),
+        const SizedBox(height: 18),
         _AttentionSummary(
           lowStock: lowStock,
           overstock: overstock,
@@ -246,6 +258,8 @@ class _AnalyticsFilters extends StatelessWidget {
     required this.onCategoryChanged,
     required this.onBrandChanged,
     required this.onClear,
+    required this.activeFilterCount,
+    required this.resultCount,
   });
   final AnalyticsOverview overview;
   final String showroom;
@@ -255,6 +269,8 @@ class _AnalyticsFilters extends StatelessWidget {
   final ValueChanged<String> onCategoryChanged;
   final ValueChanged<String> onBrandChanged;
   final VoidCallback onClear;
+  final int activeFilterCount;
+  final int resultCount;
 
   @override
   Widget build(BuildContext context) => ApplicationFilterBar(
@@ -278,11 +294,18 @@ class _AnalyticsFilters extends StatelessWidget {
         values: ['ALL', ...overview.brands.map((item) => item.id)],
         onChanged: onBrandChanged,
       ),
-      TextButton.icon(
-        onPressed: onClear,
-        icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-        label: const Text('Clear filters'),
+      Chip(
+        avatar: const Icon(Icons.filter_list_rounded, size: 16),
+        label: Text('$resultCount attention records'),
       ),
+      if (activeFilterCount > 0) ...[
+        Chip(label: Text('$activeFilterCount active')),
+        TextButton.icon(
+          onPressed: onClear,
+          icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+          label: const Text('Clear filters'),
+        ),
+      ],
     ],
   );
 }
@@ -502,7 +525,7 @@ class _PerformanceBreakdown extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SectionHeading(
-            title: 'Performance breakdown',
+            title: 'Performance comparison',
             subtitle:
                 'Compare operational and financial performance by business dimension',
           ),
@@ -542,6 +565,12 @@ class _PerformanceBreakdown extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
+          Text(
+            '${_dimensionLabel(dimension)} ranked by ${_metricLabel(metric).toLowerCase()}. '
+            'Bars are scaled relative to the highest visible record.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
           if (ranked.isEmpty)
             const Padding(
               padding: EdgeInsets.all(24),
@@ -595,58 +624,70 @@ class _RankingBar extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final value = _metricValue(item, metric);
-            return Row(
-              children: [
-                SizedBox(
-                  width: constraints.maxWidth < 650 ? 110 : 190,
-                  child: Text(
-                    item.label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(5),
-                    child: LinearProgressIndicator(
-                      value: maximum <= 0 ? 0 : value / maximum,
-                      minHeight: 12,
-                      color: const Color(0xFF2563EB),
-                      backgroundColor: const Color(0xFFE9EDF5),
+  Widget build(BuildContext context) {
+    final value = _metricValue(item, metric);
+    final formatted = _metricFormat(value, metric);
+    return Semantics(
+      button: true,
+      label: '${item.label}, ${_metricLabel(metric)}, $formatted',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Row(
+                  children: [
+                    SizedBox(
+                      width: constraints.maxWidth < 650 ? 110 : 190,
+                      child: Tooltip(
+                        message: item.label,
+                        child: Text(
+                          item.label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 100,
-                  child: Text(
-                    _metricFormat(value, metric),
-                    textAlign: TextAlign.end,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5),
+                        child: LinearProgressIndicator(
+                          value: maximum <= 0 ? 0 : value / maximum,
+                          minHeight: 12,
+                          color: const Color(0xFF2563EB),
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            );
-          },
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 100,
+                      child: Text(
+                        formatted,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _ComparisonTable extends StatelessWidget {
@@ -706,7 +747,19 @@ class _ComparisonTable extends StatelessWidget {
           for (final item in sorted)
             DataRow(
               cells: [
-                DataCell(SizedBox(width: 180, child: Text(item.label))),
+                DataCell(
+                  Tooltip(
+                    message: item.label,
+                    child: SizedBox(
+                      width: 180,
+                      child: Text(
+                        item.label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
                 DataCell(Text(_number(item.totalStock))),
                 DataCell(Text(_number(item.lowStockItems))),
                 DataCell(Text(_number(item.overstockItems))),
@@ -985,12 +1038,12 @@ class _PriorityRow extends StatelessWidget {
         ? 'STOCKOUT'
         : item.currentStock < item.reorderLevel
         ? 'LOW'
-        : 'OVERSTOCK';
+        : 'ATTENTION';
     final color = status == 'STOCKOUT'
         ? const Color(0xFFD92D20)
         : status == 'LOW'
         ? const Color(0xFFF04438)
-        : const Color(0xFFF79009);
+        : Theme.of(context).colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: LayoutBuilder(
@@ -1081,8 +1134,9 @@ class _FinancialOpportunity extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _SectionHeading(
-          title: 'Inventory value & opportunity',
-          subtitle: 'Financial context from the current inventory snapshot',
+          title: 'Financial snapshot',
+          subtitle:
+              'Network-wide financial context from the current inventory snapshot',
         ),
         const SizedBox(height: 18),
         Wrap(

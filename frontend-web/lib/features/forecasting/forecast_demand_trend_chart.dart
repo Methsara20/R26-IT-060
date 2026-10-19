@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/theme/application_design_tokens.dart';
 import '../../models/forecast/short_range_forecast.dart';
 
 class ForecastDemandTrendChart extends StatelessWidget {
@@ -16,9 +17,9 @@ class ForecastDemandTrendChart extends StatelessWidget {
         .toDouble();
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE1E7F0)),
+        color: ApplicationColors.panel(context),
+        borderRadius: BorderRadius.circular(ApplicationRadii.card),
+        border: Border.all(color: ApplicationColors.border(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
@@ -48,8 +49,15 @@ class ForecastDemandTrendChart extends StatelessWidget {
                     rightTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false),
                     ),
-                    leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 38,
+                        getTitlesWidget: (value, meta) => Text(
+                          value.toInt().toString(),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
                     ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
@@ -74,8 +82,10 @@ class ForecastDemandTrendChart extends StatelessWidget {
                   ),
                   gridData: FlGridData(
                     drawVerticalLine: false,
-                    getDrawingHorizontalLine: (_) =>
-                        const FlLine(color: Color(0xFFE8ECF3), strokeWidth: 1),
+                    getDrawingHorizontalLine: (_) => FlLine(
+                      color: ApplicationColors.border(context),
+                      strokeWidth: 1,
+                    ),
                   ),
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(

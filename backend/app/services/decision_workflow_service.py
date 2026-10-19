@@ -1,5 +1,9 @@
 import hashlib
 import math
+from fastapi import HTTPException
+from pymongo.errors import DuplicateKeyError
+from app.security.inventory_permissions import require_roles, require_global_access, require_store_access
+from app.security.inventory_resource_access import require_workflow_user, require_workflow_access
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -13,6 +17,7 @@ from app.constants.collections import (
     DECISION_WORKFLOWS_COLLECTION,
     OPTIMIZATION_CANDIDATES_COLLECTION,
     INVENTORY_COLLECTION,
+    STOCK_MOVEMENTS_COLLECTION,
 )
 
 from app.schemas.decision_workflow_schema import (
@@ -122,6 +127,27 @@ class DecisionWorkflowExecutionError(RuntimeError):
 # ==========================================================
 # GENERAL HELPERS
 # ==========================================================
+
+def _read_resource(collection_name, document_id):
+    collection = get_collection(collection_name)
+    if collection is None:
+        raise DecisionWorkflowExecutionError("Inventory workflow storage is unavailable.")
+    document = collection.document(document_id).get()
+    if not document.exists:
+        return None
+    record = document.to_dict()
+    if not isinstance(record, dict):
+        raise DecisionWorkflowExecutionError("Invalid workflow resource.")
+    return {**record, "id": document.id}
+
+
+def _authorize_replay(existing, request, principal):
+    # Ownerless legacy claims cannot safely establish the original actor.
+    if existing.get("actor_id") != principal.user_id:
+        raise HTTPException(status_code=403, detail="Inventory access denied.")
+    require_workflow_access(principal, existing)
+    _assert_same_idempotent_request(existing, request)
+
 
 def _now() -> str:
     return datetime.now().isoformat()
@@ -281,25 +307,49 @@ def _with_next_action(
     return result
 
 
+def _actor_snapshot(user):
+    """Snapshot only validated server principals; never infer legacy identities."""
+    from fastapi import HTTPException
+    from app.schemas.inventory_auth_schema import InventoryPrincipal
+    try:
+        if not isinstance(user, InventoryPrincipal):
+            raise ValueError()
+        validated = InventoryPrincipal.model_validate(user.model_dump())
+        username = validated.username_normalized
+        display = validated.display_name
+        if (username != username.strip().casefold() or len(username) > 128
+                or not display.strip() or len(display) > 128
+                or any(ord(char) < 32 for char in username + display)):
+            raise ValueError()
+        return {
+            "actor_id": validated.user_id,
+            "actor_username_snapshot": username,
+            "actor_display_name_snapshot": display,
+            "actor_role_snapshot": validated.role,
+        }
+    except Exception:
+        raise HTTPException(403, "Inventory actor identity is unavailable.") from None
+
+
 def _claim_workflow(
     request: DecisionWorkflowRequest,
+    principal,
 ) -> tuple[dict, bool]:
+
+    actor = _actor_snapshot(principal)
 
     workflow_id = _workflow_id(
         request.idempotency_key
     )
 
-    existing = get_document_by_id(
+    existing = _read_resource(
         DECISION_WORKFLOWS_COLLECTION,
         workflow_id,
     )
 
     if existing is not None:
 
-        _assert_same_idempotent_request(
-            existing,
-            request,
-        )
+        _authorize_replay(existing, request, principal)
 
         return (
             _with_next_action(existing),
@@ -309,6 +359,7 @@ def _claim_workflow(
     timestamp = _now()
 
     workflow = {
+        **actor,
         "workflow_id":
             workflow_id,
 
@@ -383,9 +434,9 @@ def _claim_workflow(
 
         return workflow, True
 
-    except AlreadyExists:
+    except (AlreadyExists, DuplicateKeyError):
 
-        concurrent = get_document_by_id(
+        concurrent = _read_resource(
             DECISION_WORKFLOWS_COLLECTION,
             workflow_id,
         )
@@ -396,10 +447,7 @@ def _claim_workflow(
                 "idempotent workflow."
             )
 
-        _assert_same_idempotent_request(
-            concurrent,
-            request,
-        )
+        _authorize_replay(concurrent, request, principal)
 
         return (
             _with_next_action(concurrent),
@@ -1047,40 +1095,25 @@ def _save_workflow(
 # HYDRATE WORKFLOW
 # ==========================================================
 
-def _hydrate_workflow(
-    workflow: dict,
-) -> dict:
-
-    result = _with_next_action(
-        workflow
-    )
-
-    candidate_id = result.get(
-        "candidate_id"
-    )
-
-    movement_id = result.get(
-        "movement_id"
-    )
-
-    if candidate_id:
-
-        result["candidate"] = (
-            get_document_by_id(
-                OPTIMIZATION_CANDIDATES_COLLECTION,
-                candidate_id,
-            )
-        )
-
-    if movement_id:
-
-        result["movement"] = (
-            get_stock_movement_by_id(
-                movement_id
-            )
-        )
-
-    return result
+def _hydrate_workflow(workflow: dict, principal) -> dict:
+    try:
+        require_workflow_access(principal, workflow)
+        result = _with_next_action(workflow)
+        if result.get("candidate_id"):
+            result["candidate"] = _read_resource(OPTIMIZATION_CANDIDATES_COLLECTION, result["candidate_id"])
+            if result["candidate"] is None:
+                raise HTTPException(status_code=403)
+        if result.get("movement_id"):
+            result["movement"] = _read_resource(STOCK_MOVEMENTS_COLLECTION, result["movement_id"])
+            if result["movement"] is None:
+                raise HTTPException(status_code=403)
+        require_workflow_access(principal, result)
+        return result
+    except HTTPException as exc:
+        if exc.status_code != 403:
+            raise
+        # Missing and unauthorized resources share the same outward response.
+        raise DecisionWorkflowNotFoundError("Decision workflow not found.") from None
 
 
 # ==========================================================
@@ -1089,7 +1122,12 @@ def _hydrate_workflow(
 
 def analyze_decision_workflow(
     request: DecisionWorkflowRequest,
+    *, user,
 ) -> dict:
+    principal = require_workflow_user(user)
+    require_roles(principal, "admin", "manager", "analyst")
+    require_global_access(principal)
+    require_store_access(principal, request.store_id)
 
     _validate_business_request(
         request
@@ -1114,15 +1152,11 @@ def analyze_decision_workflow(
         (
             workflow,
             workflow_claimed,
-        ) = _claim_workflow(
-            request
-        )
+        ) = _claim_workflow(request, principal)
 
         if not workflow_claimed:
 
-            return _hydrate_workflow(
-                workflow
-            )
+            return _hydrate_workflow(workflow, principal)
 
         # --------------------------------------------------
         # PRODUCT + STORE
@@ -1464,13 +1498,9 @@ def analyze_decision_workflow(
                 "movement_id"
             ):
 
-                return _hydrate_workflow(
-                    workflow
-                )
+                return _hydrate_workflow(workflow, principal)
 
-            movement = recommend_transfer(
-                candidate_id
-            )
+            movement = recommend_transfer(candidate_id, user=principal)
 
             if (
                 movement is None
@@ -1525,6 +1555,8 @@ def analyze_decision_workflow(
     # FIRESTORE QUOTA
     # ======================================================
 
+    except (HTTPException, DecisionWorkflowNotFoundError):
+        raise
     except ResourceExhausted as exc:
 
         raise DecisionWorkflowQuotaError(
@@ -1621,11 +1653,12 @@ def analyze_decision_workflow(
 
 def get_decision_workflow(
     workflow_id: str,
+    *, user,
 ) -> dict:
-
+    principal = require_workflow_user(user)
     try:
 
-        workflow = get_document_by_id(
+        workflow = _read_resource(
             DECISION_WORKFLOWS_COLLECTION,
             workflow_id,
         )
@@ -1633,13 +1666,10 @@ def get_decision_workflow(
         if workflow is None:
 
             raise DecisionWorkflowNotFoundError(
-                f"Decision workflow "
-                f"'{workflow_id}' was not found."
+                "Decision workflow not found."
             )
 
-        return _hydrate_workflow(
-            workflow
-        )
+        return _hydrate_workflow(workflow, principal)
 
     except ResourceExhausted as exc:
 
@@ -1653,43 +1683,36 @@ def get_decision_workflow(
 # WORKFLOW HISTORY
 # ==========================================================
 
-def list_decision_workflows(
-    limit: int = 20,
-) -> list[dict]:
-
+def list_decision_workflows(limit: int = 20, *, user) -> list[dict]:
+    principal = require_workflow_user(user)
+    if type(limit) is not int or not 1 <= limit <= 100:
+        raise DecisionWorkflowValidationError("Invalid workflow limit.")
+    if not principal.global_access and not principal.store_ids:
+        return []
     try:
-
-        docs = (
-            get_collection(
-                DECISION_WORKFLOWS_COLLECTION
-            )
-            .order_by(
-                "created_at",
-                direction="DESCENDING",
-            )
-            .limit(limit)
-            .stream()
-        )
-
+        collection = get_collection(DECISION_WORKFLOWS_COLLECTION)
+        if collection is None:
+            raise DecisionWorkflowExecutionError("Inventory workflow storage is unavailable.")
+        query = collection
+        if not principal.global_access:
+            query = query.where("store_id", "in", list(principal.store_ids))
+        # Target predicate is pushed to the database; linked/embedded scope is
+        # checked on the server BEFORE counting a record toward the response limit.
+        # Never apply a database limit to an incompletely authorized result set.
+        docs = query.order_by("created_at", direction="DESCENDING").stream()
         workflows = []
-
         for doc in docs:
-
             item = doc.to_dict()
-
+            try:
+                _hydrate_workflow(item, principal)
+            except DecisionWorkflowNotFoundError:
+                continue
             item["id"] = doc.id
-
-            workflows.append(
-                _with_next_action(
-                    item
-                )
-            )
-
+            workflows.append(_with_next_action(item))
+            if len(workflows) == limit:
+                break
         return workflows
-
     except ResourceExhausted as exc:
-
         raise DecisionWorkflowQuotaError(
-            "Firestore quota is currently "
-            "exhausted. Please retry later."
+            "Firestore quota is currently exhausted. Please retry later."
         ) from exc

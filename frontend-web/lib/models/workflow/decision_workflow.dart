@@ -22,6 +22,7 @@ class DecisionWorkflow {
     this.movement,
     this.failureStage,
     this.errorMessage,
+    this.sharePreview,
   });
 
   factory DecisionWorkflow.fromJson(Map<String, dynamic> json) {
@@ -77,6 +78,7 @@ class DecisionWorkflow {
           : StockMovement.fromJson(movementJson),
       failureStage: json['failure_stage']?.toString(),
       errorMessage: json['error_message']?.toString(),
+      sharePreview: ForecastSharePreview.fromJson(forecastResult, inventory),
     );
   }
 
@@ -98,6 +100,21 @@ class DecisionWorkflow {
   final StockMovement? movement;
   final String? failureStage;
   final String? errorMessage;
+  final ForecastSharePreview? sharePreview;
+
+  bool get canShareForecast =>
+      id.isNotEmpty &&
+      id == id.trim() &&
+      id.length <= 128 &&
+      !RegExp(r'[\x00-\x1f\x7f]').hasMatch(id) &&
+      const {'DAILY', 'SEVEN_DAY', 'CUSTOM'}.contains(forecastType) &&
+      const {
+        'NO_ACTION_REQUIRED',
+        'CANDIDATE_ANALYZED',
+        'MOVEMENT_RECOMMENDED',
+        'REORDER_RECOMMENDED',
+      }.contains(status) &&
+      sharePreview?.hasPeriod == true;
 
   /// Returns a new workflow snapshot after a backend-confirmed movement
   /// mutation. Other workflow fields remain exactly as originally returned.
@@ -121,7 +138,33 @@ class DecisionWorkflow {
         movement: updatedMovement,
         failureStage: failureStage,
         errorMessage: errorMessage,
+        sharePreview: sharePreview,
       );
+}
+
+/// Optional stored metadata for communication only. Existing result parsing is unchanged.
+class ForecastSharePreview {
+  const ForecastSharePreview({this.start, this.end, this.demand, this.stock});
+  final DateTime? start;
+  final DateTime? end;
+  final num? demand;
+  final num? stock;
+  bool get hasPeriod => start != null && end != null && !end!.isBefore(start!);
+  factory ForecastSharePreview.fromJson(
+    Map<String, dynamic>? forecast,
+    Map<String, dynamic>? inventory,
+  ) {
+    num? quantity(dynamic value) =>
+        value is num && value.isFinite && value >= 0 ? value : null;
+    return ForecastSharePreview(
+      start: DateTime.tryParse(
+        forecast?['forecast_start_date']?.toString() ?? '',
+      ),
+      end: DateTime.tryParse(forecast?['forecast_end_date']?.toString() ?? ''),
+      demand: quantity(forecast?['forecast_total_demand']),
+      stock: quantity(inventory?['current_stock']),
+    );
+  }
 }
 
 class WorkflowInventoryIntelligence {

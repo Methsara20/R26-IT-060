@@ -16,6 +16,9 @@ Responsibilities:
 
 from datetime import datetime
 from typing import Any, Optional
+from app.schemas.inventory_auth_schema import InventoryPrincipal
+from app.security.inventory_permissions import require_stock_movement_role
+from app.security.inventory_resource_access import require_candidate_access, require_movement_access
 
 from app.constants.collections import (
     INVENTORY_COLLECTION,
@@ -67,6 +70,30 @@ RECOMMENDATION_ALGORITHM = (
 # GENERAL HELPERS
 # ==========================================================
 
+def _actor_snapshot(user):
+    """Snapshot only validated server principals; never infer legacy identities."""
+    from fastapi import HTTPException
+    from app.schemas.inventory_auth_schema import InventoryPrincipal
+    try:
+        if not isinstance(user, InventoryPrincipal):
+            raise ValueError()
+        validated = InventoryPrincipal.model_validate(user.model_dump())
+        username = validated.username_normalized
+        display = validated.display_name
+        if (username != username.strip().casefold() or len(username) > 128
+                or not display.strip() or len(display) > 128
+                or any(ord(char) < 32 for char in username + display)):
+            raise ValueError()
+        return {
+            "actor_id": validated.user_id,
+            "actor_username_snapshot": username,
+            "actor_display_name_snapshot": display,
+            "actor_role_snapshot": validated.role,
+        }
+    except Exception:
+        raise HTTPException(403, "Inventory actor identity is unavailable.") from None
+
+
 def now() -> str:
     return datetime.now().isoformat()
 
@@ -99,15 +126,17 @@ def build_status_history_entry(
 
 def append_status_history(
     movement: dict,
-    status: str
+    status: str,
+    user: Optional[InventoryPrincipal] = None,
 ) -> list:
     history = list(
         movement.get("status_history") or []
     )
 
-    history.append(
-        build_status_history_entry(status)
-    )
+    entry = build_status_history_entry(status)
+    if user is not None:
+        entry.update(_actor_snapshot(user))
+    history.append(entry)
 
     return history
 
@@ -689,8 +718,12 @@ def try_generate_execution_summary(
 # ==========================================================
 
 def recommend_transfer(
-    candidate_id: str
+    candidate_id: str,
+    user: Optional[InventoryPrincipal] = None,
 ):
+    actor = _actor_snapshot(user)
+    if user is not None:
+        require_stock_movement_role(user, "recommend")
     candidate = get_document_by_id(
         OPTIMIZATION_CANDIDATES_COLLECTION,
         candidate_id
@@ -698,6 +731,9 @@ def recommend_transfer(
 
     if candidate is None:
         return None
+
+    if user is not None:
+        require_candidate_access(user, candidate)
 
     if (
         candidate.get("recommended_action")
@@ -1129,6 +1165,11 @@ def recommend_transfer(
         "updated_at": movement_timestamp
     }
 
+    if user is not None:
+        require_movement_access(user, movement)
+        movement["recommended_by"] = user.user_id
+        movement["status_history"][0].update(actor)
+
     create_or_update_document(
         STOCK_MOVEMENTS_COLLECTION,
         movement_id,
@@ -1171,14 +1212,21 @@ def recommend_transfer(
 # ==========================================================
 
 def approve_movement(
-    movement_id: str
+    movement_id: str,
+    user: Optional[InventoryPrincipal] = None,
 ):
+    actor = _actor_snapshot(user)
+    if user is not None:
+        require_stock_movement_role(user, "approve")
     movement = get_stock_movement_by_id(
         movement_id
     )
 
     if movement is None:
         return None
+
+    if user is not None:
+        require_movement_access(user, movement)
 
     current_status = movement.get(
         "movement_status"
@@ -1207,13 +1255,14 @@ def approve_movement(
             "is_cancelled": False,
             "is_executed": False,
 
-            "approved_by": None,
+            "approved_by": user.user_id if user is not None else None,
             "approved_at": update_timestamp,
 
             "status_history": (
                 append_status_history(
                     movement,
-                    "APPROVED"
+                    "APPROVED",
+                    user=user,
                 )
             ),
 
@@ -1232,14 +1281,21 @@ def approve_movement(
 
 def reject_movement(
     movement_id: str,
-    rejection_reason: Optional[str] = None
+    rejection_reason: Optional[str] = None,
+    user: Optional[InventoryPrincipal] = None,
 ):
+    actor = _actor_snapshot(user)
+    if user is not None:
+        require_stock_movement_role(user, "reject")
     movement = get_stock_movement_by_id(
         movement_id
     )
 
     if movement is None:
         return None
+
+    if user is not None:
+        require_movement_access(user, movement)
 
     current_status = movement.get(
         "movement_status"
@@ -1268,7 +1324,7 @@ def reject_movement(
             "is_cancelled": False,
             "is_executed": False,
 
-            "rejected_by": None,
+            "rejected_by": user.user_id if user is not None else None,
             "rejected_at": update_timestamp,
             "rejection_reason": (
                 rejection_reason
@@ -1277,7 +1333,8 @@ def reject_movement(
             "status_history": (
                 append_status_history(
                     movement,
-                    "REJECTED"
+                    "REJECTED",
+                    user=user,
                 )
             ),
 
@@ -1296,14 +1353,21 @@ def reject_movement(
 
 def cancel_movement(
     movement_id: str,
-    cancel_reason: Optional[str] = None
+    cancel_reason: Optional[str] = None,
+    user: Optional[InventoryPrincipal] = None,
 ):
+    actor = _actor_snapshot(user)
+    if user is not None:
+        require_stock_movement_role(user, "cancel")
     movement = get_stock_movement_by_id(
         movement_id
     )
 
     if movement is None:
         return None
+
+    if user is not None:
+        require_movement_access(user, movement)
 
     current_status = movement.get(
         "movement_status"
@@ -1330,14 +1394,15 @@ def cancel_movement(
         "is_cancelled": True,
         "is_executed": False,
 
-        "cancelled_by": None,
+        "cancelled_by": user.user_id if user is not None else None,
         "cancelled_at": update_timestamp,
         "cancel_reason": cancel_reason,
 
         "status_history": (
             append_status_history(
                 movement,
-                "CANCELLED"
+                "CANCELLED",
+                user=user,
             )
         ),
 
@@ -1414,14 +1479,21 @@ def validate_execution_state(
 # ==========================================================
 
 def execute_movement(
-    movement_id: str
+    movement_id: str,
+    user: Optional[InventoryPrincipal] = None,
 ):
+    actor = _actor_snapshot(user)
+    if user is not None:
+        require_stock_movement_role(user, "execute")
     movement = get_stock_movement_by_id(
         movement_id
     )
 
     if movement is None:
         return None
+
+    if user is not None:
+        require_movement_access(user, movement)
 
     state_error = validate_execution_state(
         movement
@@ -1567,7 +1639,8 @@ def execute_movement(
     in_progress_history = (
         append_status_history(
             movement,
-            "IN_PROGRESS"
+            "IN_PROGRESS",
+            user=user,
         )
     )
 
@@ -1739,7 +1812,7 @@ def execute_movement(
                 target_new_stock
             ),
 
-            "executed_by": None,
+            "executed_by": user.user_id if user is not None else None,
             "created_at": (
                 transaction_timestamp
             ),
@@ -1763,7 +1836,8 @@ def execute_movement(
 
         executed_history.append({
             "status": "EXECUTED",
-            "time": executed_timestamp
+            "time": executed_timestamp,
+            **actor,
         })
 
         update_document(
@@ -1781,7 +1855,7 @@ def execute_movement(
                 # execution followed approval.
                 "is_approved": True,
 
-                "executed_by": None,
+                "executed_by": user.user_id if user is not None else None,
                 "executed_at": (
                     executed_timestamp
                 ),
@@ -1842,7 +1916,8 @@ def execute_movement(
 
         failed_history.append({
             "status": "FAILED",
-            "time": failed_timestamp
+            "time": failed_timestamp,
+            **actor,
         })
 
         update_document(

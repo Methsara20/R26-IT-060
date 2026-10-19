@@ -1,14 +1,18 @@
 // Final-polish pass: standardizes the header, filters, and semantic badges.
 // Legacy presentation widgets remain in this file temporarily as a verified
 // fallback while the extracted decision workspace is reviewed.
-// ignore_for_file: unused_element
+// ignore_for_file: unused_element, unused_local_variable
 
 import 'package:flutter/material.dart';
+import '../../core/auth/inventory_api_client.dart';
+import '../../core/auth/inventory_auth_scope.dart';
+import '../../core/auth/inventory_ui_permissions.dart';
 import '../../models/optimization/optimization_candidate.dart';
 import '../../models/stock_movement/stock_movement.dart';
 import '../workflow/inventory_decision_workflow_controller.dart';
 import '../../services/optimization_api_service.dart';
 import '../../core/widgets/application_page_layout.dart';
+import '../../core/widgets/application_feedback_components.dart';
 import '../../core/widgets/application_ui_components.dart';
 import 'stock_flow_decision_workspace.dart';
 
@@ -29,22 +33,44 @@ class OptimizationCandidatesScreen extends StatefulWidget {
 
 class _OptimizationCandidatesScreenState
     extends State<OptimizationCandidatesScreen> {
-  final _service = OptimizationApiService();
+  late final InventoryApiClient _inventoryClient;
+  late final OptimizationApiService _service;
   Future<OptimizationOverview>? _overviewFuture;
   String? _analyzingId;
   bool _showWorkflowRecommendation = false;
+  bool _refreshing = false;
+
+  @override
+  void dispose() {
+    _inventoryClient.close();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    _inventoryClient = InventoryApiClient(
+      session: InventoryAuthScope.read(context),
+    );
+    _service = OptimizationApiService(client: _inventoryClient);
     // The queue remains the default even while global workflow context exists.
     _overviewFuture = _service.getOverview();
   }
 
-  void _reload() {
+  Future<void> _reload() async {
+    if (_refreshing) return;
+    final request = _service.getOverview();
     setState(() {
-      _overviewFuture = _service.getOverview();
+      _refreshing = true;
+      _overviewFuture = request;
     });
+    try {
+      await request;
+    } catch (_) {
+      // FutureBuilder presents the existing sanitized service error.
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
   }
 
   Future<void> _analyze(OptimizationCandidate candidate) async {
@@ -96,21 +122,24 @@ class _OptimizationCandidatesScreenState
   @override
   Widget build(BuildContext context) {
     final workflow = widget.workflowController.current;
+    final currentUser = InventoryAuthScope.of(context).user;
+    final permissions = currentUser == null
+        ? null
+        : InventoryUiPermissions(currentUser);
     return ApplicationPageContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ApplicationPageHeader(
+            contextLabel: 'STOCK OPTIMIZATION',
+            leadingIcon: Icons.route_outlined,
+            premium: true,
             title: 'Optimization',
             subtitle:
                 'Review prioritized stock-flow decisions and recommended actions',
-            actions: [
-              IconButton.filledTonal(
-                onPressed: _reload,
-                tooltip: 'Refresh candidates',
-                icon: const Icon(Icons.refresh),
-              ),
-            ],
+            onRefresh: () => _reload(),
+            refreshing: _refreshing,
+            refreshTooltip: 'Refresh candidates',
           ),
           const SizedBox(height: 24),
           if (workflow?.candidate != null && _showWorkflowRecommendation) ...[
@@ -175,6 +204,12 @@ class _OptimizationCandidatesScreenState
                 return StockFlowDecisionWorkspace(
                   overview: overview,
                   analyzingId: _analyzingId,
+                  canAnalyze: (candidate) =>
+                      permissions?.canForStores(
+                        InventoryOperation.analyzeCandidate,
+                        [candidate.storeId],
+                      ) ??
+                      false,
                   onAnalyze: _analyze,
                 );
               },
@@ -598,7 +633,6 @@ class _CandidateCard extends StatelessWidget {
                   ),
               ],
             ],
-
           ],
         ),
       ),
@@ -662,10 +696,23 @@ class _Value extends StatelessWidget {
 class _OptimizationLoading extends StatelessWidget {
   const _OptimizationLoading();
   @override
-  Widget build(BuildContext context) => const Card(
-    child: Padding(
-      padding: EdgeInsets.symmetric(vertical: 64),
-      child: Center(child: CircularProgressIndicator()),
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    label: 'Loading optimization decisions',
+    child: const Card(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ApplicationLoadingSkeleton(height: 28, width: 240),
+            SizedBox(height: 18),
+            ApplicationLoadingSkeleton(height: 92),
+            SizedBox(height: 12),
+            ApplicationLoadingSkeleton(height: 180),
+          ],
+        ),
+      ),
     ),
   );
 }
@@ -699,21 +746,10 @@ class _OptimizationError extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
-          const SizedBox(width: 12),
-          Expanded(child: Text(message)),
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
-    ),
+  Widget build(BuildContext context) => ApplicationErrorState(
+    title: 'Unable to load optimization decisions',
+    message: message,
+    onRetry: onRetry,
+    retryLabel: 'Retry',
   );
 }
