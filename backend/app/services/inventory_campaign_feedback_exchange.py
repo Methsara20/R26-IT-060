@@ -52,7 +52,9 @@ class ExchangeSettings:
                 for s in self.store_ids
             ) or (not self.store_ids and not self.global_access):
                 raise ValueError()
-            key = load_pem_private_key(self.private_key.encode(), password=None)
+            clean_key = self.private_key.replace("\\n", "\n").strip("\"'")
+            object.__setattr__(self, "private_key", clean_key)
+            key = load_pem_private_key(clean_key.encode(), password=None)
             if not isinstance(key, RSAPrivateKey) or key.key_size < 2048:
                 raise ValueError()
             return key

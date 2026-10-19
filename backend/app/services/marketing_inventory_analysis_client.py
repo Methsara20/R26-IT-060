@@ -25,7 +25,9 @@ class MarketingInventoryClientSettings:
 
     def validate(self):
         parsed = urlsplit(self.base_url)
-        key = load_pem_private_key(self.signing_key.encode(), password=None)
+        clean_key = self.signing_key.replace("\\n", "\n").strip("\"'")
+        object.__setattr__(self, "signing_key", clean_key)
+        key = load_pem_private_key(clean_key.encode(), password=None)
         if (parsed.scheme not in ("http", "https") or not parsed.hostname
                 or parsed.username or parsed.password or parsed.query or parsed.fragment
                 or parsed.path not in ("", "/") or not isinstance(key, RSAPrivateKey)
